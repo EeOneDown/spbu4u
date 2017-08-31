@@ -12,10 +12,15 @@ webhook_url_path = "/{}/".format(test_token)
 bot_main_commands = ("/start", "/help", "/home", "/setting", "/exit")
 bot_text_commands = ("Расписание", "СЕССИЯ", "Сегодня", "Завтра",
                      "Из Универа", "В Универ", "Свой маршрут")
+
 emoji = {"info": u"\U00002139", "star": u"\U00002B50",
          "settings": u"\U00002699", "suburban": u"\U0001F689",
          "editor": u"\U0001F4DD", "alarm_clock": u"\U000023F0",
-         "calendar": u"\U0001F4C5"}
+         "calendar": u"\U0001F4C5", "sleep": u"\U0001F634",
+         "clock": u"\U0001F552"}
+week_day_number = {"Пн": 1, "Вт": 2, "Ср": 3, "Чт": 4, "Пт": 5, "Сб": 6}
+subject_short_type = {"лекция": "Л", "практическое занятие": "ПР",
+                      "семинар": "С"}
 
 full_info_answer = \
     'ИНФОРМАЦИЯ\n\n*Раздел "Расписание"*\n\U00002022 Информация о расписании' +\

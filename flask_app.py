@@ -5,6 +5,7 @@ import sqlite3
 import logging
 import json
 import time
+from datetime import datetime, timedelta
 import flask
 from flask_sslify import SSLify
 import registration_functions as reg_func
@@ -96,6 +97,22 @@ def schedule_handler(message):
     schedule_keyboard.row("Сегодня", "Завтра", emoji["calendar"])
     schedule_keyboard.row("Назад", emoji["alarm_clock"])
     bot.send_message(message.chat.id, answer, reply_markup=schedule_keyboard)
+
+
+@bot.message_handler(func=lambda mess: mess.text == "Сегодня")
+def today_schedule_handler(message):
+    today_moscow_date = datetime.today().date() + timedelta(hours=3)
+    json_day = func.get_json_day_data(message.chat.id, today_moscow_date)
+    answer = func.get_schedule(json_day)
+    bot.send_message(message.chat.id, answer, parse_mode="HTML")
+
+
+@bot.message_handler(func=lambda mess: mess.text == "Завтра")
+def tomorrow_schedule_handler(message):
+    tomorrow_moscow_date = datetime.today().date() + timedelta(hours=3)
+    json_day = func.get_json_day_data(message.chat.id, tomorrow_moscow_date)
+    answer = func.get_schedule(json_day)
+    bot.send_message(message.chat.id, answer, parse_mode="HTML")
 
 
 @bot.message_handler(func=lambda mess:

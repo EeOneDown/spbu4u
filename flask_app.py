@@ -11,7 +11,7 @@ from flask_sslify import SSLify
 import registration_functions as reg_func
 import functions as func
 from constants import test_token, emoji, briefly_info_answer, \
-    full_info_answer, webhook_url_base, webhook_url_path
+    full_info_answer, webhook_url_base, webhook_url_path, week_day_number
 
 
 bot = telebot.TeleBot(test_token, threaded=False)
@@ -92,7 +92,7 @@ def settings_handler(message):
 @bot.message_handler(func=lambda mess: mess.text == "Расписание",
                      content_types=["text"])
 def schedule_handler(message):
-    answer = "Выбери день"
+    answer = "Меню расписания"
     schedule_keyboard = telebot.types.ReplyKeyboardMarkup(True)
     schedule_keyboard.row("Сегодня", "Завтра", emoji["calendar"])
     schedule_keyboard.row("Назад", emoji["alarm_clock"])
@@ -113,6 +113,16 @@ def tomorrow_schedule_handler(message):
     json_day = func.get_json_day_data(message.chat.id, tomorrow_moscow_date)
     answer = func.get_schedule(json_day)
     bot.send_message(message.chat.id, answer, parse_mode="HTML")
+
+
+@bot.message_handler(func=lambda mess: mess.text == emoji["calendar"])
+def calendar_handler(message):
+    answer = "Выбери день:"
+    week_day_calendar = telebot.types.InlineKeyboardMarkup()
+    week_day_calendar.row(
+        *[telebot.types.InlineKeyboardButton(text=name, callback_data=name) for
+          name in week_day_number.keys()])
+    bot.send_message(message.chat.id, answer, reply_markup=week_day_calendar)
 
 
 @bot.message_handler(func=lambda mess:
@@ -193,6 +203,22 @@ def show_briefly_info(call_back):
                           parse_mode="Markdown",
                           disable_web_page_preview=True,
                           reply_markup=inline_keyboard)
+
+
+@bot.callback_query_handler(func=lambda call_back:
+                            call_back.data in week_day_number.keys())
+def week_day_schedule_handler(call_back):
+    iso_day_date = list((datetime.today() + timedelta(hours=3)).isocalendar())
+    if iso_day_date[3] == 7:
+        iso_day_date[2] += 1
+    iso_day_date[3] = week_day_number[call_back.data]
+    day_date = func.date_from_iso(iso_day_date)
+    json_day = func.get_json_day_data(call_back.message.chat.id, day_date)
+    answer = func.get_schedule(json_day)
+    bot.edit_message_text(text=answer,
+                          chat_id=call_back.message.chat.id,
+                          message_id=call_back.message.message_id,
+                          parse_mode="HTML")
 
 
 @app.route("/reset_webhook", methods=["GET", "HEAD"])

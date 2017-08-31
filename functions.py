@@ -112,7 +112,7 @@ def get_schedule(day_info, user_id=None, full=True):
         answer += subject_short_type[event["Subject"].split(", ")[-1]] + " - "
         answer += ", ".join(event["Subject"].split(", ")[:-1]) + "</b>\n"
         for location in event["EventLocations"]:
-            answer += location["DisplayName"] + "<i>("
+            answer += location["DisplayName"] + " <i>("
             educators = [educator["Item2"].split(", ")[0] for educator in
                          location["EducatorIds"]]
             answer += "; ".join(educators) + ")</i>\n\n"

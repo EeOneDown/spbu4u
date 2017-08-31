@@ -173,6 +173,12 @@ def confirm_choice_handler(message):
     return
 
 
+@bot.message_handler(func=lambda mess: True, content_types=["text"])
+def other_text_handler(message):
+    answer = "Некоторые функии сейчас недоступны.\n Подробнее - @Spbu4u_news"
+    bot.send_message(message.chat.id, answer)
+
+
 @bot.callback_query_handler(func=lambda call_back:
                             call_back.data == "Полное ИНФО")
 def show_full_info(call_back):

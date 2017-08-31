@@ -10,11 +10,11 @@ import flask
 from flask_sslify import SSLify
 import registration_functions as reg_func
 import functions as func
-from constants import test_token, emoji, briefly_info_answer, \
+from constants import release_token, emoji, briefly_info_answer, \
     full_info_answer, webhook_url_base, webhook_url_path, week_day_number
 
 
-bot = telebot.TeleBot(test_token, threaded=False)
+bot = telebot.TeleBot(release_token, threaded=False)
 app = flask.Flask(__name__)
 sslify = SSLify(app)
 

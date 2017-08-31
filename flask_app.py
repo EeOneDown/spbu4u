@@ -209,9 +209,9 @@ def show_briefly_info(call_back):
                             call_back.data in week_day_number.keys())
 def week_day_schedule_handler(call_back):
     iso_day_date = list((datetime.today() + timedelta(hours=3)).isocalendar())
-    if iso_day_date[3] == 7:
-        iso_day_date[2] += 1
-    iso_day_date[3] = week_day_number[call_back.data]
+    if iso_day_date[2] == 7:
+        iso_day_date[1] += 1
+    iso_day_date[2] = week_day_number[call_back.data]
     day_date = func.date_from_iso(iso_day_date)
     json_day = func.get_json_day_data(call_back.message.chat.id, day_date)
     answer = func.get_schedule(json_day)

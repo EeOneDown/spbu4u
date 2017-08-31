@@ -109,7 +109,7 @@ def today_schedule_handler(message):
 
 @bot.message_handler(func=lambda mess: mess.text == "Завтра")
 def tomorrow_schedule_handler(message):
-    tomorrow_moscow_date = datetime.today().date() + timedelta(hours=3)
+    tomorrow_moscow_date = datetime.today().date() + timedelta(days=1, hours=3)
     json_day = func.get_json_day_data(message.chat.id, tomorrow_moscow_date)
     answer = func.get_schedule(json_day)
     bot.send_message(message.chat.id, answer, parse_mode="HTML")

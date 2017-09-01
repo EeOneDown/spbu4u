@@ -21,6 +21,3 @@ def schedule_update():
         sql_con.commit()
     cursor.close()
     sql_con.close()
-
-
-schedule_update()

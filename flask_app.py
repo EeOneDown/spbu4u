@@ -177,7 +177,7 @@ def calendar_handler(message):
 
 @bot.message_handler(func=lambda mess: mess.text == emoji["suburban"])
 def suburban_handler(message):
-    answer = "Меню Расписания электричек"
+    answer = "Меню расписания электричек"
     suburban_keyboard = telebot.types.ReplyKeyboardMarkup(True, False)
     suburban_keyboard.row('Из Универа', 'В Универ')
     suburban_keyboard.row('Назад', 'Свой маршрут')
@@ -186,12 +186,13 @@ def suburban_handler(message):
     bot.send_message(message.chat.id,
                      answer,
                      reply_markup=suburban_keyboard,
-                     parse_mode='HTML')
+                     parse_mode='HTML',
+                     disable_web_page_preview=True)
 
 
 @bot.message_handler(func=lambda mess: True, content_types=["text"])
 def other_text_handler(message):
-    answer = "Некоторые функии сейчас недоступны.\n Подробнее - @Spbu4u_news"
+    answer = "Некоторые функии сейчас недоступны.\nПодробнее - @Spbu4u_news"
     bot.send_message(message.chat.id, answer)
 
 

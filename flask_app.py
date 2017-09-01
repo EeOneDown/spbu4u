@@ -175,6 +175,20 @@ def calendar_handler(message):
     bot.send_message(message.chat.id, answer, reply_markup=week_day_calendar)
 
 
+@bot.message_handler(func=lambda mess: mess.text == emoji["suburban"])
+def suburban_handler(message):
+    answer = "Меню Расписания электричек"
+    suburban_keyboard = telebot.types.ReplyKeyboardMarkup(True, False)
+    suburban_keyboard.row('Из Универа', 'В Универ')
+    suburban_keyboard.row('Назад', 'Свой маршрут')
+    answer += "\n\nДанные предоставлены сервисом "
+    answer += "<a href = 'http://rasp.yandex.ru/'>Яндекс.Расписания</a>"
+    bot.send_message(message.chat.id,
+                     answer,
+                     reply_markup=suburban_keyboard,
+                     parse_mode='HTML')
+
+
 @bot.message_handler(func=lambda mess: True, content_types=["text"])
 def other_text_handler(message):
     answer = "Некоторые функии сейчас недоступны.\n Подробнее - @Spbu4u_news"

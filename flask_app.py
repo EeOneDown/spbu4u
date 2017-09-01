@@ -56,75 +56,6 @@ def start_handler(message):
     func.set_next_step(message.chat.id, "select_division")
 
 
-@bot.message_handler(commands=["help"])
-@bot.message_handler(func=lambda mess: mess.text == emoji["info"],
-                     content_types=["text"])
-def help_handler(message):
-    inline_full_info_keyboard = telebot.types.InlineKeyboardMarkup()
-    inline_full_info_keyboard.row(
-        *[telebot.types.InlineKeyboardButton(text=name, callback_data=name) for
-          name in ["Полное ИНФО"]])
-    answer = briefly_info_answer
-    bot.send_message(message.chat.id, answer,
-                     parse_mode="Markdown",
-                     reply_markup=inline_full_info_keyboard,
-                     disable_web_page_preview=True)
-
-
-@bot.message_handler(commands=["home"])
-@bot.message_handler(func=lambda mess: mess.text == "Назад",
-                     content_types=["text"])
-def home_handler(message):
-    func.delete_user(message.chat.id, only_choice=True)
-    answer = "Главное меню"
-    bot.send_message(message.chat.id, answer, reply_markup=main_keyboard)
-
-
-@bot.message_handler(commands=["settings"])
-@bot.message_handler(func=lambda mess: mess.text == emoji["settings"],
-                     content_types=["text"])
-def settings_handler(message):
-    func.delete_user(message.chat.id, only_choice=True)
-    answer = "Главное меню"
-    bot.send_message(message.chat.id, answer, reply_markup=main_keyboard)
-
-
-@bot.message_handler(func=lambda mess: mess.text == "Расписание",
-                     content_types=["text"])
-def schedule_handler(message):
-    answer = "Меню расписания"
-    schedule_keyboard = telebot.types.ReplyKeyboardMarkup(True)
-    schedule_keyboard.row("Сегодня", "Завтра", emoji["calendar"])
-    schedule_keyboard.row("Назад", emoji["alarm_clock"])
-    bot.send_message(message.chat.id, answer, reply_markup=schedule_keyboard)
-
-
-@bot.message_handler(func=lambda mess: mess.text == "Сегодня")
-def today_schedule_handler(message):
-    today_moscow_date = datetime.today().date() + timedelta(hours=3)
-    json_day = func.get_json_day_data(message.chat.id, today_moscow_date)
-    answer = func.get_schedule(json_day)
-    bot.send_message(message.chat.id, answer, parse_mode="HTML")
-
-
-@bot.message_handler(func=lambda mess: mess.text == "Завтра")
-def tomorrow_schedule_handler(message):
-    tomorrow_moscow_date = datetime.today().date() + timedelta(days=1, hours=3)
-    json_day = func.get_json_day_data(message.chat.id, tomorrow_moscow_date)
-    answer = func.get_schedule(json_day)
-    bot.send_message(message.chat.id, answer, parse_mode="HTML")
-
-
-@bot.message_handler(func=lambda mess: mess.text == emoji["calendar"])
-def calendar_handler(message):
-    answer = "Выбери день:"
-    week_day_calendar = telebot.types.InlineKeyboardMarkup()
-    week_day_calendar.row(
-        *[telebot.types.InlineKeyboardButton(text=name, callback_data=name) for
-          name in week_day_number.keys()])
-    bot.send_message(message.chat.id, answer, reply_markup=week_day_calendar)
-
-
 @bot.message_handler(func=lambda mess:
                      func.get_step(mess.chat.id) == "select_division",
                      content_types=["text"])
@@ -171,6 +102,77 @@ def select_student_group_handler(message):
 def confirm_choice_handler(message):
     reg_func.confirm_choice(message)
     return
+
+
+@bot.message_handler(commands=["help"])
+@bot.message_handler(func=lambda mess: mess.text == emoji["info"],
+                     content_types=["text"])
+def help_handler(message):
+    inline_full_info_keyboard = telebot.types.InlineKeyboardMarkup()
+    inline_full_info_keyboard.row(
+        *[telebot.types.InlineKeyboardButton(text=name, callback_data=name) for
+          name in ["Полное ИНФО"]])
+    answer = briefly_info_answer
+    bot.send_message(message.chat.id, answer,
+                     parse_mode="Markdown",
+                     reply_markup=inline_full_info_keyboard,
+                     disable_web_page_preview=True)
+
+
+@bot.message_handler(commands=["home"])
+@bot.message_handler(func=lambda mess: mess.text == "Назад",
+                     content_types=["text"])
+def home_handler(message):
+    func.delete_user(message.chat.id, only_choice=True)
+    answer = "Главное меню"
+    bot.send_message(message.chat.id, answer, reply_markup=main_keyboard)
+
+
+@bot.message_handler(commands=["settings"])
+@bot.message_handler(func=lambda mess: mess.text == emoji["settings"],
+                     content_types=["text"])
+def settings_handler(message):
+    func.delete_user(message.chat.id, only_choice=True)
+    answer = "Главное меню"
+    bot.send_message(message.chat.id, answer, reply_markup=main_keyboard)
+
+
+@bot.message_handler(func=lambda mess: mess.text == "Расписание",
+                     content_types=["text"])
+def schedule_handler(message):
+    answer = "Меню расписания"
+    schedule_keyboard = telebot.types.ReplyKeyboardMarkup(True)
+    schedule_keyboard.row("Сегодня", "Завтра", emoji["calendar"])
+    schedule_keyboard.row("Назад", emoji["alarm_clock"])
+    bot.send_message(message.chat.id, answer, reply_markup=schedule_keyboard)
+
+
+@bot.message_handler(func=lambda mess: mess.text == "Сегодня")
+def today_schedule_handler(message):
+    today_moscow_datetime = datetime.today() + timedelta(hours=3)
+    today_moscow_date = today_moscow_datetime.date()
+    json_day = func.get_json_day_data(message.chat.id, today_moscow_date)
+    answer = func.get_schedule(json_day)
+    bot.send_message(message.chat.id, answer, parse_mode="HTML")
+
+
+@bot.message_handler(func=lambda mess: mess.text == "Завтра")
+def tomorrow_schedule_handler(message):
+    tomorrow_moscow_datetime = datetime.today() + timedelta(days=1, hours=3)
+    tomorrow_moscow_date = tomorrow_moscow_datetime.date()
+    json_day = func.get_json_day_data(message.chat.id, tomorrow_moscow_date)
+    answer = func.get_schedule(json_day)
+    bot.send_message(message.chat.id, answer, parse_mode="HTML")
+
+
+@bot.message_handler(func=lambda mess: mess.text == emoji["calendar"])
+def calendar_handler(message):
+    answer = "Выбери день:"
+    week_day_calendar = telebot.types.InlineKeyboardMarkup()
+    week_day_calendar.row(
+        *[telebot.types.InlineKeyboardButton(text=name, callback_data=name) for
+          name in week_day_number.keys()])
+    bot.send_message(message.chat.id, answer, reply_markup=week_day_calendar)
 
 
 @bot.message_handler(func=lambda mess: True, content_types=["text"])
@@ -245,7 +247,11 @@ def webhook():
     if flask.request.headers.get("content-type") == "application/json":
         json_string = flask.request.get_data().decode("utf-8")
         update = telebot.types.Update.de_json(json_string)
-        bot.process_new_updates([update])
+        try:
+            bot.process_new_updates([update])
+        except:
+            # TODO
+            pass
         return "OK", 200
     else:
         flask.abort(403)

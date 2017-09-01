@@ -10,6 +10,7 @@ import flask
 from flask_sslify import SSLify
 import registration_functions as reg_func
 import functions as func
+from sql_updater import schedule_update
 from constants import release_token, emoji, briefly_info_answer, \
     full_info_answer, webhook_url_base, webhook_url_path, week_day_number
 
@@ -188,6 +189,13 @@ def suburban_handler(message):
                      reply_markup=suburban_keyboard,
                      parse_mode='HTML',
                      disable_web_page_preview=True)
+
+
+@bot.message_handler(func=lambda mess: mess.text == "Скул",
+                     content_types=["text"])
+def schedule_update_handler(message):
+    schedule_update()
+    bot.reply_to(message, "Done")
 
 
 @bot.message_handler(func=lambda mess: True, content_types=["text"])

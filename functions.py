@@ -39,10 +39,13 @@ def delete_user(user_id, only_choice=False):
                    (user_id,))
     sql_con.commit()
     if not only_choice:
-        cursor.execute("""DELETE FROM user_data WHERE id = ?""",
+        cursor.execute("""DELETE FROM user_groups WHERE user_id = ?""",
                        (user_id,))
         sql_con.commit()
-        cursor.execute("""DELETE FROM user_groups WHERE user_id = ?""",
+        cursor.execute("""DELETE FROM skips WHERE user_id = ?""",
+                       (user_id,))
+        sql_con.commit()
+        cursor.execute("""DELETE FROM user_data WHERE id = ?""",
                        (user_id,))
         sql_con.commit()
     cursor.close()
@@ -54,7 +57,7 @@ def date_from_iso(iso):
                              "%Y%W%w").date()
 
 
-def get_json_day_data(user_id, day_date, next_week=False):
+def get_json_week_data(user_id, next_week=False):
     sql_con = sqlite3.connect("Bot_db")
     cursor = sql_con.cursor()
     if next_week:
@@ -84,7 +87,12 @@ def get_json_day_data(user_id, day_date, next_week=False):
         json_week_data = json.loads(data[0])
     cursor.close()
     sql_con.close()
+    return json_week_data
 
+
+def get_json_day_data(user_id, day_date, json_week_data=None):
+    if json_week_data is None:
+        json_week_data = get_json_week_data(user_id)
     for day_info in json_week_data["Days"]:
         if datetime.strptime(day_info["Day"],
                              "%Y-%m-%dT%H:%M:%S").date() == day_date:
@@ -92,7 +100,7 @@ def get_json_day_data(user_id, day_date, next_week=False):
     return None
 
 
-def get_schedule(day_info, user_id=None, full=True):
+def create_schedule_answer(day_info, full=True):
     from constants import emoji, subject_short_type
     if day_info is None:
 
@@ -104,9 +112,11 @@ def get_schedule(day_info, user_id=None, full=True):
     for event in day_study_events:
         if not full:
             # TODO select skip lessons for user
-            skips = []
+            # skips = []
+            pass
         else:
-            skips = []
+            # skips = []
+            pass
         answer += emoji["clock"] + " " + event["TimeIntervalString"] + "\n"
         answer += "<b>"
         answer += subject_short_type[event["Subject"].split(", ")[-1]] + " - "
@@ -117,3 +127,39 @@ def get_schedule(day_info, user_id=None, full=True):
                          location["EducatorIds"]]
             answer += "; ".join(educators) + ")</i>\n\n"
     return answer
+
+
+def is_user_exist(user_id):
+    sql_con = sqlite3.connect("Bot_db")
+    cursor = sql_con.cursor()
+    cursor.execute("""SELECT count(id) 
+                      FROM user_data
+                      WHERE id = ?""", (user_id, ))
+    data = cursor.fetchone()
+    cursor.close()
+    sql_con.close()
+    return data[0]
+
+
+def is_sending_on(user_id):
+    sql_con = sqlite3.connect("Bot_db")
+    cursor = sql_con.cursor()
+    cursor.execute("""SELECT sending 
+                      FROM user_data
+                      WHERE id = ?""", (user_id, ))
+    data = cursor.fetchone()
+    cursor.close()
+    sql_con.close()
+    return data[0]
+
+
+def set_sending(user_id, on=True):
+    sql_con = sqlite3.connect("Bot_db")
+    cursor = sql_con.cursor()
+    cursor.execute("""UPDATE user_data
+                      SET sending = ?
+                      WHERE id = ?""",
+                   (int(on), user_id))
+    sql_con.commit()
+    cursor.close()
+    sql_con.close()

@@ -259,7 +259,11 @@ def for_all_handler(message):
     answer = "\n\n".join(message.text.split("\n\n")[1:])
     users_id = func.select_all_users()
     for user_id in users_id:
-        bot.send_message(user_id, answer, disable_notification=True)
+        try:
+            bot.send_message(user_id, answer, disable_notification=True)
+        except:
+            bot.send_message(my_id, str(user_id), disable_notification=True)
+            continue
 
 
 @bot.message_handler(func=lambda mess: True, content_types=["text"])

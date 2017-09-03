@@ -119,7 +119,11 @@ def create_schedule_answer(day_info, full=True):
             pass
         answer += emoji["clock"] + " " + event["TimeIntervalString"] + "\n"
         answer += "<b>"
-        answer += subject_short_type[event["Subject"].split(", ")[-1]] + " - "
+        subject_type = event["Subject"].split(", ")[-1]
+        if subject_type in subject_short_type.keys():
+            answer += subject_short_type[subject_type] + " - "
+        else:
+            answer += subject_type.capitalize() + " - "
         answer += ", ".join(event["Subject"].split(", ")[:-1]) + "</b>\n"
         for location in event["EventLocations"]:
             answer += location["DisplayName"] + " <i>("

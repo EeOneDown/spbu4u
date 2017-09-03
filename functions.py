@@ -163,3 +163,13 @@ def set_sending(user_id, on=True):
     sql_con.commit()
     cursor.close()
     sql_con.close()
+
+
+def select_all_users():
+    sql_con = sqlite3.connect("Bot_db")
+    cursor = sql_con.cursor()
+    cursor.execute("""SELECT id FROM user_data""")
+    ids = cursor.fetchall()
+    cursor.close()
+    sql_con.close()
+    return ids

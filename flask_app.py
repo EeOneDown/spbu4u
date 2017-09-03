@@ -253,6 +253,15 @@ def schedule_update_handler(message):
     bot.reply_to(message, "Done")
 
 
+@bot.message_handler(func=lambda mess: mess.text.split("\n\n")[0] == "Всем",
+                     content_types=["text"])
+def for_all_handler(message):
+    answer = "\n\n".join(message.text.split("\n\n")[1:])
+    users_id = func.select_all_users()
+    for user_id in users_id:
+        bot.send_message(user_id, answer, disable_notification=True)
+
+
 @bot.message_handler(func=lambda mess: True, content_types=["text"])
 def other_text_handler(message):
     answer = "Некоторые функии сейчас недоступны.\nПодробнее - @Spbu4u_news"
@@ -377,7 +386,12 @@ def webhook():
         try:
             bot.process_new_updates([update])
         except Exception as err:
-            bot.send_message(my_id, str(err))
+            answer = "Кажется, произошла ошибка.\nМожешь сообщить разработчику "
+            answer += "@EeOneDown"
+            bot.reply_to(update.message, answer)
+            bot.forward_message(my_id, update.message.chat.id,
+                                update.message.message_id)
+            bot.send_message(my_id, str(err), disable_notification=True)
         return "OK", 200
     else:
         flask.abort(403)

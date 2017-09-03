@@ -260,9 +260,9 @@ def for_all_handler(message):
     users_id = func.select_all_users()
     for user_id in users_id:
         try:
-            bot.send_message(user_id, answer, disable_notification=True)
+            bot.send_message(user_id[0], answer, disable_notification=True)
         except:
-            bot.send_message(my_id, str(user_id), disable_notification=True)
+            bot.send_message(my_id, str(user_id[0]), disable_notification=True)
             continue
 
 

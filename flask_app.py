@@ -268,7 +268,7 @@ def for_all_handler(message):
 
 @bot.message_handler(func=lambda mess: True, content_types=["text"])
 def other_text_handler(message):
-    answer = "Некоторые функии сейчас недоступны.\nПодробнее - @Spbu4u_news"
+    answer = "Некоторые функции сейчас недоступны.\nПодробнее - @Spbu4u_news"
     bot.send_message(message.chat.id, answer)
 
 

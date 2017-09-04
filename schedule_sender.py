@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
 import json
 import sqlite3
+import telebot
 from datetime import datetime, timedelta
 from functions import get_json_day_data, create_schedule_answer
-from flask_app import bot
+from constants import release_token
 
 
 def schedule_sender():
+    bot = telebot.TeleBot(release_token)
     sql_con = sqlite3.connect("Bot_db")
     cursor = sql_con.cursor()
     cursor.execute("""SELECT user_data.id, groups_data.json_week_data
@@ -27,7 +29,12 @@ def schedule_sender():
         answer = create_schedule_answer(json_day)
         if "Выходной" in answer:
             continue
-        bot.send_message(user_id, answer, parse_mode="HTML")
+        print(user_id, answer)
+        try:
+            bot.send_message(user_id, answer, parse_mode="HTML")
+        except Exception as err:
+            print(err)
+            continue
 
 
 if __name__ == '__main__':

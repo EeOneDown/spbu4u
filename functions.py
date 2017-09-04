@@ -100,7 +100,7 @@ def get_json_day_data(user_id, day_date, json_week_data=None):
     return None
 
 
-def create_schedule_answer(day_info, full=True):
+def create_schedule_answer(day_info, full_place, full=True):
     from constants import emoji, subject_short_type
     if day_info is None:
 
@@ -126,7 +126,11 @@ def create_schedule_answer(day_info, full=True):
             answer += subject_type.capitalize() + " - "
         answer += ", ".join(event["Subject"].split(", ")[:-1]) + "</b>\n"
         for location in event["EventLocations"]:
-            answer += location["DisplayName"] + " <i>("
+            if full_place:
+                location_name = location["DisplayName"]
+            else:
+                location_name = location["DisplayName"].split(", ")[-1]
+            answer += location_name + " <i>("
             educators = [educator["Item2"].split(", ")[0] for educator in
                          location["EducatorIds"]]
             answer += "; ".join(educators) + ")</i>\n\n"
@@ -177,3 +181,27 @@ def select_all_users():
     cursor.close()
     sql_con.close()
     return ids
+
+
+def is_full_place(user_id):
+    sql_con = sqlite3.connect("Bot_db")
+    cursor = sql_con.cursor()
+    cursor.execute("""SELECT full_place 
+                      FROM user_data
+                      WHERE id = ?""", (user_id, ))
+    data = cursor.fetchone()
+    cursor.close()
+    sql_con.close()
+    return data[0]
+
+
+def set_full_place(user_id, on=True):
+    sql_con = sqlite3.connect("Bot_db")
+    cursor = sql_con.cursor()
+    cursor.execute("""UPDATE user_data
+                      SET full_place = ?
+                      WHERE id = ?""",
+                   (int(on), user_id))
+    sql_con.commit()
+    cursor.close()
+    sql_con.close()

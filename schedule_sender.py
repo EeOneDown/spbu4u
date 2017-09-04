@@ -3,7 +3,7 @@ import json
 import sqlite3
 import telebot
 from datetime import datetime, timedelta
-from functions import get_json_day_data, create_schedule_answer
+from functions import get_json_day_data, create_schedule_answer, is_full_place
 from constants import release_token
 
 
@@ -26,7 +26,8 @@ def schedule_sender():
     for user_data in data:
         user_id, json_week = user_data[0], json.loads(user_data[1])
         json_day = get_json_day_data(user_id, tomorrow_moscow_date, json_week)
-        answer = create_schedule_answer(json_day)
+        full_place = is_full_place(user_id)
+        answer = create_schedule_answer(json_day, full_place)
         if "Выходной" in answer:
             continue
         print(user_id, answer)

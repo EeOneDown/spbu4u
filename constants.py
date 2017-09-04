@@ -19,7 +19,8 @@ emoji = {"info": u"\U00002139", "star": u"\U00002B50",
          "calendar": u"\U0001F4C5", "sleep": u"\U0001F634",
          "clock": u"\U0001F552", "cross_mark": u"\U0000274C",
          "check_mark": u"\U00002705", "mailbox_off": u"\U0001F4EA",
-         "mailbox_on": u"\U0001F4EB"}
+         "mailbox_on": u"\U0001F4EB", "door": u"\U0001F6AA",
+         "school": u"\U0001F3EB"}
 week_day_number = {"Пн": 1, "Вт": 2, "Ср": 3, "Чт": 4, "Пт": 5, "Сб": 6}
 subject_short_type = {"лекция": "Л", "практическое занятие": "ПР",
                       "семинар": "С"}

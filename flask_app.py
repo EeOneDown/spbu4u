@@ -185,7 +185,8 @@ def today_schedule_handler(message):
     today_moscow_datetime = datetime.today() + timedelta(hours=3)
     today_moscow_date = today_moscow_datetime.date()
     json_day = func.get_json_day_data(message.chat.id, today_moscow_date)
-    answer = func.create_schedule_answer(json_day)
+    full_place = func.is_full_place(message.chat.id)
+    answer = func.create_schedule_answer(json_day, full_place)
     bot.send_message(message.chat.id, answer, parse_mode="HTML")
 
 
@@ -194,7 +195,8 @@ def tomorrow_schedule_handler(message):
     tomorrow_moscow_datetime = datetime.today() + timedelta(days=1, hours=3)
     tomorrow_moscow_date = tomorrow_moscow_datetime.date()
     json_day = func.get_json_day_data(message.chat.id, tomorrow_moscow_date)
-    answer = func.create_schedule_answer(json_day)
+    full_place = func.is_full_place(message.chat.id)
+    answer = func.create_schedule_answer(json_day, full_place)
     bot.send_message(message.chat.id, answer, parse_mode="HTML")
 
 
@@ -246,6 +248,39 @@ def suburban_handler(message):
                      disable_web_page_preview=True)
 
 
+@bot.message_handler(func=lambda mess: mess.text == emoji["editor"])
+def schedule_editor_handler(message):
+    answer = "Редактор расписания"
+    schedule_editor_keyboard = telebot.types.ReplyKeyboardMarkup(True, False)
+    schedule_editor_keyboard.row("Скрыть занятие")
+    schedule_editor_keyboard.row("Назад", "Адрес", "Вернуть")
+    bot.send_message(message.chat.id,
+                     answer,
+                     reply_markup=schedule_editor_keyboard,
+                     parse_mode='HTML')
+
+
+@bot.message_handler(func=lambda mess: mess.text == "Адрес",
+                     content_types=["text"])
+def place_handler(message):
+    answer = "В каком формате отображать адрес занятий?\nСейчас: "
+    place_keyboard = telebot.types.InlineKeyboardMarkup(True)
+    if func.is_full_place(message.chat.id):
+        answer += "<b>Полностью</b> " + emoji["school"]
+        place_keyboard.row(
+            *[telebot.types.InlineKeyboardButton(text=name,
+                                                 callback_data="Аудитория")
+              for name in [emoji["door"] + " Только аудитория"]])
+    else:
+        answer += "<b>Только аудитория</b> " + emoji["door"]
+        place_keyboard.row(
+            *[telebot.types.InlineKeyboardButton(text=name,
+                                                 callback_data="Полностью")
+              for name in [emoji["school"] + " Полностью"]])
+    bot.send_message(message.chat.id, answer, parse_mode="HTML",
+                     reply_markup=place_keyboard)
+
+
 @bot.message_handler(func=lambda mess: mess.text == "Скул",
                      content_types=["text"])
 def schedule_update_handler(message):
@@ -261,8 +296,9 @@ def for_all_handler(message):
     for user_id in users_id:
         try:
             bot.send_message(user_id[0], answer, disable_notification=True)
-        except:
-            bot.send_message(my_id, str(user_id[0]), disable_notification=True)
+        except Exception as err:
+            answer_to_me = str(user_id[0]) + "\n" + str(err)
+            bot.send_message(my_id, answer_to_me, disable_notification=True)
             continue
 
 
@@ -313,7 +349,8 @@ def week_day_schedule_handler(call_back):
     iso_day_date[2] = week_day_number[call_back.data]
     day_date = func.date_from_iso(iso_day_date)
     json_day = func.get_json_day_data(call_back.message.chat.id, day_date)
-    answer = func.create_schedule_answer(json_day)
+    full_place = func.is_full_place(call_back.message.chat.id)
+    answer = func.create_schedule_answer(json_day, full_place)
     bot.edit_message_text(text=answer,
                           chat_id=call_back.message.chat.id,
                           message_id=call_back.message.message_id,
@@ -333,7 +370,8 @@ def all_week_schedule_handler(call_back):
         iso_day_date[2] = week_day_number[day]
         day_date = func.date_from_iso(iso_day_date)
         json_day = func.get_json_day_data(user_id, day_date, json_week)
-        answer = func.create_schedule_answer(json_day)
+        full_place = func.is_full_place(call_back.message.chat.id)
+        answer = func.create_schedule_answer(json_day, full_place)
         if day == "Пн":
             bot.edit_message_text(text=answer,
                                   chat_id=user_id,
@@ -363,6 +401,30 @@ def sending_on_handler(call_back):
     func.set_sending(call_back.message.chat.id, False)
     answer = emoji["mailbox_off"]
     answer += " Рассылка <b>отключена</b>"
+    bot.edit_message_text(text=answer,
+                          chat_id=call_back.message.chat.id,
+                          message_id=call_back.message.message_id,
+                          parse_mode="HTML")
+
+
+@bot.callback_query_handler(func=lambda call_back:
+                            call_back.data == "Полностью")
+def full_place_on_handler(call_back):
+    func.set_full_place(call_back.message.chat.id, True)
+    answer = "Теперь адрес отображается <b>полностью</b> "
+    answer += emoji["school"]
+    bot.edit_message_text(text=answer,
+                          chat_id=call_back.message.chat.id,
+                          message_id=call_back.message.message_id,
+                          parse_mode="HTML")
+
+
+@bot.callback_query_handler(func=lambda call_back:
+                            call_back.data == "Аудитория")
+def full_place_off_handler(call_back):
+    func.set_full_place(call_back.message.chat.id, False)
+    answer = "Теперь отображается <b>только аудитория</b> "
+    answer += emoji["door"]
     bot.edit_message_text(text=answer,
                           chat_id=call_back.message.chat.id,
                           message_id=call_back.message.message_id,

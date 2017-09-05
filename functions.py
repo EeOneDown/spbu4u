@@ -220,7 +220,7 @@ def get_rate_statistics():
     if date[0] is None:
         return None
     else:
-        return date[0] / date[1]
+        return [date[0] / date[1], date[1]]
 
 
 def set_rate(user_id, count_of_stars):

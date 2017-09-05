@@ -486,11 +486,13 @@ def full_place_off_handler(call_back):
 @bot.callback_query_handler(func=lambda call_back:
                             call_back.data == "Статистика")
 def statistics_handler(call_back):
-    average_rate = func.get_rate_statistics()
-    if average_rate is None:
+    data = func.get_rate_statistics()
+    if data is None:
         answer = "Пока что нет оценок."
     else:
-        answer = "Средняя оценка: " + str(average_rate)
+        rate = emoji["star"] * round(data[0])
+        answer = "Средняя оценка: {}\n".format(data[0])
+        answer += "{} ({})".format(rate, data[1])
     bot.edit_message_text(text=answer,
                           chat_id=call_back.message.chat.id,
                           message_id=call_back.message.message_id,

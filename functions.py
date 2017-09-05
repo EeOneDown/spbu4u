@@ -185,8 +185,8 @@ def select_all_users():
     return ids
 
 
-def is_full_place(user_id):
-    sql_con = sqlite3.connect("Bot_db")
+def is_full_place(user_id, db_path="Bot_db"):
+    sql_con = sqlite3.connect(db_path)
     cursor = sql_con.cursor()
     cursor.execute("""SELECT full_place 
                       FROM user_data

@@ -35,6 +35,7 @@ main_keyboard.row(emoji["info"], emoji["star"], emoji["settings"],
 @bot.message_handler(func=lambda mess: mess.text == "Сменить группу",
                      content_types=["text"])
 def start_handler(message):
+    bot.send_chat_action(message.chat.id, "typing")
     answer = ""
     if message.text == "/start":
         answer += "Приветствую!\n"
@@ -43,6 +44,7 @@ def start_handler(message):
         "https://timetable.spbu.ru/api/v1/divisions").json()
     division_names = [division["Name"] for division in divisions]
     divisions_keyboard = telebot.types.ReplyKeyboardMarkup(True, False)
+    divisions_keyboard.row("Проблема", "Завершить")
     for division_name in division_names:
         divisions_keyboard.row(division_name)
     data = json.dumps(divisions)
@@ -62,11 +64,34 @@ def start_handler(message):
     func.set_next_step(message.chat.id, "select_division")
 
 
+@bot.message_handler(func=lambda mess: mess.text == "Проблема",
+                     content_types=["text"])
+def other_text_handler(message):
+    bot.send_chat_action(message.chat.id, "typing")
+    answer = "Если возникла проблема, то:\n"
+    answer += "1. возможно, информация по этому поводу есть в нашем канале"
+    answer += " - @Spbu4u_news;\n"
+    answer += "2. ты всегда можешь связаться с разработчиком @EeOneDown."
+    bot.send_message(message.chat.id, answer)
+
+
+@bot.message_handler(commands=["exit"])
+@bot.message_handler(func=lambda mess: mess.text == "Завершить",
+                     content_types=["text"])
+def exit_handler(message):
+    bot.send_chat_action(message.chat.id, "typing")
+    func.delete_user(message.chat.id, only_choice=False)
+    remove_keyboard = telebot.types.ReplyKeyboardRemove(True)
+    answer = "До встречи!"
+    bot.send_message(message.chat.id, answer, reply_markup=remove_keyboard)
+
+
 @bot.message_handler(func=lambda mess:
                      func.get_step(mess.chat.id) == "select_division" and
                      mess.text != "/home" and mess.text != "Назад",
                      content_types=["text"])
 def select_division_handler(message):
+    bot.send_chat_action(message.chat.id, "typing")
     reg_func.select_division(message)
     return
 
@@ -76,6 +101,7 @@ def select_division_handler(message):
                      mess.text != "/home" and mess.text != "Назад",
                      content_types=["text"])
 def select_study_level_handler(message):
+    bot.send_chat_action(message.chat.id, "typing")
     reg_func.select_study_level(message)
     return
 
@@ -85,6 +111,7 @@ def select_study_level_handler(message):
                      mess.text != "/home" and mess.text != "Назад",
                      content_types=["text"])
 def select_study_program_combination_handler(message):
+    bot.send_chat_action(message.chat.id, "typing")
     reg_func.select_study_program_combination(message)
     return
 
@@ -94,6 +121,7 @@ def select_study_program_combination_handler(message):
                      mess.text != "/home" and mess.text != "Назад",
                      content_types=["text"])
 def select_admission_year_handler(message):
+    bot.send_chat_action(message.chat.id, "typing")
     reg_func.select_admission_year(message)
     return
 
@@ -103,6 +131,7 @@ def select_admission_year_handler(message):
                      mess.text != "/home" and mess.text != "Назад",
                      content_types=["text"])
 def select_student_group_handler(message):
+    bot.send_chat_action(message.chat.id, "typing")
     reg_func.select_student_group(message)
     return
 
@@ -112,6 +141,7 @@ def select_student_group_handler(message):
                      mess.text != "/home" and mess.text != "Назад",
                      content_types=["text"])
 def confirm_choice_handler(message):
+    bot.send_chat_action(message.chat.id, "typing")
     reg_func.confirm_choice(message)
     return
 
@@ -119,6 +149,7 @@ def confirm_choice_handler(message):
 @bot.message_handler(func=lambda mess: not func.is_user_exist(mess.chat.id),
                      content_types=["text"])
 def not_exist_user_handler(message):
+    bot.send_chat_action(message.chat.id, "typing")
     answer = "Чтобы начать пользоваться сервисом, необходимо зарегистрироваться"
     answer += ".\nВоспользуйся коммандой /start"
     bot.send_message(message.chat.id, answer)
@@ -128,6 +159,7 @@ def not_exist_user_handler(message):
 @bot.message_handler(func=lambda mess: mess.text == emoji["info"],
                      content_types=["text"])
 def help_handler(message):
+    bot.send_chat_action(message.chat.id, "typing")
     inline_full_info_keyboard = telebot.types.InlineKeyboardMarkup()
     inline_full_info_keyboard.row(
         *[telebot.types.InlineKeyboardButton(text=name, callback_data=name) for
@@ -143,6 +175,7 @@ def help_handler(message):
 @bot.message_handler(func=lambda mess: mess.text == "Назад",
                      content_types=["text"])
 def home_handler(message):
+    bot.send_chat_action(message.chat.id, "typing")
     func.delete_user(message.chat.id, only_choice=True)
     answer = "Главное меню"
     bot.send_message(message.chat.id, answer, reply_markup=main_keyboard)
@@ -152,6 +185,7 @@ def home_handler(message):
 @bot.message_handler(func=lambda mess: mess.text == emoji["settings"],
                      content_types=["text"])
 def settings_handler(message):
+    bot.send_chat_action(message.chat.id, "typing")
     func.delete_user(message.chat.id, only_choice=True)
     settings_keyboard = telebot.types.ReplyKeyboardMarkup(True)
     settings_keyboard.row("Сменить группу", "Завершить")
@@ -160,19 +194,10 @@ def settings_handler(message):
     bot.send_message(message.chat.id, answer, reply_markup=settings_keyboard)
 
 
-@bot.message_handler(commands=["exit"])
-@bot.message_handler(func=lambda mess: mess.text == "Завершить",
-                     content_types=["text"])
-def exit_handler(message):
-    func.delete_user(message.chat.id, only_choice=False)
-    remove_keyboard = telebot.types.ReplyKeyboardRemove(True)
-    answer = "До встречи!"
-    bot.send_message(message.chat.id, answer, reply_markup=remove_keyboard)
-
-
 @bot.message_handler(func=lambda mess: mess.text == "Расписание",
                      content_types=["text"])
 def schedule_handler(message):
+    bot.send_chat_action(message.chat.id, "typing")
     answer = "Меню расписания"
     schedule_keyboard = telebot.types.ReplyKeyboardMarkup(True)
     schedule_keyboard.row("Сегодня", "Завтра", emoji["calendar"])
@@ -182,6 +207,7 @@ def schedule_handler(message):
 
 @bot.message_handler(func=lambda mess: mess.text == "Сегодня")
 def today_schedule_handler(message):
+    bot.send_chat_action(message.chat.id, "typing")
     today_moscow_datetime = datetime.today() + timedelta(hours=3)
     today_moscow_date = today_moscow_datetime.date()
     json_day = func.get_json_day_data(message.chat.id, today_moscow_date)
@@ -192,6 +218,7 @@ def today_schedule_handler(message):
 
 @bot.message_handler(func=lambda mess: mess.text == "Завтра")
 def tomorrow_schedule_handler(message):
+    bot.send_chat_action(message.chat.id, "typing")
     tomorrow_moscow_datetime = datetime.today() + timedelta(days=1, hours=3)
     tomorrow_moscow_date = tomorrow_moscow_datetime.date()
     json_day = func.get_json_day_data(message.chat.id, tomorrow_moscow_date)
@@ -202,6 +229,7 @@ def tomorrow_schedule_handler(message):
 
 @bot.message_handler(func=lambda mess: mess.text == emoji["calendar"])
 def calendar_handler(message):
+    bot.send_chat_action(message.chat.id, "typing")
     answer = "Выбери день:"
     week_day_calendar = telebot.types.InlineKeyboardMarkup()
     week_day_calendar.row(
@@ -215,6 +243,7 @@ def calendar_handler(message):
 
 @bot.message_handler(func=lambda mess: mess.text == emoji["alarm_clock"])
 def sending_handler(message):
+    bot.send_chat_action(message.chat.id, "typing")
     answer = "Здесь ты можешь <b>подписаться</b> на рассылку расписания на " + \
              "следующий день или <b>отписаться</b> от неё.\n" + \
              "Рассылка производится в 21:00"
@@ -233,8 +262,27 @@ def sending_handler(message):
                      reply_markup=sending_keyboard)
 
 
+@bot.message_handler(func=lambda mess: mess.text == emoji["star"])
+def rate_handler(message):
+    bot.send_chat_action(message.chat.id, "typing")
+    answer = "Оцените качество сервиса:"
+    rate_keyboard = telebot.types.InlineKeyboardMarkup(True)
+    for count_of_stars in range(5, 1, -1):
+        rate_keyboard.row(
+            *[telebot.types.InlineKeyboardButton(text=name, callback_data=str(
+                count_of_stars))
+              for name in [emoji["star"] * count_of_stars]])
+    rate_keyboard.row(
+        *[telebot.types.InlineKeyboardButton(text=name,
+                                             callback_data="Статистика")
+          for name in ["Статистика"]])
+    bot.send_message(message.chat.id, answer, parse_mode="HTML",
+                     reply_markup=rate_keyboard)
+
+
 @bot.message_handler(func=lambda mess: mess.text == emoji["suburban"])
 def suburban_handler(message):
+    bot.send_chat_action(message.chat.id, "typing")
     answer = "Меню расписания электричек"
     suburban_keyboard = telebot.types.ReplyKeyboardMarkup(True, False)
     suburban_keyboard.row('Из Универа', 'В Универ')
@@ -250,6 +298,7 @@ def suburban_handler(message):
 
 @bot.message_handler(func=lambda mess: mess.text == emoji["editor"])
 def schedule_editor_handler(message):
+    bot.send_chat_action(message.chat.id, "typing")
     answer = "Редактор расписания"
     schedule_editor_keyboard = telebot.types.ReplyKeyboardMarkup(True, False)
     schedule_editor_keyboard.row("Скрыть занятие")
@@ -263,6 +312,7 @@ def schedule_editor_handler(message):
 @bot.message_handler(func=lambda mess: mess.text == "Адрес",
                      content_types=["text"])
 def place_handler(message):
+    bot.send_chat_action(message.chat.id, "typing")
     answer = "В каком формате отображать адрес занятий?\nСейчас: "
     place_keyboard = telebot.types.InlineKeyboardMarkup(True)
     if func.is_full_place(message.chat.id):
@@ -284,6 +334,7 @@ def place_handler(message):
 @bot.message_handler(func=lambda mess: mess.text == "Скул",
                      content_types=["text"])
 def schedule_update_handler(message):
+    bot.send_chat_action(message.chat.id, "typing")
     schedule_update()
     bot.reply_to(message, "Done")
 
@@ -304,6 +355,7 @@ def for_all_handler(message):
 
 @bot.message_handler(func=lambda mess: True, content_types=["text"])
 def other_text_handler(message):
+    bot.send_chat_action(message.chat.id, "typing")
     answer = "Некоторые функции сейчас недоступны.\nПодробнее - @Spbu4u_news"
     bot.send_message(message.chat.id, answer)
 
@@ -431,6 +483,47 @@ def full_place_off_handler(call_back):
                           parse_mode="HTML")
 
 
+@bot.callback_query_handler(func=lambda call_back:
+                            call_back.data == "Статистика")
+def statistics_handler(call_back):
+    average_rate = func.get_rate_statistics()
+    if average_rate is None:
+        answer = "Пока что нет оценок."
+    else:
+        answer = "Средняя оценка: " + str(average_rate)
+    bot.edit_message_text(text=answer,
+                          chat_id=call_back.message.chat.id,
+                          message_id=call_back.message.message_id,
+                          parse_mode="HTML")
+
+
+@bot.callback_query_handler(func=lambda call_back:
+                            call_back.data in ["2", "3", "4", "5"])
+def set_rate_handler(call_back):
+    rate = call_back.data
+    answer = ""
+    func.set_rate(call_back.message.chat.id, rate)
+    if rate == "5":
+        answer += emoji["smile"]
+        answer += " Пятёрка! Супер! Спасибо большое!"
+    elif rate == "4":
+        answer += emoji["halo"]
+        answer += " Стабильная четверочка. Спасибо!"
+    elif rate == "3":
+        answer += emoji["cold_sweat"]
+        answer += " Удовлетворительно? Ничего...тоже оценка. "
+        answer += "Буду стараться лучше."
+    elif rate == "2":
+        answer += emoji["disappointed"]
+        answer += " Двойка? Быть может, я могу что-то исправить? Сделать лучше?"
+        answer += "\n\nОпиши проблему разработчику - @EeOneDown и "
+        answer += "вместе мы ее решим!"
+    bot.edit_message_text(text=answer,
+                          chat_id=call_back.message.chat.id,
+                          message_id=call_back.message.message_id,
+                          parse_mode="HTML")
+
+
 @app.route("/reset_webhook", methods=["GET", "HEAD"])
 def reset_webhook():
     bot.remove_webhook()
@@ -452,8 +545,10 @@ def webhook():
         try:
             bot.process_new_updates([update])
         except Exception as err:
-            answer = "Кажется, произошла ошибка.\nМожешь сообщить разработчику "
-            answer += "@EeOneDown"
+            answer = "Кажется, произошла ошибка.\n"
+            answer += "Возможно, информация по этому поводу есть в нашем канале"
+            answer += " - @Spbu4u_news\n"
+            answer += "И ты всегда можешь связаться с разработчиком @EeOneDown"
             bot.reply_to(update.message, answer)
             bot.forward_message(my_id, update.message.chat.id,
                                 update.message.message_id)

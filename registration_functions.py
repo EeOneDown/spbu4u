@@ -334,6 +334,7 @@ def select_student_group(message):
 
 def confirm_choice(message):
     from flask_app import bot, start_handler, main_keyboard
+    from constants import emoji
 
     if message.text == "Все верно":
         sql_con = sqlite3.connect("Bot_db")
@@ -376,10 +377,12 @@ def confirm_choice(message):
             sql_con.commit()
             cursor.close()
             sql_con.close()
-        answer = "Главное меню\n\n\U00002139 - информация о боте\n" + \
-                 "\U00002B50 - оценить бота/обратная связь\n" + \
-                 "\U00002699 - настройки\n\U0001F689 - электрички\n" + \
-                 "\U0001F4DD - редактор расписания"
+        answer = "Главное меню\n\n"
+        answer += emoji["info"] + " - информация о боте\n"
+        answer += emoji["star"] + " - оценить бота\n"
+        answer += emoji["settings"] + " - настройки\n"
+        answer += emoji["suburban"] + " - электрички\n"
+        answer += emoji["editor"] + " - редактор расписания"
         bot.send_message(message.chat.id, answer, reply_markup=main_keyboard,
                          parse_mode="HTML")
     elif message.text == "Другая группа":

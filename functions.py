@@ -35,18 +35,18 @@ def get_step(user_id):
 def delete_user(user_id, only_choice=False):
     sql_con = sqlite3.connect("Bot_db")
     cursor = sql_con.cursor()
-    cursor.execute("""DELETE FROM user_choice WHERE user_id = ?""",
-                   (user_id,))
+    cursor.execute("""DELETE FROM user_choice 
+                      WHERE user_id = ?""", (user_id,))
     sql_con.commit()
     if not only_choice:
-        cursor.execute("""DELETE FROM user_groups WHERE user_id = ?""",
-                       (user_id,))
+        cursor.execute("""DELETE FROM user_groups 
+                          WHERE user_id = ?""", (user_id,))
         sql_con.commit()
-        cursor.execute("""DELETE FROM skips WHERE user_id = ?""",
-                       (user_id,))
+        cursor.execute("""DELETE FROM skips 
+                          WHERE user_id = ?""", (user_id,))
         sql_con.commit()
-        cursor.execute("""DELETE FROM user_data WHERE id = ?""",
-                       (user_id,))
+        cursor.execute("""DELETE FROM user_data 
+                          WHERE id = ?""", (user_id,))
         sql_con.commit()
     cursor.close()
     sql_con.close()
@@ -176,7 +176,8 @@ def set_sending(user_id, on=True):
 def select_all_users():
     sql_con = sqlite3.connect("Bot_db")
     cursor = sql_con.cursor()
-    cursor.execute("""SELECT id FROM user_data""")
+    cursor.execute("""SELECT id 
+                      FROM user_data""")
     ids = cursor.fetchall()
     cursor.close()
     sql_con.close()
@@ -202,6 +203,33 @@ def set_full_place(user_id, on=True):
                       SET full_place = ?
                       WHERE id = ?""",
                    (int(on), user_id))
+    sql_con.commit()
+    cursor.close()
+    sql_con.close()
+
+
+def get_rate_statistics():
+    sql_con = sqlite3.connect("Bot_db")
+    cursor = sql_con.cursor()
+    cursor.execute("""SELECT sum(rate), count(id) 
+                      FROM user_data
+                      WHERE rate != 0""")
+    date = cursor.fetchone()
+    cursor.close()
+    sql_con.close()
+    if date[0] is None:
+        return None
+    else:
+        return date[0] / date[1]
+
+
+def set_rate(user_id, count_of_stars):
+    sql_con = sqlite3.connect("Bot_db")
+    cursor = sql_con.cursor()
+    cursor.execute("""UPDATE user_data
+                      SET rate = ?
+                      WHERE id = ?""",
+                   (int(count_of_stars), user_id))
     sql_con.commit()
     cursor.close()
     sql_con.close()

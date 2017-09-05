@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-test_token = ""
+test_token = "337544102:AAGkUrKSKvUYUEKyxd5DficXo9VqtdziAnU"
 release_token = ""
 my_id = 200466757
 ks_id = 71591548

@@ -133,7 +133,8 @@ def create_schedule_answer(day_info, full_place, full=True):
             answer += location_name + " <i>("
             educators = [educator["Item2"].split(", ")[0] for educator in
                          location["EducatorIds"]]
-            answer += "; ".join(educators) + ")</i>\n\n"
+            answer += "; ".join(educators) + ")</i>\n"
+        answer += "\n"
     return answer
 
 

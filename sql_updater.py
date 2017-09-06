@@ -7,25 +7,27 @@ import requests
 def schedule_update():
     sql_con = sqlite3.connect("Bot_db")
     cursor = sql_con.cursor()
-    cursor.execute("""WITH empty_groups AS (
-                        SELECT groups_data.id, groups_data.alias
+    # WITH construction don't work :(
+    cursor.execute("""DELETE
+                      FROM groups_data
+                      WHERE id in (
+                        SELECT
+                          groups_data.id
                         FROM groups_data
-                        LEFT OUTER JOIN user_data
-                          ON (groups_data.id = user_data.group_id
+                          LEFT OUTER JOIN user_data
+                            ON (groups_data.id = user_data.group_id
                               AND groups_data.alias = user_data.alias)
                         WHERE user_data.id ISNULL
-                        )
-
-                        DELETE
+                      )
+                            AND alias in (
+                        SELECT
+                          groups_data.alias
                         FROM groups_data
-                        WHERE id in (
-                          SELECT empty_groups.id
-                          FROM empty_groups
-                        )
-                              AND alias in (
-                          SELECT empty_groups.alias
-                          FROM empty_groups
-                        )""")
+                          LEFT OUTER JOIN user_data
+                            ON (groups_data.id = user_data.group_id
+                              AND groups_data.alias = user_data.alias)
+                        WHERE user_data.id ISNULL
+                      );""")
     sql_con.commit()
     cursor.execute("""SELECT id, alias FROM groups_data""")
     groups = cursor.fetchall()

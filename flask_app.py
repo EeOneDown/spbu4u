@@ -335,8 +335,11 @@ def place_handler(message):
                      content_types=["text"])
 def schedule_update_handler(message):
     bot.send_chat_action(message.chat.id, "typing")
+    tic = time.time()
     schedule_update()
-    bot.reply_to(message, "Done")
+    toc = time.time() - tic
+    answer = "Done\n\nWork time: {}".format(toc)
+    bot.reply_to(message, answer)
 
 
 @bot.message_handler(func=lambda mess: True, content_types=["text"])

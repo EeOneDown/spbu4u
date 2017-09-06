@@ -339,20 +339,6 @@ def schedule_update_handler(message):
     bot.reply_to(message, "Done")
 
 
-@bot.message_handler(func=lambda mess: mess.text.split("\n\n")[0] == "Всем",
-                     content_types=["text"])
-def for_all_handler(message):
-    answer = "\n\n".join(message.text.split("\n\n")[1:])
-    users_id = func.select_all_users()
-    for user_id in users_id:
-        try:
-            bot.send_message(user_id[0], answer, disable_notification=True)
-        except Exception as err:
-            answer_to_me = str(user_id[0]) + "\n" + str(err)
-            bot.send_message(my_id, answer_to_me, disable_notification=True)
-            continue
-
-
 @bot.message_handler(func=lambda mess: True, content_types=["text"])
 def other_text_handler(message):
     bot.send_chat_action(message.chat.id, "typing")
@@ -552,8 +538,6 @@ def webhook():
             answer += " - @Spbu4u_news\n"
             answer += "И ты всегда можешь связаться с разработчиком @EeOneDown"
             bot.reply_to(update.message, answer)
-            bot.forward_message(my_id, update.message.chat.id,
-                                update.message.message_id)
             bot.send_message(my_id, str(err), disable_notification=True)
         return "OK", 200
     else:

@@ -166,7 +166,7 @@ def help_handler(message):
           name in ["Полное ИНФО"]])
     answer = briefly_info_answer
     bot.send_message(message.chat.id, answer,
-                     parse_mode="Markdown",
+                     parse_mode="HTML",
                      reply_markup=inline_full_info_keyboard,
                      disable_web_page_preview=True)
 
@@ -360,7 +360,7 @@ def show_full_info(call_back):
     bot.edit_message_text(text=answer,
                           chat_id=call_back.message.chat.id,
                           message_id=call_back.message.message_id,
-                          parse_mode="Markdown",
+                          parse_mode="HTML",
                           disable_web_page_preview=True,
                           reply_markup=inline_keyboard)
 
@@ -376,7 +376,7 @@ def show_briefly_info(call_back):
     bot.edit_message_text(text=answer,
                           chat_id=call_back.message.chat.id,
                           message_id=call_back.message.message_id,
-                          parse_mode="Markdown",
+                          parse_mode="HTML",
                           disable_web_page_preview=True,
                           reply_markup=inline_keyboard)
 

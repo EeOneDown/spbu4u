@@ -10,5 +10,7 @@
 
 ## Special thanks
 1. @eternnoir for [pyTelegramBotAPI](https://github.com/eternnoir/pyTelegramBotAPI)
-2. ![pythonanywhere](https://www.pythonanywhere.com/static/anywhere/images/logo-234x35.png "pythonanywhere") for free host
+
+2. [![pythonanywhere](https://www.pythonanywhere.com/static/anywhere/images/logo-234x35.png "pythonanywhere")](https://www.pythonanywhere.com)   for free host
+
 3. SPbU developers for [SPbU Timetable API](https://timetable.spbu.ru/help/ui/index#/)

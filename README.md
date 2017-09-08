@@ -2,6 +2,6 @@
 
 ## Getting started
 
-```Username: @Spb44UBot```
+* Username: @Spbu4UBot
 
-Or you can use [this link](https://t.me/Spbu4UBot)
+* Or you can use this [link](https://t.me/Spbu4UBot)

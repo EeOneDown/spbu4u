@@ -12,12 +12,12 @@ import registration_functions as reg_func
 import functions as func
 from yandex_timetable import get_yandex_timetable_data
 from sql_updater import schedule_update
-from constants import test_token, emoji, briefly_info_answer, my_id, \
+from constants import release_token, emoji, briefly_info_answer, my_id, \
     full_info_answer, webhook_url_base, webhook_url_path, week_day_number, \
     all_stations, all_stations_const
 
 
-bot = telebot.TeleBot(test_token, threaded=False)
+bot = telebot.TeleBot(release_token, threaded=False)
 app = flask.Flask(__name__)
 sslify = SSLify(app)
 

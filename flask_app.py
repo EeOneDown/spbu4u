@@ -5,17 +5,19 @@ import sqlite3
 import logging
 import json
 import time
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, time as dt_time
 import flask
 from flask_sslify import SSLify
 import registration_functions as reg_func
 import functions as func
+from yandex_timetable import get_yandex_timetable_data
 from sql_updater import schedule_update
-from constants import release_token, emoji, briefly_info_answer, my_id, \
-    full_info_answer, webhook_url_base, webhook_url_path, week_day_number
+from constants import test_token, emoji, briefly_info_answer, my_id, \
+    full_info_answer, webhook_url_base, webhook_url_path, week_day_number, \
+    all_stations, all_stations_const
 
 
-bot = telebot.TeleBot(release_token, threaded=False)
+bot = telebot.TeleBot(test_token, threaded=False)
 app = flask.Flask(__name__)
 sslify = SSLify(app)
 
@@ -29,6 +31,8 @@ else:
     main_keyboard.row("Расписание")
 main_keyboard.row(emoji["info"], emoji["star"], emoji["settings"],
                   emoji["suburban"], emoji["editor"])
+
+server_timedelta = timedelta(hours=3)
 
 
 @bot.message_handler(commands=["start"])
@@ -208,7 +212,7 @@ def schedule_handler(message):
 @bot.message_handler(func=lambda mess: mess.text == "Сегодня")
 def today_schedule_handler(message):
     bot.send_chat_action(message.chat.id, "typing")
-    today_moscow_datetime = datetime.today() + timedelta(hours=3)
+    today_moscow_datetime = datetime.today() + server_timedelta
     today_moscow_date = today_moscow_datetime.date()
     json_day = func.get_json_day_data(message.chat.id, today_moscow_date)
     full_place = func.is_full_place(message.chat.id)
@@ -219,7 +223,8 @@ def today_schedule_handler(message):
 @bot.message_handler(func=lambda mess: mess.text == "Завтра")
 def tomorrow_schedule_handler(message):
     bot.send_chat_action(message.chat.id, "typing")
-    tomorrow_moscow_datetime = datetime.today() + timedelta(days=1, hours=3)
+    tomorrow_moscow_datetime = datetime.today() + server_timedelta + \
+        timedelta(days=1)
     tomorrow_moscow_date = tomorrow_moscow_datetime.date()
     json_day = func.get_json_day_data(message.chat.id, tomorrow_moscow_date)
     full_place = func.is_full_place(message.chat.id)
@@ -296,6 +301,69 @@ def suburban_handler(message):
                      disable_web_page_preview=True)
 
 
+@bot.message_handler(func=lambda mess: mess.text == "В Универ")
+def to_university_handler(message):
+    bot.send_chat_action(message.chat.id, "typing")
+    from_station = all_stations["Санкт-Петербург"]
+    to_station = all_stations["Университет"]
+    server_datetime = datetime.today() + server_timedelta
+    data = get_yandex_timetable_data(from_station, to_station, server_datetime)
+    answer = data["answer"]
+    update_keyboard = telebot.types.InlineKeyboardMarkup(True)
+    if data["is_tomorrow"]:
+        bot.send_message(message.chat.id, "На сегодня нет электричек")
+        update_keyboard.row(*[telebot.types.InlineKeyboardButton(
+            text=name, callback_data=name)
+            for name in ["Все на завтра"]])
+    else:
+        update_keyboard.row(*[telebot.types.InlineKeyboardButton(
+            text=name, callback_data=name)
+            for name in ["Оставшиеся", "Обновить"]])
+    bot.send_message(message.chat.id,
+                     answer,
+                     reply_markup=update_keyboard,
+                     parse_mode='HTML',
+                     disable_web_page_preview=True)
+
+
+@bot.message_handler(func=lambda mess: mess.text == "Из Универа")
+def from_university_handler(message):
+    bot.send_chat_action(message.chat.id, "typing")
+
+    from_station = all_stations["Университет"]
+    to_station = all_stations["Санкт-Петербург"]
+
+    server_datetime = datetime.today() + server_timedelta
+    data = get_yandex_timetable_data(from_station, to_station, server_datetime)
+    answer = data["answer"]
+
+    update_keyboard = telebot.types.InlineKeyboardMarkup(True)
+    if data["is_tomorrow"]:
+        bot.send_message(message.chat.id, "На сегодня нет электричек")
+        update_keyboard.row(*[telebot.types.InlineKeyboardButton(
+            text=name, callback_data=name) for name in ["Все на завтра"]])
+    else:
+        update_keyboard.row(*[telebot.types.InlineKeyboardButton(
+            text=name, callback_data=name)
+            for name in ["Оставшиеся", "Обновить"]])
+    bot.send_message(message.chat.id,
+                     answer,
+                     reply_markup=update_keyboard,
+                     parse_mode='HTML',
+                     disable_web_page_preview=True)
+
+
+@bot.message_handler(func=lambda mess: mess.text == "Свой маршрут")
+def own_trail_handler(message):
+    answer = "Выбери начальную станцию:"
+    start_station_keyboard = telebot.types.InlineKeyboardMarkup(True)
+    for station_title in all_stations_const:
+        start_station_keyboard.row(*[telebot.types.InlineKeyboardButton(
+            text=name, callback_data=name) for name in [station_title]])
+    bot.send_message(message.chat.id, answer,
+                     reply_markup=start_station_keyboard)
+
+
 @bot.message_handler(func=lambda mess: mess.text == emoji["editor"])
 def schedule_editor_handler(message):
     bot.send_chat_action(message.chat.id, "typing")
@@ -363,6 +431,8 @@ def show_full_info(call_back):
                           parse_mode="HTML",
                           disable_web_page_preview=True,
                           reply_markup=inline_keyboard)
+    inline_answer = "Много текста " + emoji["arrow_up"]
+    bot.answer_callback_query(call_back.id, inline_answer, cache_time=1)
 
 
 @bot.callback_query_handler(func=lambda call_back:
@@ -384,7 +454,7 @@ def show_briefly_info(call_back):
 @bot.callback_query_handler(func=lambda call_back:
                             call_back.data in week_day_number.keys())
 def week_day_schedule_handler(call_back):
-    iso_day_date = list((datetime.today() + timedelta(hours=3)).isocalendar())
+    iso_day_date = list((datetime.today() + server_timedelta).isocalendar())
     if iso_day_date[2] == 7:
         iso_day_date[1] += 1
     iso_day_date[2] = week_day_number[call_back.data]
@@ -402,7 +472,7 @@ def week_day_schedule_handler(call_back):
                             call_back.data == "Вся неделя")
 def all_week_schedule_handler(call_back):
     user_id = call_back.message.chat.id
-    iso_day_date = list((datetime.today() + timedelta(hours=3)).isocalendar())
+    iso_day_date = list((datetime.today() + server_timedelta).isocalendar())
     if iso_day_date[2] == 7:
         iso_day_date[1] += 1
     days = week_day_number.keys()
@@ -445,6 +515,256 @@ def sending_on_handler(call_back):
     bot.edit_message_text(text=answer,
                           chat_id=call_back.message.chat.id,
                           message_id=call_back.message.message_id,
+                          parse_mode="HTML")
+
+
+@bot.callback_query_handler(func=lambda call_back:
+                            call_back.data == "Обновить")
+def update_yandex_handler(call_back):
+    from_to_stations = call_back.message.text.split("\n\n")[0].split(" => ")
+    from_station_title = from_to_stations[0]
+    to_station_title = from_to_stations[1]
+    from_station = all_stations[from_station_title]
+    to_station = all_stations[to_station_title]
+
+    server_datetime = datetime.today() + server_timedelta
+    data = get_yandex_timetable_data(from_station, to_station, server_datetime)
+    answer = data["answer"]
+
+    update_keyboard = telebot.types.InlineKeyboardMarkup(True)
+    if data["is_tomorrow"]:
+        inline_answer = "На сегодня нет электричек"
+        bot.answer_callback_query(call_back.id, inline_answer, cache_time=2)
+        update_keyboard.row(*[telebot.types.InlineKeyboardButton(
+            text=name, callback_data=name) for name in ["Все на завтра"]])
+    else:
+        update_keyboard.row(*[telebot.types.InlineKeyboardButton(
+            text=name, callback_data=name)
+            for name in ["Оставшиеся", "Обновить"]])
+
+    try:
+        bot.edit_message_text(text=answer,
+                              chat_id=call_back.message.chat.id,
+                              message_id=call_back.message.message_id,
+                              parse_mode="HTML",
+                              reply_markup=update_keyboard)
+    except telebot.apihelper.ApiException:
+        pass
+    finally:
+        inline_answer = emoji["check_mark"] + " Обновлено"
+        bot.answer_callback_query(call_back.id, inline_answer, cache_time=1)
+
+
+@bot.callback_query_handler(func=lambda call_back:
+                            call_back.data == "Оставшиеся")
+def more_suburbans_handler(call_back):
+    from_to_stations = call_back.message.text.split("\n\n")[0].split(" => ")
+    from_station_title = from_to_stations[0]
+    to_station_title = from_to_stations[1]
+    from_station = all_stations[from_station_title]
+    to_station = all_stations[to_station_title]
+    server_datetime = datetime.today() + server_timedelta
+    data = get_yandex_timetable_data(from_station, to_station, server_datetime,
+                                     limit=100)
+    answer = data["answer"]
+
+    update_keyboard = telebot.types.InlineKeyboardMarkup(True)
+    if data["is_tomorrow"]:
+        inline_answer = "На сегодня нет электричек"
+        bot.answer_callback_query(call_back.id, inline_answer, cache_time=2)
+        update_keyboard.row(*[telebot.types.InlineKeyboardButton(
+            text=name, callback_data=name) for name in ["Все на завтра"]])
+    else:
+        update_keyboard.row(*[telebot.types.InlineKeyboardButton(
+            text=name, callback_data=name)
+            for name in ["Ближайшие", "Обновить"]])
+
+    try:
+        bot.edit_message_text(text=answer,
+                              chat_id=call_back.message.chat.id,
+                              message_id=call_back.message.message_id,
+                              parse_mode="HTML",
+                              reply_markup=update_keyboard)
+    except telebot.apihelper.ApiException:
+        pass
+
+
+@bot.callback_query_handler(func=lambda call_back:
+                            call_back.data == "Ближайшие")
+def less_suburbans_handler(call_back):
+    from_to_stations = call_back.message.text.split("\n\n")[0].split(" => ")
+    from_station_title = from_to_stations[0]
+    to_station_title = from_to_stations[1]
+    from_station = all_stations[from_station_title]
+    to_station = all_stations[to_station_title]
+    server_datetime = datetime.today() + server_timedelta
+    data = get_yandex_timetable_data(from_station, to_station, server_datetime)
+    answer = data["answer"]
+
+    update_keyboard = telebot.types.InlineKeyboardMarkup(True)
+    if data["is_tomorrow"]:
+        inline_answer = "На сегодня нет электричек"
+        bot.answer_callback_query(call_back.id, inline_answer, cache_time=2)
+        update_keyboard.row(*[telebot.types.InlineKeyboardButton(
+            text=name, callback_data=name) for name in ["Все на завтра"]])
+    else:
+        update_keyboard.row(*[telebot.types.InlineKeyboardButton(
+            text=name, callback_data=name)
+            for name in ["Оставшиеся", "Обновить"]])
+
+    try:
+        bot.edit_message_text(text=answer,
+                              chat_id=call_back.message.chat.id,
+                              message_id=call_back.message.message_id,
+                              parse_mode="HTML",
+                              reply_markup=update_keyboard)
+    except telebot.apihelper.ApiException:
+        pass
+
+
+@bot.callback_query_handler(func=lambda call_back:
+                            call_back.data == "Все на завтра")
+def all_tomorrow_suburbans_handler(call_back):
+    from_to_stations = call_back.message.text.split("\n\n")[0].split(" => ")
+    from_station_title = from_to_stations[0]
+    to_station_title = from_to_stations[1]
+    from_station = all_stations[from_station_title]
+    to_station = all_stations[to_station_title]
+
+    server_datetime = datetime.combine(
+        (datetime.today() + timedelta(days=1)).date(), dt_time())
+
+    data = get_yandex_timetable_data(from_station, to_station, server_datetime,
+                                     limit=100)
+    answer = data["answer"]
+
+    update_keyboard = telebot.types.InlineKeyboardMarkup(True)
+    update_keyboard.row(*[telebot.types.InlineKeyboardButton(
+        text=name, callback_data=name) for name in ["Самые ранние"]])
+
+    try:
+        bot.edit_message_text(text=answer,
+                              chat_id=call_back.message.chat.id,
+                              message_id=call_back.message.message_id,
+                              parse_mode="HTML",
+                              reply_markup=update_keyboard)
+    except telebot.apihelper.ApiException:
+        pass
+
+
+@bot.callback_query_handler(func=lambda call_back:
+                            call_back.data == "Самые ранние")
+def early_tomorrow_suburbans_handler(call_back):
+    from_to_stations = call_back.message.text.split("\n\n")[0].split(" => ")
+    from_station_title = from_to_stations[0]
+    to_station_title = from_to_stations[1]
+    from_station = all_stations[from_station_title]
+    to_station = all_stations[to_station_title]
+
+    server_datetime = datetime.today() + server_timedelta
+    data = get_yandex_timetable_data(from_station, to_station, server_datetime,
+                                     limit=5)
+    answer = data["answer"]
+    update_keyboard = telebot.types.InlineKeyboardMarkup(True)
+    update_keyboard.row(*[telebot.types.InlineKeyboardButton(
+        text=name, callback_data=name) for name in ["Все на завтра"]])
+    try:
+        bot.edit_message_text(text=answer,
+                              chat_id=call_back.message.chat.id,
+                              message_id=call_back.message.message_id,
+                              parse_mode="HTML",
+                              reply_markup=update_keyboard)
+    except telebot.apihelper.ApiException:
+        pass
+
+
+@bot.callback_query_handler(func=lambda call_back:
+                            call_back.message.text == "Выбери начальную "
+                                                      "станцию:")
+def start_station_handler(call_back):
+    answer = "Начальная: <b>{}</b>\nВыбери конечную станцию:".format(
+        call_back.data)
+    end_station_keyboard = telebot.types.InlineKeyboardMarkup(True)
+    for station_title in all_stations_const:
+        if station_title == call_back.data:
+            continue
+        end_station_keyboard.row(*[telebot.types.InlineKeyboardButton(
+            text=name, callback_data=name) for name in [station_title]])
+    end_station_keyboard.row(*[telebot.types.InlineKeyboardButton(
+            text=name, callback_data=name) for name in ["Изменить начальную"]])
+    bot.edit_message_text(text=answer,
+                          chat_id=call_back.message.chat.id,
+                          message_id=call_back.message.message_id,
+                          reply_markup=end_station_keyboard,
+                          parse_mode="HTML")
+
+
+@bot.callback_query_handler(func=lambda call_back:
+                            call_back.data == "Изменить начальную")
+def change_start_station_handler(call_back):
+    answer = "Выбери начальную станцию:"
+    start_station_keyboard = telebot.types.InlineKeyboardMarkup(True)
+    for station_title in all_stations_const:
+        start_station_keyboard.row(*[telebot.types.InlineKeyboardButton(
+            text=name, callback_data=name) for name in [station_title]])
+    bot.edit_message_text(text=answer,
+                          chat_id=call_back.message.chat.id,
+                          message_id=call_back.message.message_id,
+                          reply_markup=start_station_keyboard)
+
+
+@bot.callback_query_handler(func=lambda call_back: "Выбери конечную станцию:"
+                                                   in call_back.message.text)
+def end_station_handler(call_back):
+    from_station_title = call_back.message.text.split("\n")[0].split(": ")[-1]
+    to_station_title = call_back.data
+    answer = "Начальная: <b>{}</b>\nКончная: <b>{}</b>\nВыбери день:".format(
+        from_station_title, to_station_title)
+    day_keyboard = telebot.types.InlineKeyboardMarkup(True)
+    day_keyboard.row(*[telebot.types.InlineKeyboardButton(
+        text=name, callback_data=name) for name in ["Сегодня", "Завтра"]])
+    bot.edit_message_text(text=answer,
+                          chat_id=call_back.message.chat.id,
+                          message_id=call_back.message.message_id,
+                          reply_markup=day_keyboard,
+                          parse_mode="HTML")
+
+
+@bot.callback_query_handler(func=lambda call_back: "Выбери день:"
+                                                   in call_back.message.text)
+def build_trail_handler(call_back):
+    from_station_title = call_back.message.text.split("\n")[0].split(": ")[-1]
+    to_station_title = call_back.message.text.split("\n")[1].split(": ")[-1]
+    from_station = all_stations[from_station_title]
+    to_station = all_stations[to_station_title]
+
+    if call_back.data == "Завтра":
+        server_datetime = datetime.combine(
+            (datetime.today() + timedelta(days=1)).date(), dt_time())
+        limit = 7
+    else:
+        server_datetime = datetime.today() + server_timedelta
+        limit = 3
+
+    data = get_yandex_timetable_data(from_station, to_station, server_datetime,
+                                     limit)
+    answer = data["answer"]
+
+    update_keyboard = telebot.types.InlineKeyboardMarkup(True)
+    if call_back.data == "Завтра" or data["is_tomorrow"]:
+        if data["is_tomorrow"]:
+            inline_answer = "На сегодня нет электричек"
+            bot.answer_callback_query(call_back.id, inline_answer, cache_time=2)
+        update_keyboard.row(*[telebot.types.InlineKeyboardButton(
+            text=name, callback_data=name) for name in ["Все на завтра"]])
+    else:
+        update_keyboard.row(*[telebot.types.InlineKeyboardButton(
+            text=name, callback_data=name)
+            for name in ["Оставшиеся", "Обновить"]])
+    bot.edit_message_text(text=answer,
+                          chat_id=call_back.message.chat.id,
+                          message_id=call_back.message.message_id,
+                          reply_markup=update_keyboard,
                           parse_mode="HTML")
 
 

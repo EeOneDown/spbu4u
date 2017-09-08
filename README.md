@@ -7,11 +7,10 @@
 * Or you can use this [link](https://t.me/Spbu4UBot)
 
 
-//@EeOneDown
-## Special thanks
-1. @eternnoir for [pyTelegramBotAPI](https://github.com/eternnoir/pyTelegramBotAPI)
 
+## Special thanks
+1. [@eternnoir](https://github.com/eternnoir) for [pyTelegramBotAPI](https://github.com/eternnoir/pyTelegramBotAPI)
 2. [![pythonanywhere](https://www.pythonanywhere.com/static/anywhere/images/logo-234x35.png "pythonanywhere")](https://www.pythonanywhere.com)
-        for free hosting
+   for free hosting
 
 3. SPbU developers for [SPbU Timetable API](https://timetable.spbu.ru/help/ui/index#/)

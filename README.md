@@ -2,8 +2,6 @@
 
 ## Getting started
 
-You can find him
-'''
-Username: @Spb44UBot
-'''
+```Username: @Spb44UBot```
+
 Or you can use [this link](https://t.me/Spbu4UBot)

@@ -21,7 +21,7 @@
 * __Schedule__ __editor__
 - [x] place format
 - [ ] hide lessons
-- [ ] show lessons
+- [ ] return lessons
 - [ ] add own lessons
 * __Settings__
 - [x] end work (exit)
@@ -33,6 +33,21 @@
 * __Rate__
 - [x] rate bot
 - [x] average rate
+
+
+## Screenshots
+![registration](https://pp.userapi.com/c837720/v837720734/5eb4e/JSkfjb8JbGI.jpg "select year") 
+![registration2](https://pp.userapi.com/c837720/v837720734/5eb47/f0a-L9t-Hlk.jpg "confirm choice") 
+![main menu](https://pp.userapi.com/c837720/v837720734/5eb39/DxAvcBGmuQM.jpg "main menu")
+![schedule](https://pp.userapi.com/c837720/v837720734/5eb55/5Gkq3YnquJc.jpg "today schedule")
+![schedule2](https://pp.userapi.com/c837720/v837720734/5eb6a/c10MbYzJhks.jpg "week day schedule")
+![editor](https://pp.userapi.com/c837720/v837720734/5eb71/I3ukcbFoWpE.jpg "place editor")
+![setting](https://pp.userapi.com/c837720/v837720734/5eb32/S3vrFYHK3vQ.jpg "settings")
+![yandex tt](https://pp.userapi.com/c837720/v837720734/5eb2b/Xx7Ab6L189M.jpg "yandex timetable menu")
+![from university](https://pp.userapi.com/c837720/v837720734/5eb40/mRPHFt5ApLQ.jpg "suburbans from University")
+![own](https://pp.userapi.com/c837720/v837720734/5eb24/BRfQ1XsDjtI.jpg "select end station for own trail")
+![own2](https://pp.userapi.com/c837720/v837720734/5eb5c/mK_doaX8rQg.jpg "select day for own trail")
+![own3](https://pp.userapi.com/c837720/v837720734/5eb63/pLaCahhTeXY.jpg "all suburbans for own trail")
 
 
 ## Special thanks

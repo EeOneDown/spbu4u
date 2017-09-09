@@ -661,7 +661,9 @@ def early_tomorrow_suburbans_handler(call_back):
     from_station = all_stations[from_station_title]
     to_station = all_stations[to_station_title]
 
-    server_datetime = datetime.today() + server_timedelta
+    server_datetime = datetime.combine(
+        (datetime.today() + timedelta(days=1)).date(), dt_time())
+
     data = get_yandex_timetable_data(from_station, to_station, server_datetime,
                                      limit=5)
     answer = data["answer"]

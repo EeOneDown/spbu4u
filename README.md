@@ -7,6 +7,33 @@
 * Or you can use this [link](https://t.me/Spbu4UBot)
 
 
+## Functionality
+* __Schedule__
+- [x] today/tomorrow schedule
+- [x] all week schedule
+- [x] sending
+- [ ] educators schedule
+- [ ] interim/final attestation schedule
+* __Suburbans__
+- [x] from SPb to University station
+- [x] from University station to SPb
+- [x] own trail on the Baltic direction (today/tomorrow)
+* __Schedule__ __editor__
+- [x] place format
+- [ ] hide lessons
+- [ ] show lessons
+- [ ] add own lessons
+* __Settings__
+- [x] end work (exit)
+- [x] change group
+- [ ] groups templates
+* __Info__
+- [x] full info
+- [x] briefly info
+* __Rate__
+- [x] rate bot
+- [x] average rate
+
 
 ## Special thanks
 1. [@eternnoir](https://github.com/eternnoir) for [pyTelegramBotAPI](https://github.com/eternnoir/pyTelegramBotAPI)

@@ -65,7 +65,7 @@ def start_handler(message):
     sql_con.close()
     bot.send_message(message.chat.id, answer,
                      reply_markup=divisions_keyboard)
-    func.set_next_step(message.chat.id, "select_division")
+    reg_func.set_next_step(message.chat.id, "select_division")
 
 
 @bot.message_handler(func=lambda mess: mess.text == "Проблема",
@@ -91,7 +91,7 @@ def exit_handler(message):
 
 
 @bot.message_handler(func=lambda mess:
-                     func.get_step(mess.chat.id) == "select_division" and
+                     reg_func.get_step(mess.chat.id) == "select_division" and
                      mess.text != "/home" and mess.text != "Назад",
                      content_types=["text"])
 def select_division_handler(message):
@@ -101,7 +101,7 @@ def select_division_handler(message):
 
 
 @bot.message_handler(func=lambda mess:
-                     func.get_step(mess.chat.id) == "select_study_level" and
+                     reg_func.get_step(mess.chat.id) == "select_study_level" and
                      mess.text != "/home" and mess.text != "Назад",
                      content_types=["text"])
 def select_study_level_handler(message):
@@ -110,7 +110,7 @@ def select_study_level_handler(message):
     return
 
 
-@bot.message_handler(func=lambda mess: func.get_step(
+@bot.message_handler(func=lambda mess: reg_func.get_step(
     mess.chat.id) == "select_study_program_combination" and
                      mess.text != "/home" and mess.text != "Назад",
                      content_types=["text"])
@@ -121,8 +121,8 @@ def select_study_program_combination_handler(message):
 
 
 @bot.message_handler(func=lambda mess:
-                     func.get_step(mess.chat.id) == "select_admission_year" and
-                     mess.text != "/home" and mess.text != "Назад",
+                     reg_func.get_step(mess.chat.id) == "select_admission_year"
+                     and mess.text != "/home" and mess.text != "Назад",
                      content_types=["text"])
 def select_admission_year_handler(message):
     bot.send_chat_action(message.chat.id, "typing")
@@ -131,8 +131,8 @@ def select_admission_year_handler(message):
 
 
 @bot.message_handler(func=lambda mess:
-                     func.get_step(mess.chat.id) == "select_student_group" and
-                     mess.text != "/home" and mess.text != "Назад",
+                     reg_func.get_step(mess.chat.id) == "select_student_group"
+                     and mess.text != "/home" and mess.text != "Назад",
                      content_types=["text"])
 def select_student_group_handler(message):
     bot.send_chat_action(message.chat.id, "typing")
@@ -141,7 +141,7 @@ def select_student_group_handler(message):
 
 
 @bot.message_handler(func=lambda mess:
-                     func.get_step(mess.chat.id) == "confirm_choice" and
+                     reg_func.get_step(mess.chat.id) == "confirm_choice" and
                      mess.text != "/home" and mess.text != "Назад",
                      content_types=["text"])
 def confirm_choice_handler(message):

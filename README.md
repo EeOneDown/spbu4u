@@ -21,8 +21,8 @@
 - [x] own trail on the Baltic direction (today/tomorrow)
 * __Schedule__ __editor__
 - [x] place format
-- [ ] hide lessons
-- [ ] return lessons
+- [x] hide lessons
+- [x] return lessons
 - [ ] add own lessons
 * __Settings__
 - [x] end work (exit)

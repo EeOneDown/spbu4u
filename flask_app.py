@@ -311,7 +311,8 @@ def to_university_handler(message):
     answer = data["answer"]
     update_keyboard = telebot.types.InlineKeyboardMarkup(True)
     if data["is_tomorrow"]:
-        bot.send_message(message.chat.id, "На сегодня нет электричек")
+        bot.send_message(message.chat.id, emoji["warning"] +
+                         " На сегодня нет электричек")
         update_keyboard.row(*[telebot.types.InlineKeyboardButton(
             text=name, callback_data=name)
             for name in ["Все на завтра"]])
@@ -339,7 +340,8 @@ def from_university_handler(message):
 
     update_keyboard = telebot.types.InlineKeyboardMarkup(True)
     if data["is_tomorrow"]:
-        bot.send_message(message.chat.id, "На сегодня нет электричек")
+        bot.send_message(message.chat.id, emoji["warning"] +
+                         " На сегодня нет электричек")
         update_keyboard.row(*[telebot.types.InlineKeyboardButton(
             text=name, callback_data=name) for name in ["Все на завтра"]])
     else:
@@ -575,7 +577,7 @@ def update_yandex_handler(call_back):
 
     update_keyboard = telebot.types.InlineKeyboardMarkup(True)
     if data["is_tomorrow"]:
-        inline_answer = "На сегодня нет электричек"
+        inline_answer = emoji["warning"] + " На сегодня нет электричек"
         bot.answer_callback_query(call_back.id, inline_answer, cache_time=2)
         update_keyboard.row(*[telebot.types.InlineKeyboardButton(
             text=name, callback_data=name) for name in ["Все на завтра"]])
@@ -612,7 +614,7 @@ def more_suburbans_handler(call_back):
 
     update_keyboard = telebot.types.InlineKeyboardMarkup(True)
     if data["is_tomorrow"]:
-        inline_answer = "На сегодня нет электричек"
+        inline_answer = emoji["warning"] + " На сегодня нет электричек"
         bot.answer_callback_query(call_back.id, inline_answer, cache_time=2)
         update_keyboard.row(*[telebot.types.InlineKeyboardButton(
             text=name, callback_data=name) for name in ["Все на завтра"]])
@@ -645,7 +647,7 @@ def less_suburbans_handler(call_back):
 
     update_keyboard = telebot.types.InlineKeyboardMarkup(True)
     if data["is_tomorrow"]:
-        inline_answer = "На сегодня нет электричек"
+        inline_answer = emoji["warning"] + " На сегодня нет электричек"
         bot.answer_callback_query(call_back.id, inline_answer, cache_time=2)
         update_keyboard.row(*[telebot.types.InlineKeyboardButton(
             text=name, callback_data=name) for name in ["Все на завтра"]])
@@ -797,7 +799,7 @@ def build_trail_handler(call_back):
     update_keyboard = telebot.types.InlineKeyboardMarkup(True)
     if call_back.data == "Завтра" or data["is_tomorrow"]:
         if data["is_tomorrow"]:
-            inline_answer = "На сегодня нет электричек"
+            inline_answer = emoji["warning"] + " На сегодня нет электричек"
             bot.answer_callback_query(call_back.id, inline_answer, cache_time=2)
         update_keyboard.row(*[telebot.types.InlineKeyboardButton(
             text=name, callback_data=name) for name in ["Все на завтра"]])

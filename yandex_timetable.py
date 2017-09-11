@@ -40,7 +40,7 @@ def get_yandex_timetable_data(from_station, to_station, date, limit=3):
         time_left = departure_datetime - server_now_date
         total_minutes = math.ceil(time_left.total_seconds() / 60)
 
-        if total_minutes >= 59:
+        if total_minutes >= 60:
             hours = total_minutes // 60
             segment_answer = emoji["blue_diamond"] + segment_answer
             segment_answer += "{} ч ".format(hours)

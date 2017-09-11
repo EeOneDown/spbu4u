@@ -32,8 +32,7 @@ else:
 main_keyboard.row(emoji["info"], emoji["star"], emoji["settings"],
                   emoji["suburban"], emoji["editor"])
 
-# TODO change timedelta
-server_timedelta = timedelta(hours=0)
+server_timedelta = timedelta(hours=3)
 
 
 @bot.message_handler(commands=["start"])

@@ -12,13 +12,12 @@ import registration_functions as reg_func
 import functions as func
 from yandex_timetable import get_yandex_timetable_data
 from sql_updater import schedule_update
-from constants import test_token, emoji, briefly_info_answer, my_id, \
+from constants import release_token, emoji, briefly_info_answer, my_id, \
     full_info_answer, webhook_url_base, webhook_url_path, week_day_number, \
-    all_stations, all_stations_const
+    all_stations, all_stations_const, week_day_titles, subject_short_type_revert
 
 
-# TODO change token
-bot = telebot.TeleBot(test_token, threaded=False)
+bot = telebot.TeleBot(release_token, threaded=False)
 app = flask.Flask(__name__)
 sslify = SSLify(app)
 
@@ -72,7 +71,7 @@ def start_handler(message):
 
 @bot.message_handler(func=lambda mess: mess.text == "Проблема",
                      content_types=["text"])
-def other_text_handler(message):
+def problem_text_handler(message):
     bot.send_chat_action(message.chat.id, "typing")
     answer = "Если возникла проблема, то:\n"
     answer += "1. возможно, информация по этому поводу есть в нашем канале"
@@ -218,7 +217,7 @@ def today_schedule_handler(message):
     today_moscow_date = today_moscow_datetime.date()
     json_day = func.get_json_day_data(message.chat.id, today_moscow_date)
     full_place = func.is_full_place(message.chat.id)
-    answer = func.create_schedule_answer(json_day, full_place)
+    answer = func.create_schedule_answer(json_day, full_place, message.chat.id)
     bot.send_message(message.chat.id, answer, parse_mode="HTML")
 
 
@@ -230,7 +229,7 @@ def tomorrow_schedule_handler(message):
     tomorrow_moscow_date = tomorrow_moscow_datetime.date()
     json_day = func.get_json_day_data(message.chat.id, tomorrow_moscow_date)
     full_place = func.is_full_place(message.chat.id)
-    answer = func.create_schedule_answer(json_day, full_place)
+    answer = func.create_schedule_answer(json_day, full_place, message.chat.id)
     bot.send_message(message.chat.id, answer, parse_mode="HTML")
 
 
@@ -401,6 +400,46 @@ def place_handler(message):
                      reply_markup=place_keyboard)
 
 
+@bot.message_handler(func=lambda mess: mess.text == "Скрыть занятие")
+def hide_lesson_handler(message):
+    bot.send_chat_action(message.chat.id, "typing")
+    answer = "Выбери день, когда есть это занятие:"
+    json_week_data = func.get_json_week_data(my_id)
+    days = json_week_data["Days"]
+    days_keyboard = telebot.types.InlineKeyboardMarkup(True)
+    for day in days:
+        days_keyboard.row(
+            *[telebot.types.InlineKeyboardButton(text=name, callback_data=name)
+              for name in [day["DayString"].split(", ")[0].capitalize()]])
+    bot.send_message(message.chat.id, answer, reply_markup=days_keyboard)
+
+
+@bot.message_handler(func=lambda mess: mess.text == "Вернуть")
+def return_hided_lesson(message):
+    data = func.get_hide_lessons_data(message.chat.id)
+    ids_keyboard = telebot.types.InlineKeyboardMarkup(True)
+    if len(data):
+        answer = "Вот список скрытых тобой занятий:\n\n"
+        for lesson in data:
+            answer += "<b>id: {}</b>\n<b>Название</b>: {}\n<b>Тип</b>: {}\n" \
+                      "<b>День</b>: {}\n<b>Время</b>: {}\n\n".format(
+                          lesson[0], lesson[1], lesson[2], lesson[3], lesson[4])
+            ids_keyboard.row(
+                *[telebot.types.InlineKeyboardButton(text=name,
+                                                     callback_data=name)
+                  for name in ["{} - {}".format(lesson[0], lesson[1])[:32]]]
+            )
+        ids_keyboard.row(
+            *[telebot.types.InlineKeyboardButton(text=name, callback_data=name)
+              for name in ["Вернуть всё"]]
+        )
+        answer += "Выбери то, которое хочешь вернуть:"
+    else:
+        answer = "Скрытых занятий нет"
+    bot.send_message(message.chat.id, answer,
+                     reply_markup=ids_keyboard, parse_mode="HTML")
+
+
 @bot.message_handler(func=lambda mess: mess.text == "Скул",
                      content_types=["text"])
 def schedule_update_handler(message):
@@ -463,7 +502,8 @@ def week_day_schedule_handler(call_back):
     day_date = func.date_from_iso(iso_day_date)
     json_day = func.get_json_day_data(call_back.message.chat.id, day_date)
     full_place = func.is_full_place(call_back.message.chat.id)
-    answer = func.create_schedule_answer(json_day, full_place)
+    answer = func.create_schedule_answer(json_day, full_place,
+                                         call_back.message.chat.id)
     bot.edit_message_text(text=answer,
                           chat_id=call_back.message.chat.id,
                           message_id=call_back.message.message_id,
@@ -484,7 +524,8 @@ def all_week_schedule_handler(call_back):
         day_date = func.date_from_iso(iso_day_date)
         json_day = func.get_json_day_data(user_id, day_date, json_week)
         full_place = func.is_full_place(call_back.message.chat.id)
-        answer = func.create_schedule_answer(json_day, full_place)
+        answer = func.create_schedule_answer(json_day, full_place,
+                                             call_back.message.chat.id)
         if day == "Пн":
             bot.edit_message_text(text=answer,
                                   chat_id=user_id,
@@ -510,7 +551,7 @@ def sending_on_handler(call_back):
 
 @bot.callback_query_handler(func=lambda call_back:
                             call_back.data == "Отписаться")
-def sending_on_handler(call_back):
+def sending_off_handler(call_back):
     func.set_sending(call_back.message.chat.id, False)
     answer = emoji["mailbox_off"]
     answer += " Рассылка <b>отключена</b>"
@@ -797,6 +838,170 @@ def full_place_off_handler(call_back):
 
 
 @bot.callback_query_handler(func=lambda call_back:
+                            call_back.data == "Другой день")
+def another_day_handler(call_back):
+    answer = "Выбери день, когда есть это занятие:"
+    json_week_data = func.get_json_week_data(my_id)
+    days = json_week_data["Days"]
+    days_keyboard = telebot.types.InlineKeyboardMarkup(True)
+    for day in days:
+        days_keyboard.row(
+            *[telebot.types.InlineKeyboardButton(text=name, callback_data=name)
+              for name in [day["DayString"].split(", ")[0].capitalize()]])
+    bot.edit_message_text(text=answer, chat_id=call_back.message.chat.id,
+                          message_id=call_back.message.message_id,
+                          reply_markup=days_keyboard)
+
+
+@bot.callback_query_handler(func=lambda call_back:
+                            call_back.data in week_day_titles.keys())
+def select_day_handler(call_back):
+    iso_day_date = list((datetime.today() + server_timedelta).isocalendar())
+    if iso_day_date[2] == 7:
+        iso_day_date[1] += 1
+    iso_day_date[2] = week_day_number[week_day_titles[call_back.data]]
+    day_date = func.date_from_iso(iso_day_date)
+    json_day = func.get_json_day_data(call_back.message.chat.id, day_date)
+    full_place = func.is_full_place(call_back.message.chat.id)
+    day_data = func.create_schedule_answer(json_day, full_place, personal=False)
+    answer = "Полное раписание на:" + day_data[1:] + "Выбери занятие:"
+    events_keyboard = telebot.types.InlineKeyboardMarkup(True)
+    events = day_data.split("\n\n")[1:-1]
+    for event in events:
+        event_name = event.split("\n")[1][3:-4].split(" - ")
+        button_text = event_name[0] + " - " + event_name[-1].split(". ")[-1]
+        events_keyboard.row(
+            *[telebot.types.InlineKeyboardButton(text=name, callback_data=name)
+              for name in [button_text[:32]]])
+    events_keyboard.row(
+        *[telebot.types.InlineKeyboardButton(text=name, callback_data=name)
+          for name in ["Другой день"]]
+    )
+    bot.edit_message_text(text=answer,
+                          chat_id=call_back.message.chat.id,
+                          message_id=call_back.message.message_id,
+                          parse_mode="HTML",
+                          reply_markup=events_keyboard)
+
+
+@bot.callback_query_handler(func=lambda call_back:
+                            "Выбери занятие:" in call_back.message.text)
+def select_day_handler(call_back):
+    answer = "Доступные пары "
+    answer += call_back.message.text.split("\n\n")[0][17:] + "\n\n"
+    events = call_back.message.text.split("\n\n")[1:-1]
+    days_keyboard = telebot.types.InlineKeyboardMarkup(True)
+    for event in events:
+        trigger = False
+        for event_part in call_back.data.split(" - "):
+            if event_part not in event:
+                trigger = True
+                continue
+        if trigger:
+            continue
+        event_data = event.split("\n")
+        answer += "{}\n<b>{}</b>\n{}\n\n".format(event_data[0], event_data[1],
+                                                 "\n".join(event_data[2:]))
+    days_keyboard.row(
+        *[telebot.types.InlineKeyboardButton(text=name, callback_data=name)
+          for name in ["Этот день"]])
+    days_keyboard.row(
+        *[telebot.types.InlineKeyboardButton(text=name, callback_data=name)
+          for name in ["Все дни"]])
+    answer += "Выбери день для скрытия пары:"
+    bot.edit_message_text(text=answer,
+                          chat_id=call_back.message.chat.id,
+                          message_id=call_back.message.message_id,
+                          parse_mode="HTML",
+                          reply_markup=days_keyboard)
+
+
+@bot.callback_query_handler(func=lambda call_back:
+                            "Выбери день для скрытия пары:" in
+                            call_back.message.text)
+def select_time_handler(call_back):
+    answer = call_back.message.text.split("\n\n")[0] + "\n\n"
+
+    times_keyboard = telebot.types.InlineKeyboardMarkup(True)
+    events = call_back.message.text.split("\n\n")[1:-1]
+    for event in events:
+        event_data = event.split("\n")
+        answer += "{}\n<b>{}</b>\n{}\n\n".format(event_data[0], event_data[1],
+                                                 "\n".join(event_data[2:]))
+        times_keyboard.row(
+            *[telebot.types.InlineKeyboardButton(text=name, callback_data=name)
+              for name in [event_data[0][2:]]])
+    times_keyboard.row(
+        *[telebot.types.InlineKeyboardButton(text=name, callback_data=name) for
+          name in ["Любое время"]])
+    answer += "День: <b>{}</b>\n\nВыбери время:".format(call_back.data)
+    bot.edit_message_text(text=answer,
+                          chat_id=call_back.message.chat.id,
+                          message_id=call_back.message.message_id,
+                          parse_mode="HTML",
+                          reply_markup=times_keyboard)
+
+
+@bot.callback_query_handler(func=lambda call_back:
+                            "Выбери время:" in call_back.message.text)
+def confirm_hide_lesson_handler(call_back):
+    data = call_back.message.text.split("\n\n")
+    hide_event_data = data[1].split("\n")[1].split(" - ")
+    hide_day = data[-2].split(": ")[1]
+    hide_time = call_back.data
+    if hide_event_data[0] in subject_short_type_revert.keys():
+        hide_event_data[0] = subject_short_type_revert[hide_event_data[0]]
+    if hide_day == "Все дни":
+        hide_day = "all"
+    else:
+        hide_day = data[0].split(": ")[1].split(", ")[0].lower()
+    if hide_time == "Любое время":
+        hide_time = "all"
+
+    func.insert_skip(hide_event_data, hide_day, hide_time,
+                     call_back.message.chat.id)
+    answer = "Пара скрыта"
+    bot.edit_message_text(text=answer,
+                          chat_id=call_back.message.chat.id,
+                          message_id=call_back.message.message_id)
+
+
+@bot.callback_query_handler(func=lambda call_back:
+                            call_back.data == "Вернуть всё")
+def return_all(call_back):
+    sql_con = sqlite3.connect("Bot_db")
+    cursor = sql_con.cursor()
+    cursor.execute("""DELETE FROM skips 
+                      WHERE user_id = ?""", (call_back.message.chat.id, ))
+    sql_con.commit()
+    cursor.close()
+    sql_con.close()
+
+    answer = "Все занятия возвращены"
+    bot.edit_message_text(text=answer, chat_id=call_back.message.chat.id,
+                          message_id=call_back.message.message_id)
+
+
+@bot.callback_query_handler(func=lambda call_back:
+                            "Выбери то, которое хочешь вернуть:" in
+                            call_back.message.text)
+def return_lesson_handler(call_back):
+    lesson_id = call_back.data.split(" - ")[0]
+    sql_con = sqlite3.connect("Bot_db")
+    cursor = sql_con.cursor()
+    cursor.execute("""DELETE FROM skips 
+                      WHERE user_id = ?
+                      AND lesson_id = ?""",
+                   (call_back.message.chat.id, lesson_id))
+    sql_con.commit()
+    cursor.close()
+    sql_con.close()
+    answer = "Занятие возвращено"
+    bot.edit_message_text(text=answer, chat_id=call_back.message.chat.id,
+                          message_id=call_back.message.message_id)
+
+
+@bot.callback_query_handler(func=lambda call_back:
                             call_back.data == "Статистика")
 def statistics_handler(call_back):
     data = func.get_rate_statistics()
@@ -864,7 +1069,8 @@ def webhook():
             answer += "Возможно, информация по этому поводу есть в нашем канале"
             answer += " - @Spbu4u_news\n"
             answer += "И ты всегда можешь связаться с разработчиком @EeOneDown"
-            bot.reply_to(update.message, answer)
+            # bot.reply_to(update.message, answer)
+            bot.send_message(update.message.chat.id, answer)
             bot.send_message(my_id, str(err), disable_notification=True)
         return "OK", 200
     else:

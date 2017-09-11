@@ -372,6 +372,7 @@ def confirm_choice(message):
                               VALUES (?, ?, ?)""",
                            (message.chat.id, alias, group_id))
         except sqlite3.IntegrityError:
+            sql_con.rollback()
             cursor.execute("""UPDATE user_data 
                               SET alias = ?, group_id = ?
                               WHERE id = ?""",

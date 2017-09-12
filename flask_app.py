@@ -435,7 +435,7 @@ def return_hided_lesson(message):
             )
         ids_keyboard.row(
             *[telebot.types.InlineKeyboardButton(text=name, callback_data=name)
-              for name in ["Вернуть всё", "Отмена"]]
+              for name in ["Отмена", "Вернуть всё"]]
         )
         answer += "Выбери то, которое хочешь вернуть:"
     else:

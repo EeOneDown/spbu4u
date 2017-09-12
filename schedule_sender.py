@@ -28,11 +28,12 @@ def schedule_sender():
         user_id, json_week = user_data[0], json.loads(user_data[1])
         json_day = get_json_day_data(user_id, tomorrow_moscow_date, json_week)
         full_place = is_full_place(user_id, db_path="spbu4u/Bot_db")
-        answer = create_schedule_answer(json_day, full_place)
+        answer = create_schedule_answer(json_day, full_place, user_id)
         if "Выходной" in answer:
             continue
         print(user_id, answer)
         try:
+            answer = "Расписание на завтра:\n\n" + answer
             bot.send_message(user_id, answer, parse_mode="HTML")
         except Exception as err:
             print(err)

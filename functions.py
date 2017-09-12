@@ -5,31 +5,55 @@ import requests
 from datetime import datetime
 
 
-def set_next_step(user_id, next_step):
+def insert_skip(hide_event_data, hide_day, hide_time, user_id):
     sql_con = sqlite3.connect("Bot_db")
     cursor = sql_con.cursor()
-    cursor.execute("""UPDATE user_choice
-                      SET step = ? 
-                      WHERE user_id = ?""",
-                   (next_step, user_id))
-    sql_con.commit()
-    cursor.close()
-    sql_con.close()
+    try:
+        cursor.execute("""INSERT INTO lessons (name, type, day, time) 
+                              VALUES (?, ?, ?, ?)""",
+                       (hide_event_data[1], hide_event_data[0],
+                        hide_day, hide_time))
+        sql_con.commit()
+    except sqlite3.IntegrityError:
+        sql_con.rollback()
+    finally:
+        cursor.execute("""SELECT id 
+                              FROM lessons 
+                              WHERE name = ? 
+                                AND type = ? 
+                                AND day = ? 
+                                AND time = ?""",
+                       (hide_event_data[1], hide_event_data[0],
+                        hide_day, hide_time))
+        lesson_id = cursor.fetchone()[0]
+    try:
+        cursor.execute("""INSERT INTO skips VALUES (?, ?)""",
+                       (lesson_id, user_id))
+        sql_con.commit()
+    except sqlite3.IntegrityError:
+        sql_con.rollback()
+    finally:
+        cursor.close()
+        sql_con.close()
 
 
-def get_step(user_id):
+def get_hide_lessons_data(user_id):
     sql_con = sqlite3.connect("Bot_db")
     cursor = sql_con.cursor()
-    cursor.execute("""SELECT  step
-                      FROM user_choice
+    cursor.execute("""SELECT
+                        s.lesson_id,
+                        l.name,
+                        l.type,
+                        l.day,
+                        l.time
+                      FROM skips AS s
+                        JOIN lessons AS l
+                          ON l.id = s.lesson_id
                       WHERE user_id = ?""", (user_id, ))
-    step = cursor.fetchone()
+    data = cursor.fetchall()
     cursor.close()
     sql_con.close()
-    if step is None:
-        return None
-    else:
-        return step[0]
+    return data
 
 
 def delete_user(user_id, only_choice=False):
@@ -100,23 +124,39 @@ def get_json_day_data(user_id, day_date, json_week_data=None):
     return None
 
 
-def create_schedule_answer(day_info, full_place, full=True):
-    from constants import emoji, subject_short_type
-    if day_info is None:
+def is_event_in_skips(event, skips, week_day_string):
+    for skip_lesson in skips:
+        if skip_lesson[1] == ", ".join(event["Subject"].split(", ")[:-1]) and \
+           skip_lesson[2] == event["Subject"].split(", ")[-1] and \
+           (skip_lesson[3] == week_day_string or
+                skip_lesson[3] == "all") and \
+           (skip_lesson[4] == event["TimeIntervalString"] or
+                skip_lesson[4] == "all"):
+            return True
+    return False
 
+
+def create_schedule_answer(day_info, full_place, user_id=None, personal=True):
+    from constants import emoji, subject_short_type
+
+    if day_info is None:
         return emoji["sleep"] + " Выходной"
 
     answer = emoji["calendar"] + " "
     answer += day_info["DayString"].capitalize() + "\n\n"
     day_study_events = day_info["DayStudyEvents"]
+
+    if personal:
+        skips = get_hide_lessons_data(user_id)
+    else:
+        skips = []
+
     for event in day_study_events:
-        if not full:
-            # TODO select skip lessons for user
-            # skips = []
-            pass
-        else:
-            # skips = []
-            pass
+        if event["IsCancelled"]:
+            continue
+        if is_event_in_skips(event, skips,
+                             day_info["DayString"].split(", ")[0]):
+            continue
         answer += emoji["clock"] + " " + event["TimeIntervalString"] + "\n"
         answer += "<b>"
         subject_type = event["Subject"].split(", ")[-1]

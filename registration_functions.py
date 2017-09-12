@@ -5,9 +5,35 @@ import requests
 import telebot
 
 
+def set_next_step(user_id, next_step):
+    sql_con = sqlite3.connect("Bot_db")
+    cursor = sql_con.cursor()
+    cursor.execute("""UPDATE user_choice
+                      SET step = ? 
+                      WHERE user_id = ?""",
+                   (next_step, user_id))
+    sql_con.commit()
+    cursor.close()
+    sql_con.close()
+
+
+def get_step(user_id):
+    sql_con = sqlite3.connect("Bot_db")
+    cursor = sql_con.cursor()
+    cursor.execute("""SELECT  step
+                      FROM user_choice
+                      WHERE user_id = ?""", (user_id, ))
+    step = cursor.fetchone()
+    cursor.close()
+    sql_con.close()
+    if step is None:
+        return None
+    else:
+        return step[0]
+
+
 def select_division(message):
     from flask_app import bot
-    from functions import set_next_step
 
     answer = ""
 
@@ -58,7 +84,6 @@ def select_division(message):
 
 def select_study_level(message):
     from flask_app import bot, start_handler
-    from functions import set_next_step
 
     answer = ""
 
@@ -112,7 +137,6 @@ def select_study_level(message):
 
 def select_study_program_combination(message):
     from flask_app import bot
-    from functions import set_next_step
 
     answer = ""
 
@@ -180,7 +204,6 @@ def select_study_program_combination(message):
 
 def select_admission_year(message):
     from flask_app import bot
-    from functions import set_next_step
 
     answer = ""
 
@@ -265,7 +288,6 @@ def select_admission_year(message):
 
 def select_student_group(message):
     from flask_app import bot
-    from functions import set_next_step
 
     answer = ""
 
@@ -350,6 +372,7 @@ def confirm_choice(message):
                               VALUES (?, ?, ?)""",
                            (message.chat.id, alias, group_id))
         except sqlite3.IntegrityError:
+            sql_con.rollback()
             cursor.execute("""UPDATE user_data 
                               SET alias = ?, group_id = ?
                               WHERE id = ?""",

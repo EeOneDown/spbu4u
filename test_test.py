@@ -4,7 +4,6 @@ import unittest
 import telebot
 from functions import create_schedule_answer
 from constants import my_id
-from old_constants import test_token
 
 
 def everything_ok():

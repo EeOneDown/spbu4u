@@ -412,6 +412,9 @@ def hide_lesson_handler(message):
         days_keyboard.row(
             *[telebot.types.InlineKeyboardButton(text=name, callback_data=name)
               for name in [day["DayString"].split(", ")[0].capitalize()]])
+    days_keyboard.row(
+        *[telebot.types.InlineKeyboardButton(text=name, callback_data=name)
+          for name in ["Отмена"]])
     bot.send_message(message.chat.id, answer, reply_markup=days_keyboard)
 
 
@@ -432,7 +435,7 @@ def return_hided_lesson(message):
             )
         ids_keyboard.row(
             *[telebot.types.InlineKeyboardButton(text=name, callback_data=name)
-              for name in ["Вернуть всё"]]
+              for name in ["Вернуть всё", "Отмена"]]
         )
         answer += "Выбери то, которое хочешь вернуть:"
     else:
@@ -849,6 +852,9 @@ def another_day_handler(call_back):
         days_keyboard.row(
             *[telebot.types.InlineKeyboardButton(text=name, callback_data=name)
               for name in [day["DayString"].split(", ")[0].capitalize()]])
+    days_keyboard.row(
+        *[telebot.types.InlineKeyboardButton(text=name, callback_data=name)
+          for name in ["Отмена"]])
     bot.edit_message_text(text=answer, chat_id=call_back.message.chat.id,
                           message_id=call_back.message.message_id,
                           reply_markup=days_keyboard)
@@ -876,7 +882,7 @@ def select_day_handler(call_back):
               for name in [button_text[:32]]])
     events_keyboard.row(
         *[telebot.types.InlineKeyboardButton(text=name, callback_data=name)
-          for name in ["Другой день"]]
+          for name in ["Другой день", "Отмена"]]
     )
     bot.edit_message_text(text=answer,
                           chat_id=call_back.message.chat.id,
@@ -886,9 +892,17 @@ def select_day_handler(call_back):
 
 
 @bot.callback_query_handler(func=lambda call_back:
+                            call_back.data == "Отмена")
+def another_day_handler(call_back):
+    answer = "Отмена"
+    bot.edit_message_text(text=answer, chat_id=call_back.message.chat.id,
+                          message_id=call_back.message.message_id)
+
+
+@bot.callback_query_handler(func=lambda call_back:
                             "Выбери занятие:" in call_back.message.text)
 def select_day_handler(call_back):
-    answer = "Доступные пары "
+    answer = "Доступные занятия "
     answer += call_back.message.text.split("\n\n")[0][17:] + "\n\n"
     events = call_back.message.text.split("\n\n")[1:-1]
     days_keyboard = telebot.types.InlineKeyboardMarkup(True)
@@ -905,11 +919,11 @@ def select_day_handler(call_back):
                                                  "\n".join(event_data[2:]))
     days_keyboard.row(
         *[telebot.types.InlineKeyboardButton(text=name, callback_data=name)
-          for name in ["Этот день"]])
+          for name in ["Этот день", "Все дни"]])
     days_keyboard.row(
         *[telebot.types.InlineKeyboardButton(text=name, callback_data=name)
-          for name in ["Все дни"]])
-    answer += "Выбери день для скрытия пары:"
+          for name in ["Отмена"]])
+    answer += "Выбери день для скрытия занятия:"
     bot.edit_message_text(text=answer,
                           chat_id=call_back.message.chat.id,
                           message_id=call_back.message.message_id,
@@ -918,7 +932,7 @@ def select_day_handler(call_back):
 
 
 @bot.callback_query_handler(func=lambda call_back:
-                            "Выбери день для скрытия пары:" in
+                            "Выбери день для скрытия занятия:" in
                             call_back.message.text)
 def select_time_handler(call_back):
     answer = call_back.message.text.split("\n\n")[0] + "\n\n"
@@ -934,7 +948,7 @@ def select_time_handler(call_back):
               for name in [event_data[0][2:]]])
     times_keyboard.row(
         *[telebot.types.InlineKeyboardButton(text=name, callback_data=name) for
-          name in ["Любое время"]])
+          name in ["Любое время", "Отмена"]])
     answer += "День: <b>{}</b>\n\nВыбери время:".format(call_back.data)
     bot.edit_message_text(text=answer,
                           chat_id=call_back.message.chat.id,
@@ -961,10 +975,12 @@ def confirm_hide_lesson_handler(call_back):
 
     func.insert_skip(hide_event_data, hide_day, hide_time,
                      call_back.message.chat.id)
-    answer = "Пара скрыта"
+    answer = "<b>Занятие скрыто:</b>\n{}, {}".format(hide_event_data[1],
+                                                     hide_event_data[0])
     bot.edit_message_text(text=answer,
                           chat_id=call_back.message.chat.id,
-                          message_id=call_back.message.message_id)
+                          message_id=call_back.message.message_id,
+                          parse_mode="HTML")
 
 
 @bot.callback_query_handler(func=lambda call_back:
@@ -988,18 +1004,27 @@ def return_all(call_back):
                             call_back.message.text)
 def return_lesson_handler(call_back):
     lesson_id = call_back.data.split(" - ")[0]
+    events = call_back.message.text.split("\n\n")[1:-1]
+    lesson_title = lesson_type = ""
+    for event in events:
+        if event.split("\n")[0].split(": ")[1] == lesson_id:
+            lesson_title = event.split("\n")[1].split(": ")[1]
+            lesson_type = event.split("\n")[2].split(": ")[1]
+            break
     sql_con = sqlite3.connect("Bot_db")
     cursor = sql_con.cursor()
     cursor.execute("""DELETE FROM skips 
                       WHERE user_id = ?
-                      AND lesson_id = ?""",
+                        AND lesson_id = ?""",
                    (call_back.message.chat.id, lesson_id))
     sql_con.commit()
     cursor.close()
     sql_con.close()
-    answer = "Занятие возвращено"
+    answer = "<b>Занятие возвращено:</b>\n{}, {}".format(lesson_title,
+                                                         lesson_type)
     bot.edit_message_text(text=answer, chat_id=call_back.message.chat.id,
-                          message_id=call_back.message.message_id)
+                          message_id=call_back.message.message_id,
+                          parse_mode="HTML")
 
 
 @bot.callback_query_handler(func=lambda call_back:

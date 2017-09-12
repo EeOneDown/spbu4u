@@ -32,7 +32,7 @@ def all_group_ids_for_alias(alias):
                     groups_data = requests.get(url).json()
                     for group in groups_data:
                         group_ids.append(group["StudentGroupId"])
-                time.sleep(2)
+                time.sleep(0)
     print(alias, "Done")
     return group_ids
 

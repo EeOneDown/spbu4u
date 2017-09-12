@@ -66,10 +66,14 @@ def print_all():
 
 
 class TestAllSchedules(unittest.TestCase):
+
     def test_string(self):
         for alias in get_all_aliases():
+            print("HERE_1")
             for group_id in all_group_ids_for_alias(alias):
+                print("HERE_2")
                 for day_answer in get_group_week_schedules(alias, group_id):
+                    print("HERE_3")
                     self.assertTrue(day_answer)
 
 

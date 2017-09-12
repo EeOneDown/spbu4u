@@ -530,6 +530,8 @@ def all_week_schedule_handler(call_back):
         full_place = func.is_full_place(call_back.message.chat.id)
         answer = func.create_schedule_answer(json_day, full_place,
                                              call_back.message.chat.id)
+        if "Выходной" in answer:
+            continue
         if day == "Пн":
             bot.edit_message_text(text=answer,
                                   chat_id=user_id,
@@ -948,7 +950,7 @@ def select_time_handler(call_back):
               for name in [event_data[0][2:]]])
     times_keyboard.row(
         *[telebot.types.InlineKeyboardButton(text=name, callback_data=name) for
-          name in ["Любое время", "Отмена"]])
+          name in ["Отмена", "Любое время"]])
     answer += "День: <b>{}</b>\n\nВыбери время:".format(call_back.data)
     bot.edit_message_text(text=answer,
                           chat_id=call_back.message.chat.id,

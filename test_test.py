@@ -1,7 +1,9 @@
 import requests
 import time
 import unittest
+import telebot
 from functions import create_schedule_answer
+from constants import my_id
 
 
 def everything_ok():
@@ -70,10 +72,9 @@ class TestStringMethods(unittest.TestCase):
         self.assertIsInstance([1, 2], list)
 
     def test_all(self):
-        for alias in get_all_aliases():
-            for group_id in all_group_ids_for_alias(alias):
-                self.assertIsInstance(get_group_week_schedules(alias, group_id),
-                                      list)
+        tb = telebot.TeleBot(test_token)
+        msg = tb.send_message(my_id, "test", disable_notification=True)
+        self.assertTrue(msg)
 
 
 if __name__ == '__main__':

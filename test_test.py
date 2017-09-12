@@ -32,7 +32,7 @@ def all_group_ids_for_alias(alias):
                     groups_data = requests.get(url).json()
                     for group in groups_data:
                         group_ids.append(group["StudentGroupId"])
-                time.sleep(2)
+                time.sleep(0)
     print(alias, "Done")
     return group_ids
 
@@ -67,10 +67,13 @@ def print_all():
 
 class TestStringMethods(unittest.TestCase):
     def test_test(self):
-        self.assertEqual(everything_ok(), ("OK", True))
+        self.assertIsInstance([1, 2], list)
 
     def test_all(self):
-        self.assertTrue(print_all())
+        for alias in get_all_aliases():
+            for group_id in all_group_ids_for_alias(alias):
+                self.assertIsInstance(get_group_week_schedules(alias, group_id),
+                                      list)
 
 
 if __name__ == '__main__':

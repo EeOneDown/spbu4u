@@ -4,6 +4,7 @@ import unittest
 import telebot
 from functions import create_schedule_answer
 from constants import my_id
+from old_constants import test_token
 
 
 def everything_ok():
@@ -68,8 +69,6 @@ def print_all():
 
 
 class TestStringMethods(unittest.TestCase):
-    def test_test(self):
-        self.assertIsInstance([1, 2], list)
 
     def test_all(self):
         tb = telebot.TeleBot(test_token)

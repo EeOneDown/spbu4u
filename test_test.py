@@ -68,7 +68,8 @@ def print_all():
 class TestAllSchedules(unittest.TestCase):
 
     def test_string(self):
-        for alias in get_all_aliases():
+        aliases = get_all_aliases()
+        for alias in aliases[10]:
             print("HERE_1")
             for group_id in all_group_ids_for_alias(alias):
                 print("HERE_2")

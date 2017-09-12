@@ -1,5 +1,6 @@
 import requests
 import time
+from random import randint
 import unittest
 from functions import create_schedule_answer
 
@@ -69,13 +70,13 @@ class TestAllSchedules(unittest.TestCase):
 
     def test_string(self):
         aliases = get_all_aliases()
-        for alias in aliases[10:21:10]:
-            print("HERE_1")
-            for group_id in all_group_ids_for_alias(alias):
-                print("HERE_2")
-                for day_answer in get_group_week_schedules(alias, group_id):
-                    print("HERE_3")
-                    self.assertTrue(day_answer)
+        alias = aliases[randint(0, len(aliases))]
+        print(alias)
+        for group_id in all_group_ids_for_alias(alias):
+            print(group_id)
+            for day_answer in get_group_week_schedules(alias, group_id):
+                print("HERE_3")
+                self.assertTrue(day_answer)
 
 
 if __name__ == '__main__':

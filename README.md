@@ -15,6 +15,7 @@
 - [x] sending
 - [ ] educators schedule
 - [ ] interim/final attestation schedule
+- [ ] physical training schedule
 * __Suburbans__
 - [x] from SPb to University station
 - [x] from University station to SPb
@@ -49,6 +50,12 @@
 ![own](https://pp.userapi.com/c837720/v837720734/5eb24/BRfQ1XsDjtI.jpg "select end station for own trail")
 ![own2](https://pp.userapi.com/c837720/v837720734/5eb5c/mK_doaX8rQg.jpg "select day for own trail")
 ![own3](https://pp.userapi.com/c837720/v837720734/5eb63/pLaCahhTeXY.jpg "all suburbans for own trail")
+![hide_lesson1](https://pp.userapi.com/c639621/v639621751/49ff8/GF5xqgYKdTM.jpg "select lesson to hide")
+![hide_lesson2](https://pp.userapi.com/c639621/v639621751/49fff/mh71BIZh5oU.jpg "select lesson to hide")
+![hide_lesson3](https://pp.userapi.com/c639621/v639621751/49fdc/MtYPs6c4L1A.jpg "select time to hide")
+![hide_lesson4](https://pp.userapi.com/c639621/v639621751/49fe3/7_EofAQPvs4.jpg "lesson hided")
+![return_lesson1](https://pp.userapi.com/c639621/v639621751/49fea/fs4mb2pEJZ8.jpg "select lesson to return")
+![return_lesson2](https://pp.userapi.com/c639621/v639621751/49ff1/WyUajVfTuGk.jpg "select lesson to return")
 
 
 ## Special thanks

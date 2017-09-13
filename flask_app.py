@@ -440,6 +440,11 @@ def return_hided_lesson(message):
         answer += "Выбери то, которое хочешь вернуть:"
     else:
         answer = "Скрытых занятий нет"
+    if len(answer) >= 3000:
+        answers = answer.split("\n\n")
+        for answer in answers[:-1]:
+            bot.send_message(message.chat.id, answer, parse_mode="HTML")
+        answer = answers[-1]
     bot.send_message(message.chat.id, answer,
                      reply_markup=ids_keyboard, parse_mode="HTML")
 
@@ -884,7 +889,7 @@ def select_day_handler(call_back):
               for name in [button_text[:32]]])
     events_keyboard.row(
         *[telebot.types.InlineKeyboardButton(text=name, callback_data=name)
-          for name in ["Другой день", "Отмена"]]
+          for name in ["Отмена", "Другой день"]]
     )
     bot.edit_message_text(text=answer,
                           chat_id=call_back.message.chat.id,

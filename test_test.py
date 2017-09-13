@@ -58,14 +58,6 @@ def get_all_schedules():
     return all_answer
 
 
-def print_all():
-    for group_schedules in get_all_schedules():
-        for schedule in group_schedules:
-            print(schedule)
-        print("===============================\n")
-    return True
-
-
 class TestAllSchedules(unittest.TestCase):
 
     def test_string(self):

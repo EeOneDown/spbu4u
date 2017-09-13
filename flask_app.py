@@ -1108,7 +1108,7 @@ def webhook():
             if update.message is not None:
                 bot.send_message(update.message.chat.id, answer)
             else:
-                bot.send_message(update.call_back.message.chat.id, answer)
+                bot.send_message(update.callback_query.message.chat.id, answer)
             bot.send_message(my_id, str(err), disable_notification=True)
         return "OK", 200
     else:

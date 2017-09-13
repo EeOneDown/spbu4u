@@ -70,7 +70,7 @@ class TestAllSchedules(unittest.TestCase):
 
     def test_string(self):
         aliases = get_all_aliases()
-        alias = aliases[randint(0, len(aliases))]
+        alias = aliases[randint(0, len(aliases) - 1)]
         print(alias)
         for group_id in all_group_ids_for_alias(alias):
             print(group_id)

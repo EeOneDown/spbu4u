@@ -1,6 +1,5 @@
 import requests
 import time
-from random import randint
 import unittest
 from functions import create_schedule_answer
 
@@ -60,10 +59,208 @@ def get_all_schedules():
 
 class TestAllSchedules(unittest.TestCase):
 
-    def test_string(self):
-        aliases = get_all_aliases()
-        alias = aliases[randint(0, len(aliases) - 1)]
-        print(alias)
+    def test_answers_AGSM(self):
+        alias = "AGSM"
+        for group_id in all_group_ids_for_alias(alias):
+            print(group_id)
+            for day_answer in get_group_week_schedules(alias, group_id):
+                print("HERE_3")
+                self.assertTrue(day_answer)
+
+    def test_answers_BIOL(self):
+        alias = "BIOL"
+        for group_id in all_group_ids_for_alias(alias):
+            print(group_id)
+            for day_answer in get_group_week_schedules(alias, group_id):
+                print("HERE_3")
+                self.assertTrue(day_answer)
+
+    def test_answers_ORIS(self):
+        alias = "ORIS"
+        for group_id in all_group_ids_for_alias(alias):
+            print(group_id)
+            for day_answer in get_group_week_schedules(alias, group_id):
+                print("HERE_3")
+                self.assertTrue(day_answer)
+
+    def test_answers_JOUR(self):
+        alias = "JOUR"
+        for group_id in all_group_ids_for_alias(alias):
+            print(group_id)
+            for day_answer in get_group_week_schedules(alias, group_id):
+                print("HERE_3")
+                self.assertTrue(day_answer)
+
+    def test_answers_ARTS(self):
+        alias = "ARTS"
+        for group_id in all_group_ids_for_alias(alias):
+            print(group_id)
+            for day_answer in get_group_week_schedules(alias, group_id):
+                print("HERE_3")
+                self.assertTrue(day_answer)
+
+    def test_answers_HIST(self):
+        alias = "HIST"
+        for group_id in all_group_ids_for_alias(alias):
+            print(group_id)
+            for day_answer in get_group_week_schedules(alias, group_id):
+                print("HERE_3")
+                self.assertTrue(day_answer)
+
+    def test_answers_SC(self):
+        alias = "SC"
+        for group_id in all_group_ids_for_alias(alias):
+            print(group_id)
+            for day_answer in get_group_week_schedules(alias, group_id):
+                print("HERE_3")
+                self.assertTrue(day_answer)
+
+    def test_answers_MATH(self):
+        alias = "MATH"
+        for group_id in all_group_ids_for_alias(alias):
+            print(group_id)
+            for day_answer in get_group_week_schedules(alias, group_id):
+                print("HERE_3")
+                self.assertTrue(day_answer)
+
+    def test_answers_MEDI(self):
+        alias = "MEDI"
+        for group_id in all_group_ids_for_alias(alias):
+            print(group_id)
+            for day_answer in get_group_week_schedules(alias, group_id):
+                print("HERE_3")
+                self.assertTrue(day_answer)
+
+    def test_answers_INTD(self):
+        alias = "INTD"
+        for group_id in all_group_ids_for_alias(alias):
+            print(group_id)
+            for day_answer in get_group_week_schedules(alias, group_id):
+                print("HERE_3")
+                self.assertTrue(day_answer)
+
+    def test_answers_INTR(self):
+        alias = "INTR"
+        for group_id in all_group_ids_for_alias(alias):
+            print(group_id)
+            for day_answer in get_group_week_schedules(alias, group_id):
+                print("HERE_3")
+                self.assertTrue(day_answer)
+
+    def test_answers_GSOM(self):
+        alias = "GSOM"
+        for group_id in all_group_ids_for_alias(alias):
+            print(group_id)
+            for day_answer in get_group_week_schedules(alias, group_id):
+                print("HERE_3")
+                self.assertTrue(day_answer)
+
+    def test_answers_EARTH(self):
+        alias = "EARTH"
+        for group_id in all_group_ids_for_alias(alias):
+            print(group_id)
+            for day_answer in get_group_week_schedules(alias, group_id):
+                print("HERE_3")
+                self.assertTrue(day_answer)
+
+    def test_answers_POLS(self):
+        alias = "POLS"
+        for group_id in all_group_ids_for_alias(alias):
+            print(group_id)
+            for day_answer in get_group_week_schedules(alias, group_id):
+                print("HERE_3")
+                self.assertTrue(day_answer)
+
+    def test_answers_AMCP(self):
+        alias = "AMCP"
+        for group_id in all_group_ids_for_alias(alias):
+            print(group_id)
+            for day_answer in get_group_week_schedules(alias, group_id):
+                print("HERE_3")
+                self.assertTrue(day_answer)
+
+    def test_answers_PSYC(self):
+        alias = "PSYC"
+        for group_id in all_group_ids_for_alias(alias):
+            print(group_id)
+            for day_answer in get_group_week_schedules(alias, group_id):
+                print("HERE_3")
+                self.assertTrue(day_answer)
+
+    def test_answers_LIAS(self):
+        alias = "LIAS"
+        for group_id in all_group_ids_for_alias(alias):
+            print(group_id)
+            for day_answer in get_group_week_schedules(alias, group_id):
+                print("HERE_3")
+                self.assertTrue(day_answer)
+
+    def test_answers_SOCL(self):
+        alias = "SOCL"
+        for group_id in all_group_ids_for_alias(alias):
+            print(group_id)
+            for day_answer in get_group_week_schedules(alias, group_id):
+                print("HERE_3")
+                self.assertTrue(day_answer)
+
+    def test_answers_DENT(self):
+        alias = "DENT"
+        for group_id in all_group_ids_for_alias(alias):
+            print(group_id)
+            for day_answer in get_group_week_schedules(alias, group_id):
+                print("HERE_3")
+                self.assertTrue(day_answer)
+
+    def test_answers_PHYS(self):
+        alias = "PHYS"
+        for group_id in all_group_ids_for_alias(alias):
+            print(group_id)
+            for day_answer in get_group_week_schedules(alias, group_id):
+                print("HERE_3")
+                self.assertTrue(day_answer)
+
+    def test_answers_LETT(self):
+        alias = "LETT"
+        for group_id in all_group_ids_for_alias(alias):
+            print(group_id)
+            for day_answer in get_group_week_schedules(alias, group_id):
+                print("HERE_3")
+                self.assertTrue(day_answer)
+
+    def test_answers_PHIL(self):
+        alias = "PHIL"
+        for group_id in all_group_ids_for_alias(alias):
+            print(group_id)
+            for day_answer in get_group_week_schedules(alias, group_id):
+                print("HERE_3")
+                self.assertTrue(day_answer)
+
+    def test_answers_CHEM(self):
+        alias = "CHEM"
+        for group_id in all_group_ids_for_alias(alias):
+            print(group_id)
+            for day_answer in get_group_week_schedules(alias, group_id):
+                print("HERE_3")
+                self.assertTrue(day_answer)
+
+    def test_answers_ECON(self):
+        alias = "ECON"
+        for group_id in all_group_ids_for_alias(alias):
+            print(group_id)
+            for day_answer in get_group_week_schedules(alias, group_id):
+                print("HERE_3")
+                self.assertTrue(day_answer)
+
+    def test_answers_LAWS(self):
+        alias = "LAWS"
+        for group_id in all_group_ids_for_alias(alias):
+            print(group_id)
+            for day_answer in get_group_week_schedules(alias, group_id):
+                print("HERE_3")
+                self.assertTrue(day_answer)
+
+    def test_answers_LAWSPRIMARY(self):
+        alias = "LAWSPRIMARY"
         for group_id in all_group_ids_for_alias(alias):
             print(group_id)
             for day_answer in get_group_week_schedules(alias, group_id):

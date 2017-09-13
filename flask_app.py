@@ -1044,10 +1044,13 @@ def statistics_handler(call_back):
         rate = emoji["star"] * round(data[0])
         answer = "Средняя оценка: {}\n".format(data[0])
         answer += "{} ({})".format(rate, data[1])
-    bot.edit_message_text(text=answer,
-                          chat_id=call_back.message.chat.id,
-                          message_id=call_back.message.message_id,
-                          parse_mode="HTML")
+    try:
+        bot.edit_message_text(text=answer,
+                              chat_id=call_back.message.chat.id,
+                              message_id=call_back.message.message_id,
+                              parse_mode="HTML")
+    except telebot.apihelper.ApiException:
+        pass
 
 
 @bot.callback_query_handler(func=lambda call_back:
@@ -1102,8 +1105,10 @@ def webhook():
             answer += "Возможно, информация по этому поводу есть в нашем канале"
             answer += " - @Spbu4u_news\n"
             answer += "И ты всегда можешь связаться с разработчиком @EeOneDown"
-            # bot.reply_to(update.message, answer)
-            bot.send_message(update.message.chat.id, answer)
+            if update.message is not None:
+                bot.send_message(update.message.chat.id, answer)
+            else:
+                bot.send_message(update.call_back.message.chat.id, answer)
             bot.send_message(my_id, str(err), disable_notification=True)
         return "OK", 200
     else:

@@ -6,7 +6,7 @@ from functions import create_schedule_answer
 
 
 def everything_ok():
-    return "OK", True
+    return True
 
 
 def get_all_aliases():
@@ -58,14 +58,6 @@ def get_all_schedules():
     return all_answer
 
 
-def print_all():
-    for group_schedules in get_all_schedules():
-        for schedule in group_schedules:
-            print(schedule)
-        print("===============================\n")
-    return True
-
-
 class TestAllSchedules(unittest.TestCase):
 
     def test_string(self):
@@ -76,7 +68,10 @@ class TestAllSchedules(unittest.TestCase):
             print(group_id)
             for day_answer in get_group_week_schedules(alias, group_id):
                 print("HERE_3")
-                self.assertTrue(day_answer)
+                self.assertTrue(len(day_answer) <= 3000)
+
+    def test_everything_ok(self):
+        self.assertTrue(everything_ok())
 
 
 if __name__ == '__main__':

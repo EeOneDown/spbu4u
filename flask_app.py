@@ -881,9 +881,10 @@ def select_day_handler(call_back):
     answer = "Полное раписание на:" + day_data[1:] + "Выбери занятие:"
     events_keyboard = telebot.types.InlineKeyboardMarkup(True)
     events = day_data.split("\n\n")[1:-1]
-    for event in events:
+    for num, event in enumerate(events, start=1):
         event_name = event.split("\n")[1][3:-4].split(" - ")
-        button_text = event_name[0] + " - " + event_name[-1].split(". ")[-1]
+        button_text = "{}. {} - {}".format(num, event_name[0],
+                                           event_name[-1].split(". ")[-1])
         events_keyboard.row(
             *[telebot.types.InlineKeyboardButton(text=name, callback_data=name)
               for name in [button_text[:32]]])
@@ -912,14 +913,10 @@ def select_day_handler(call_back):
     answer = "Доступные занятия "
     answer += call_back.message.text.split("\n\n")[0][17:] + "\n\n"
     events = call_back.message.text.split("\n\n")[1:-1]
+    chosen_event = events[int(call_back.data.split(". ")[0]) - 1].split("\n")[1]
     days_keyboard = telebot.types.InlineKeyboardMarkup(True)
     for event in events:
-        trigger = False
-        for event_part in call_back.data.split(" - "):
-            if event_part not in event:
-                trigger = True
-                continue
-        if trigger:
+        if event.split("\n")[1] != chosen_event:
             continue
         event_data = event.split("\n")
         answer += "{}\n<b>{}</b>\n{}\n\n".format(event_data[0], event_data[1],

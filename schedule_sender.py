@@ -10,7 +10,8 @@ from constants import release_token
 
 def schedule_sender():
     bot = telebot.TeleBot(release_token)
-    sql_con = sqlite3.connect("spbu4u/Bot_db")
+    db_path = "spbu4u/Bot_db"
+    sql_con = sqlite3.connect(db_path)
     cursor = sql_con.cursor()
     cursor.execute("""SELECT user_data.id, groups_data.json_week_data
                       FROM user_data
@@ -27,8 +28,9 @@ def schedule_sender():
     for user_data in data:
         user_id, json_week = user_data[0], json.loads(user_data[1])
         json_day = get_json_day_data(user_id, tomorrow_moscow_date, json_week)
-        full_place = is_full_place(user_id, db_path="spbu4u/Bot_db")
-        answer = create_schedule_answer(json_day, full_place, user_id)
+        full_place = is_full_place(user_id, db_path=db_path)
+        answer = create_schedule_answer(json_day, full_place, user_id,
+                                        db_path=db_path)
         if "Выходной" in answer:
             continue
         print(user_id, answer)

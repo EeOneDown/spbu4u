@@ -37,8 +37,8 @@ def insert_skip(hide_event_data, hide_day, hide_time, user_id):
         sql_con.close()
 
 
-def get_hide_lessons_data(user_id):
-    sql_con = sqlite3.connect("Bot_db")
+def get_hide_lessons_data(user_id, db_path="Bot_db"):
+    sql_con = sqlite3.connect(db_path)
     cursor = sql_con.cursor()
     cursor.execute("""SELECT
                         s.lesson_id,
@@ -136,7 +136,8 @@ def is_event_in_skips(event, skips, week_day_string):
     return False
 
 
-def create_schedule_answer(day_info, full_place, user_id=None, personal=True):
+def create_schedule_answer(day_info, full_place, user_id=None, personal=True,
+                           db_path="Bot_db"):
     from constants import emoji, subject_short_type
 
     if day_info is None:
@@ -147,7 +148,7 @@ def create_schedule_answer(day_info, full_place, user_id=None, personal=True):
     day_study_events = day_info["DayStudyEvents"]
 
     if personal:
-        skips = get_hide_lessons_data(user_id)
+        skips = get_hide_lessons_data(user_id, db_path)
     else:
         skips = []
 

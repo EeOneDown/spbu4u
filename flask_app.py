@@ -193,7 +193,7 @@ def settings_handler(message):
     func.delete_user(message.chat.id, only_choice=True)
     settings_keyboard = telebot.types.ReplyKeyboardMarkup(True)
     settings_keyboard.row("Сменить группу", "Завершить")
-    settings_keyboard.row("Назад")
+    settings_keyboard.row("Назад", "Проблема")
     answer = "Настройки"
     bot.send_message(message.chat.id, answer, reply_markup=settings_keyboard)
 
@@ -279,8 +279,8 @@ def rate_handler(message):
               for name in [emoji["star"] * count_of_stars]])
     rate_keyboard.row(
         *[telebot.types.InlineKeyboardButton(text=name,
-                                             callback_data="Статистика")
-          for name in ["Статистика"]])
+                                             callback_data=name)
+          for name in ["Связь", "Статистика"]])
     bot.send_message(message.chat.id, answer, parse_mode="HTML",
                      reply_markup=rate_keyboard)
 
@@ -449,6 +449,17 @@ def return_hided_lesson(message):
                      reply_markup=ids_keyboard, parse_mode="HTML")
 
 
+@bot.message_handler(func=lambda mess: mess.reply_to_message is not None and
+                     mess.reply_to_message.from_user.username == "Spbu4UBot" and
+                     mess.reply_to_message.text == "Напиши мне что-нибудь:",
+                     content_types=["text"])
+def users_callback_handler(message):
+    bot.send_chat_action(message.chat.id, "typing")
+    bot.forward_message(my_id, message.chat.id, message.message_id)
+    bot.send_message(message.chat.id, "Записал", reply_markup=main_keyboard,
+                     reply_to_message_id=message.message_id)
+
+
 @bot.message_handler(func=lambda mess: mess.text == "Скул",
                      content_types=["text"])
 def schedule_update_handler(message):
@@ -462,6 +473,7 @@ def schedule_update_handler(message):
 
 @bot.message_handler(func=lambda mess: True, content_types=["text"])
 def other_text_handler(message):
+    logger.info(message)
     bot.send_chat_action(message.chat.id, "typing")
     answer = "Некоторые функции сейчас недоступны.\nПодробнее - @Spbu4u_news"
     bot.send_message(message.chat.id, answer)
@@ -1051,6 +1063,22 @@ def statistics_handler(call_back):
 
 
 @bot.callback_query_handler(func=lambda call_back:
+                            call_back.data == "Связь")
+def statistics_handler(call_back):
+    markup = telebot.types.ForceReply(False)
+    try:
+        bot.edit_message_text(text="Обратная связь",
+                              chat_id=call_back.message.chat.id,
+                              message_id=call_back.message.message_id)
+    except telebot.apihelper.ApiException:
+        pass
+    finally:
+        answer = "Напиши мне что-нибудь:"
+        bot.send_message(call_back.message.chat.id, answer,
+                         reply_markup=markup)
+
+
+@bot.callback_query_handler(func=lambda call_back:
                             call_back.data in ["2", "3", "4", "5"])
 def set_rate_handler(call_back):
     rate = call_back.data
@@ -1102,6 +1130,7 @@ def webhook():
             answer += "Возможно, информация по этому поводу есть в нашем канале"
             answer += " - @Spbu4u_news\n"
             answer += "И ты всегда можешь связаться с разработчиком @EeOneDown"
+            logger.info(update)
             if update.message is not None:
                 bot.send_message(update.message.chat.id, answer)
             else:

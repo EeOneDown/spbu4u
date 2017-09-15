@@ -37,6 +37,7 @@
 * __Rate__
 - [x] rate bot
 - [x] average rate
+- [x] callback
 
 
 ## Screenshots

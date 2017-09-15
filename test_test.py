@@ -1,4 +1,3 @@
-import logging
 import requests
 import time
 import unittest
@@ -63,17 +62,13 @@ class TestAllSchedules(unittest.TestCase):
 
     def test_string(self):
         aliases = get_all_aliases()
-        alias = aliases[randint(0, len(aliases))]
-        logging.info(alias)
+        alias = aliases[randint(0, len(aliases) - 1)]
         for group_id in all_group_ids_for_alias(alias):
             for day_answer in get_group_week_schedules(alias, group_id):
                 self.assertTrue(len(day_answer) <= 3000)
 
     def test_everything_ok(self):
         self.assertTrue(everything_ok())
-
-    def test_test_token(self):
-        self.assertTrue(test_token)
 
 
 if __name__ == '__main__':

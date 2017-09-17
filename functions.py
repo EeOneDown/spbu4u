@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import json
+import logging
 import sqlite3
 import requests
 from datetime import datetime
@@ -275,3 +276,15 @@ def set_rate(user_id, count_of_stars):
     sql_con.commit()
     cursor.close()
     sql_con.close()
+
+
+def write_log(update, work_time):
+    log = "=============================\n"
+    if update.message is not None:
+        chat_id = update.message.chat.id
+        user_text = update.message.text
+    else:
+        chat_id = update.callback_query.message.chat.id
+        user_text = update.callback_query.data
+    log += "CHAT: {}\nTEXT: {}\nTIME: {}".format(chat_id, user_text, work_time)
+    logging.info(log)

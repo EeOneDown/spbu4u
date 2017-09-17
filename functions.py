@@ -81,7 +81,7 @@ def date_from_iso(iso):
                              "%Y%W%w").date()
 
 
-def get_json_week_data(user_id, next_week=False):
+def get_json_week_data(user_id, next_week=False, from_sql=False):
     sql_con = sqlite3.connect("Bot_db")
     cursor = sql_con.cursor()
     if next_week:
@@ -100,23 +100,33 @@ def get_json_week_data(user_id, next_week=False):
               "?weekMonday={}".format(next_week_monday)
         json_week_data = requests.get(url).json()
     else:
-        cursor.execute("""SELECT json_week_data
-                          FROM groups_data
-                            JOIN user_data
-                              ON (groups_data.id = user_data.group_id AND 
-                                  groups_data.alias = user_data.alias) 
-                          WHERE  user_data.id= ?""", (user_id, ))
-        data = cursor.fetchone()
+        if from_sql:
+            cursor.execute("""SELECT json_week_data
+                              FROM groups_data
+                                JOIN user_data
+                                  ON (groups_data.id = user_data.group_id AND 
+                                      groups_data.alias = user_data.alias) 
+                              WHERE  user_data.id= ?""", (user_id, ))
+            data = cursor.fetchone()
 
-        json_week_data = json.loads(data[0])
+            json_week_data = json.loads(data[0])
+        else:
+            cursor.execute("""SELECT alias, group_id
+                              FROM user_data 
+                              WHERE  user_data.id= ?""", (user_id,))
+            data = cursor.fetchone()
+            alias, group_id = data[0], data[1]
+            url = "https://timetable.spbu.ru/api/v1/{}/".format(alias) + \
+                  "studentgroup/{}/events".format(group_id)
+            json_week_data = requests.get(url).json()
     cursor.close()
     sql_con.close()
     return json_week_data
 
 
-def get_json_day_data(user_id, day_date, json_week_data=None):
+def get_json_day_data(user_id, day_date, json_week_data=None, from_sql=False):
     if json_week_data is None:
-        json_week_data = get_json_week_data(user_id)
+        json_week_data = get_json_week_data(user_id, from_sql)
     for day_info in json_week_data["Days"]:
         if datetime.strptime(day_info["Day"],
                              "%Y-%m-%dT%H:%M:%S").date() == day_date:

@@ -1152,13 +1152,15 @@ def webhook():
         json_string = flask.request.get_data().decode("utf-8")
         update = telebot.types.Update.de_json(json_string)
         try:
+            tic = time.time()
             bot.process_new_updates([update])
+            func.write_log(update, time.time() - tic)
         except Exception as err:
             answer = "Кажется, произошла ошибка.\n"
             answer += "Возможно, информация по этому поводу есть в нашем канале"
             answer += " - @Spbu4u_news\n"
             answer += "И ты всегда можешь связаться с разработчиком @EeOneDown"
-            logger.error(update)
+            logging.error(update)
             if update.message is not None:
                 bot.send_message(update.message.chat.id, answer)
             else:

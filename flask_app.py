@@ -514,42 +514,45 @@ def show_briefly_info(call_back):
 
 
 @bot.callback_query_handler(func=lambda call_back:
-                            call_back.data in week_day_number.keys())
-def week_day_schedule_handler(call_back):
-    iso_day_date = list((datetime.today() + server_timedelta).isocalendar())
-    if iso_day_date[2] == 7:
-        iso_day_date[1] += 1
-    iso_day_date[2] = week_day_number[call_back.data]
-    day_date = func.date_from_iso(iso_day_date)
-    json_day = func.get_json_day_data(call_back.message.chat.id, day_date)
-    full_place = func.is_full_place(call_back.message.chat.id)
-    answer = func.create_schedule_answer(json_day, full_place,
-                                         call_back.message.chat.id)
+                            call_back.data in week_day_number.keys() or
+                            call_back.data == "Вся неделя")
+def select_week_day_schedule_handler(call_back):
+    day = ""
+    if call_back.data == "Вся неделя":
+        day += "Неделя"
+    else:
+        day += [item[0] for item in week_day_titles.items() if
+                item[1] == call_back.data][0]
+    answer = "Расписание на: <i>{}</i>\n".format(day)
+    week_type_keyboard = telebot.types.InlineKeyboardMarkup()
+    week_type_keyboard.row(
+        *[telebot.types.InlineKeyboardButton(text=name, callback_data=name) for
+          name in ["Текущее", "Следующее"]]
+    )
     bot.edit_message_text(text=answer,
                           chat_id=call_back.message.chat.id,
                           message_id=call_back.message.message_id,
-                          parse_mode="HTML")
+                          parse_mode="HTML",
+                          reply_markup=week_type_keyboard)
 
 
 @bot.callback_query_handler(func=lambda call_back:
-                            call_back.data == "Вся неделя")
+                            "Расписание на: Неделя" in call_back.message.text)
 def all_week_schedule_handler(call_back):
     user_id = call_back.message.chat.id
-    iso_day_date = list((datetime.today() + server_timedelta).isocalendar())
-    if iso_day_date[2] == 7:
-        iso_day_date[1] += 1
-    days = week_day_number.keys()
-    json_week = func.get_json_week_data(user_id)
-    for day in days:
-        iso_day_date[2] = week_day_number[day]
-        day_date = func.date_from_iso(iso_day_date)
-        json_day = func.get_json_day_data(user_id, day_date, json_week)
+    if call_back.data == "Текущее":
+        json_week = func.get_json_week_data(user_id)
+    else:
+        json_week = func.get_json_week_data(user_id, next_week=True)
+    inline_answer = json_week["WeekDisplayText"]
+    bot.answer_callback_query(call_back.id, inline_answer, cache_time=1)
+    for day in json_week["Days"]:
         full_place = func.is_full_place(call_back.message.chat.id)
-        answer = func.create_schedule_answer(json_day, full_place,
+        answer = func.create_schedule_answer(day, full_place,
                                              call_back.message.chat.id)
         if "Выходной" in answer:
             continue
-        if day == "Пн":
+        if json_week["Days"].index(day) == 0:
             bot.edit_message_text(text=answer,
                                   chat_id=user_id,
                                   message_id=call_back.message.message_id,
@@ -558,6 +561,31 @@ def all_week_schedule_handler(call_back):
             bot.send_message(chat_id=call_back.message.chat.id,
                              text=answer,
                              parse_mode="HTML")
+
+
+@bot.callback_query_handler(func=lambda call_back:
+                            call_back.data == "Текущее" or
+                            call_back.data == "Следующее")
+def week_day_schedule_handler(call_back):
+    is_next_week = False
+    iso_day_date = list((datetime.today() + server_timedelta).isocalendar())
+    if iso_day_date[2] == 7:
+        iso_day_date[1] += 1
+    if call_back.data == "Следующее":
+        iso_day_date[1] += 1
+        is_next_week = True
+    iso_day_date[2] = week_day_number[
+        week_day_titles[call_back.message.text.split(": ")[-1]]]
+    day_date = func.date_from_iso(iso_day_date)
+    json_day = func.get_json_day_data(call_back.message.chat.id, day_date,
+                                      next_week=is_next_week)
+    full_place = func.is_full_place(call_back.message.chat.id)
+    answer = func.create_schedule_answer(json_day, full_place,
+                                         call_back.message.chat.id)
+    bot.edit_message_text(text=answer,
+                          chat_id=call_back.message.chat.id,
+                          message_id=call_back.message.message_id,
+                          parse_mode="HTML")
 
 
 @bot.callback_query_handler(func=lambda call_back:
@@ -1130,7 +1158,7 @@ def webhook():
             answer += "Возможно, информация по этому поводу есть в нашем канале"
             answer += " - @Spbu4u_news\n"
             answer += "И ты всегда можешь связаться с разработчиком @EeOneDown"
-            logger.info(update)
+            logger.error(update)
             if update.message is not None:
                 bot.send_message(update.message.chat.id, answer)
             else:

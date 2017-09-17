@@ -114,9 +114,9 @@ def get_json_week_data(user_id, next_week=False):
     return json_week_data
 
 
-def get_json_day_data(user_id, day_date, json_week_data=None):
+def get_json_day_data(user_id, day_date, json_week_data=None, next_week=False):
     if json_week_data is None:
-        json_week_data = get_json_week_data(user_id)
+        json_week_data = get_json_week_data(user_id, next_week)
     for day_info in json_week_data["Days"]:
         if datetime.strptime(day_info["Day"],
                              "%Y-%m-%dT%H:%M:%S").date() == day_date:

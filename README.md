@@ -13,7 +13,7 @@
 * __Schedule__
 - [x] today/tomorrow schedule
 - [x] all week schedule
-- [ ] next week schedule
+- [x] next week schedule
 - [x] sending
 - [ ] educators schedule
 - [ ] interim/final attestation schedule

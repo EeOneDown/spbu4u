@@ -19,11 +19,11 @@ def insert_skip(hide_event_data, hide_day, hide_time, user_id):
         sql_con.rollback()
     finally:
         cursor.execute("""SELECT id 
-                              FROM lessons 
-                              WHERE name = ? 
-                                AND type = ? 
-                                AND day = ? 
-                                AND time = ?""",
+                          FROM lessons 
+                          WHERE name = ? 
+                            AND type = ? 
+                            AND day = ? 
+                            AND time = ?""",
                        (hide_event_data[1], hide_event_data[0],
                         hide_day, hide_time))
         lesson_id = cursor.fetchone()[0]
@@ -180,6 +180,30 @@ def create_schedule_answer(day_info, full_place, user_id=None, personal=True,
     return answer
 
 
+def create_master_schedule_answer(day_info):
+    from constants import emoji, subject_short_type
+    answer = "{} {}\n\n".format(emoji["calendar"], day_info["DayString"])
+    for event in day_info["DayStudyEvents"]:
+        answer += "{} {} <i>({})</i>\n".format(
+            emoji["clock"], event["TimeIntervalString"],
+            "; ".join(event["Dates"]))
+        answer += "<b>"
+        subject_type = event["Subject"].split(", ")[-1]
+        if subject_type in subject_short_type.keys():
+            answer += subject_short_type[subject_type] + " - "
+        else:
+            answer += subject_type.capitalize() + " - "
+        answer += ", ".join(
+            event["Subject"].split(", ")[:-1]) + "</b>\n"
+        for location in event["EventLocations"]:
+            location_name = location["DisplayName"]
+            answer += location_name + " <i>({})</i>\n".format(
+                "; ".join(name["Item1"] for name in
+                          event["ContingentUnitNames"]))
+        answer += "\n"
+    return answer
+
+
 def is_user_exist(user_id):
     sql_con = sqlite3.connect("Bot_db")
     cursor = sql_con.cursor()
@@ -279,12 +303,67 @@ def set_rate(user_id, count_of_stars):
 
 
 def write_log(update, work_time):
-    log = "=============================\n"
+    log = ""
     if update.message is not None:
         chat_id = update.message.chat.id
         user_text = update.message.text
     else:
         chat_id = update.callback_query.message.chat.id
         user_text = update.callback_query.data
-    log += "CHAT: {}\nTEXT: {}\nTIME: {}".format(chat_id, user_text, work_time)
+    log += "CHAT: {} ===== TEXT: {} ===== TIME: {}".format(
+        chat_id, user_text, work_time)
     logging.info(log)
+
+
+def get_templates(user_id):
+    sql_con = sqlite3.connect("Bot_db")
+    cursor = sql_con.cursor()
+    cursor.execute("""SELECT gd.id, gd.json_week_data
+                      FROM user_groups AS ug
+                        JOIN groups_data AS gd
+                          ON ug.group_id = gd.id
+                      WHERE ug.user_id = ?;""", (user_id, ))
+    data = cursor.fetchall()
+    cursor.close()
+    sql_con.close()
+    groups = {}
+    for group in data:
+        groups[json.loads(group[1])["StudentGroupDisplayName"][7:]] = group[0]
+    return groups
+
+
+def get_current_group(user_id):
+    week_data = get_json_week_data(user_id)
+    group_data = {"title": week_data["StudentGroupDisplayName"][7:],
+                  "id": week_data["StudentGroupId"]}
+    return group_data
+
+
+def save_group(group_id, user_id):
+    sql_con = sqlite3.connect("Bot_db")
+    cursor = sql_con.cursor()
+    try:
+        cursor.execute("""INSERT INTO user_groups VALUES (?, ?)""",
+                       (group_id, user_id))
+        sql_con.commit()
+    except sqlite3.IntegrityError:
+        sql_con.rollback()
+    finally:
+        cursor.close()
+        sql_con.close()
+
+
+def delete_group(group_id, user_id):
+    sql_con = sqlite3.connect("Bot_db")
+    cursor = sql_con.cursor()
+    try:
+        cursor.execute("""DELETE FROM user_groups 
+                          WHERE group_id = ? 
+                            AND user_id = ?""",
+                       (group_id, user_id))
+        sql_con.commit()
+    except sqlite3.IntegrityError:
+        sql_con.rollback()
+    finally:
+        cursor.close()
+        sql_con.close()

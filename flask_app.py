@@ -48,9 +48,9 @@ def start_handler(message):
         "https://timetable.spbu.ru/api/v1/divisions").json()
     division_names = [division["Name"] for division in divisions]
     divisions_keyboard = telebot.types.ReplyKeyboardMarkup(True, False)
-    divisions_keyboard.row("Проблема", "Завершить")
     for division_name in division_names:
         divisions_keyboard.row(division_name)
+    divisions_keyboard.row("Проблема", "Завершить")
     data = json.dumps(divisions)
 
     sql_con = sqlite3.connect("Bot_db")
@@ -176,8 +176,8 @@ def help_handler(message):
 
 
 @bot.message_handler(commands=["home"])
-@bot.message_handler(func=lambda mess: mess.text == "Назад",
-                     content_types=["text"])
+@bot.message_handler(func=lambda mess: mess.text == "Назад" or
+                     mess.text == emoji["back"], content_types=["text"])
 def home_handler(message):
     bot.send_chat_action(message.chat.id, "typing")
     func.delete_user(message.chat.id, only_choice=True)
@@ -204,8 +204,10 @@ def schedule_handler(message):
     bot.send_chat_action(message.chat.id, "typing")
     answer = "Меню расписания"
     schedule_keyboard = telebot.types.ReplyKeyboardMarkup(True)
-    schedule_keyboard.row("Сегодня", "Завтра", emoji["calendar"])
-    schedule_keyboard.row("Назад", emoji["alarm_clock"])
+    schedule_keyboard.row("Сегодня", "Завтра", "Неделя")
+    schedule_keyboard.row(emoji["back"], emoji["bust_in_silhouette"],
+                          emoji["arrows_counterclockwise"],
+                          emoji["alarm_clock"])
     bot.send_message(message.chat.id, answer, reply_markup=schedule_keyboard)
 
 
@@ -232,7 +234,7 @@ def tomorrow_schedule_handler(message):
     bot.send_message(message.chat.id, answer, parse_mode="HTML")
 
 
-@bot.message_handler(func=lambda mess: mess.text == emoji["calendar"])
+@bot.message_handler(func=lambda mess: mess.text == "Неделя")
 def calendar_handler(message):
     bot.send_chat_action(message.chat.id, "typing")
     answer = "Выбери день:"
@@ -305,7 +307,7 @@ def suburban_handler(message):
 def to_university_handler(message):
     bot.send_chat_action(message.chat.id, "typing")
     from_station = all_stations["Санкт-Петербург"]
-    to_station = all_stations["Университет"]
+    to_station = all_stations["Университетская (Университет)"]
     server_datetime = datetime.today() + server_timedelta
     data = get_yandex_timetable_data(from_station, to_station, server_datetime)
     answer = data["answer"]
@@ -331,7 +333,7 @@ def to_university_handler(message):
 def from_university_handler(message):
     bot.send_chat_action(message.chat.id, "typing")
 
-    from_station = all_stations["Университет"]
+    from_station = all_stations["Университетская (Университет)"]
     to_station = all_stations["Санкт-Петербург"]
 
     server_datetime = datetime.today() + server_timedelta
@@ -458,6 +460,45 @@ def users_callback_handler(message):
     bot.forward_message(my_id, message.chat.id, message.message_id)
     bot.send_message(message.chat.id, "Записал", reply_markup=main_keyboard,
                      reply_to_message_id=message.message_id)
+
+
+@bot.message_handler(func=lambda mess:
+                     mess.text == emoji["arrows_counterclockwise"],
+                     content_types=["text"])
+def group_templates_handler(message):
+    bot.send_chat_action(message.chat.id, "typing")
+    answer = ""
+    groups = func.get_templates(message.chat.id)
+    group_title = func.get_current_group(message.chat.id)["title"]
+    answer += "Текущая группа: <b>{}</b>\n".format(group_title)
+    saved = False
+    inline_keyboard = telebot.types.InlineKeyboardMarkup(True)
+    if len(groups) == 0:
+        answer += "Нет шаблонов групп, но ты можешь сохранить текущую\n"
+    else:
+        answer += "Выбери группу:"
+        for group in groups.keys():
+            if group == group_title:
+                saved = True
+            inline_keyboard.row(
+                *[telebot.types.InlineKeyboardButton(
+                    text=name, callback_data=str(groups[name]))
+                  for name in [group]]
+            )
+    if saved:
+        pre_last_row = ["Удалить текущую"]
+    else:
+        pre_last_row = ["Сохранить текущую"]
+    inline_keyboard.row(
+        *[telebot.types.InlineKeyboardButton(text=name, callback_data=name)
+            for name in pre_last_row]
+    )
+    inline_keyboard.row(
+        *[telebot.types.InlineKeyboardButton(text=name, callback_data=name)
+            for name in ["Отмена"]]
+    )
+    bot.send_message(message.chat.id, answer, reply_markup=inline_keyboard,
+                     parse_mode="HTML")
 
 
 @bot.message_handler(func=lambda mess: mess.text == "Скул",
@@ -961,13 +1002,19 @@ def select_day_handler(call_back):
         event_data = event.split("\n")
         answer += "{}\n<b>{}</b>\n{}\n\n".format(event_data[0], event_data[1],
                                                  "\n".join(event_data[2:]))
+    day_title = answer.split("\n\n")[0].split(": ")[-1].split(", ")[0]
+    if day_title == "Понедельник" or day_title == "Вторник" or \
+                    day_title == "Четверг":
+        day_title += "и"
+    else:
+        day_title = day_title[:-1] + "ы"
     days_keyboard.row(
         *[telebot.types.InlineKeyboardButton(text=name, callback_data=name)
-          for name in ["Этот день", "Все дни"]])
+          for name in ["Все {}".format(day_title.lower())]])
     days_keyboard.row(
         *[telebot.types.InlineKeyboardButton(text=name, callback_data=name)
-          for name in ["Отмена"]])
-    answer += "Выбери день для скрытия занятия:"
+          for name in ["Отмена", "Все дни"]])
+    answer += "Выбери дни для скрытия занятия:"
     bot.edit_message_text(text=answer,
                           chat_id=call_back.message.chat.id,
                           message_id=call_back.message.message_id,
@@ -976,7 +1023,7 @@ def select_day_handler(call_back):
 
 
 @bot.callback_query_handler(func=lambda call_back:
-                            "Выбери день для скрытия занятия:" in
+                            "Выбери дни для скрытия занятия:" in
                             call_back.message.text)
 def select_time_handler(call_back):
     answer = call_back.message.text.split("\n\n")[0] + "\n\n"
@@ -993,7 +1040,8 @@ def select_time_handler(call_back):
     times_keyboard.row(
         *[telebot.types.InlineKeyboardButton(text=name, callback_data=name) for
           name in ["Отмена", "Любое время"]])
-    answer += "День: <b>{}</b>\n\nВыбери время:".format(call_back.data)
+    answer += "День: <b>{}</b>\n\nВыбери время, в которе скрывать:".format(
+        call_back.data)
     bot.edit_message_text(text=answer,
                           chat_id=call_back.message.chat.id,
                           message_id=call_back.message.message_id,
@@ -1002,7 +1050,8 @@ def select_time_handler(call_back):
 
 
 @bot.callback_query_handler(func=lambda call_back:
-                            "Выбери время:" in call_back.message.text)
+                            "Выбери время, в которе скрывать:" in
+                            call_back.message.text)
 def confirm_hide_lesson_handler(call_back):
     data = call_back.message.text.split("\n\n")
     hide_event_data = data[1].split("\n")[1].split(" - ")
@@ -1131,6 +1180,68 @@ def set_rate_handler(call_back):
                           chat_id=call_back.message.chat.id,
                           message_id=call_back.message.message_id,
                           parse_mode="HTML")
+
+
+@bot.callback_query_handler(func=lambda call_back:
+                            call_back.data == "Сохранить текущую")
+def save_current_group_handler(call_back):
+    answer = ""
+    user_id = call_back.message.chat.id
+    group_data = func.get_current_group(user_id)
+    func.save_group(group_data["id"], user_id)
+    answer += "Группа <b>{}</b> сохранена".format(group_data["title"])
+    bot.edit_message_text(text=answer,
+                          chat_id=user_id,
+                          message_id=call_back.message.message_id,
+                          parse_mode="HTML")
+
+
+@bot.callback_query_handler(func=lambda call_back:
+                            call_back.data == "Удалить текущую")
+def delete_current_group_handler(call_back):
+    answer = ""
+    user_id = call_back.message.chat.id
+    group_data = func.get_current_group(user_id)
+    func.delete_group(group_data["id"], user_id)
+    answer += "Группа <b>{}</b> удалена".format(group_data["title"])
+    bot.edit_message_text(text=answer,
+                          chat_id=user_id,
+                          message_id=call_back.message.message_id,
+                          parse_mode="HTML")
+
+
+@bot.callback_query_handler(func=lambda call_back:
+                            func.is_text_in_group_ids(call_back.data) and
+                            "Выбери группу:" in call_back.message.text)
+def change_template_group_handler(call_back):
+    answer = "Группа успешно изменена на <b>{}</b>"
+    chosen_group_id = int(call_back.data)
+    sql_con = sqlite3.connect("Bot_db")
+    cursor = sql_con.cursor()
+    cursor.execute("""SELECT alias, json_week_data
+                      FROM groups_data
+                      WHERE id = ?""", (chosen_group_id, ))
+    data = cursor.fetchone()
+    chosen_group_alias = data[0]
+    chosen_group_title = json.loads(data[1])["StudentGroupDisplayName"][7:]
+    cursor.execute("""UPDATE user_data 
+                      SET alias = ?, group_id = ?
+                      WHERE id = ?""",
+                   (chosen_group_alias, chosen_group_id,
+                    call_back.message.chat.id))
+    sql_con.commit()
+    cursor.close()
+    sql_con.close()
+    bot.edit_message_text(text=answer.format(chosen_group_title),
+                          chat_id=call_back.message.chat.id,
+                          message_id=call_back.message.message_id,
+                          parse_mode="HTML")
+
+
+# TODO
+@bot.callback_query_handler(func=lambda call_back: True)
+def other_callback_handler(call_back):
+    logging.error(call_back)
 
 
 @app.route("/reset_webhook", methods=["GET", "HEAD"])

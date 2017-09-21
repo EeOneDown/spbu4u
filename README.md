@@ -14,10 +14,11 @@
 - [x] today/tomorrow schedule
 - [x] all week schedule
 - [x] next week schedule
-- [x] sending
 - [ ] educators schedule
 - [ ] interim/final attestation schedule
-- [ ] physical training schedule
+- [ ] physical training schedule ?
+- [x] groups templates
+- [x] sending
 * __Suburbans__
 - [x] from SPb to University station
 - [x] from University station to SPb
@@ -30,7 +31,6 @@
 * __Settings__
 - [x] end work (exit)
 - [x] change group
-- [ ] groups templates
 * __Info__
 - [x] full info
 - [x] briefly info

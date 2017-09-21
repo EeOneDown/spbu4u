@@ -19,11 +19,11 @@ def insert_skip(hide_event_data, hide_day, hide_time, user_id):
         sql_con.rollback()
     finally:
         cursor.execute("""SELECT id 
-                              FROM lessons 
-                              WHERE name = ? 
-                                AND type = ? 
-                                AND day = ? 
-                                AND time = ?""",
+                          FROM lessons 
+                          WHERE name = ? 
+                            AND type = ? 
+                            AND day = ? 
+                            AND time = ?""",
                        (hide_event_data[1], hide_event_data[0],
                         hide_day, hide_time))
         lesson_id = cursor.fetchone()[0]
@@ -289,3 +289,72 @@ def write_log(update, work_time):
     log += "CHAT: {} ===== TEXT: {} ===== TIME: {}".format(
         chat_id, user_text, work_time)
     logging.info(log)
+
+
+def get_templates(user_id):
+    sql_con = sqlite3.connect("Bot_db")
+    cursor = sql_con.cursor()
+    cursor.execute("""SELECT gd.id, gd.json_week_data
+                      FROM user_groups AS ug
+                        JOIN groups_data AS gd
+                          ON ug.group_id = gd.id
+                      WHERE ug.user_id = ?;""", (user_id, ))
+    data = cursor.fetchall()
+    cursor.close()
+    sql_con.close()
+    groups = {}
+    for group in data:
+        groups[json.loads(group[1])["StudentGroupDisplayName"][7:]] = group[0]
+    return groups
+
+
+def get_current_group(user_id):
+    week_data = get_json_week_data(user_id)
+    group_data = {"title": week_data["StudentGroupDisplayName"][7:],
+                  "id": week_data["StudentGroupId"]}
+    return group_data
+
+
+def save_group(group_id, user_id):
+    sql_con = sqlite3.connect("Bot_db")
+    cursor = sql_con.cursor()
+    try:
+        cursor.execute("""INSERT INTO user_groups VALUES (?, ?)""",
+                       (group_id, user_id))
+        sql_con.commit()
+    except sqlite3.IntegrityError:
+        sql_con.rollback()
+    finally:
+        cursor.close()
+        sql_con.close()
+
+
+def delete_group(group_id, user_id):
+    sql_con = sqlite3.connect("Bot_db")
+    cursor = sql_con.cursor()
+    try:
+        cursor.execute("""DELETE FROM user_groups 
+                          WHERE group_id = ? 
+                            AND user_id = ?""",
+                       (group_id, user_id))
+        sql_con.commit()
+    except sqlite3.IntegrityError:
+        sql_con.rollback()
+    finally:
+        cursor.close()
+        sql_con.close()
+
+
+def is_text_in_group_ids(text):
+    try:
+        current_id = int(text)
+    except ValueError:
+        return False
+    sql_con = sqlite3.connect("Bot_db")
+    cursor = sql_con.cursor()
+    cursor.execute("""SELECT id FROM groups_data""")
+    ids = cursor.fetchall()
+    cursor.close()
+    sql_con.close()
+
+    return current_id in [group_id[0] for group_id in ids]

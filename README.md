@@ -14,7 +14,7 @@
 - [x] today/tomorrow schedule
 - [x] all week schedule
 - [x] next week schedule
-- [ ] educators schedule
+- [x] educators schedule
 - [ ] interim/final attestation schedule
 - [ ] physical training schedule ?
 - [x] groups templates

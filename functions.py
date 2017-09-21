@@ -180,6 +180,30 @@ def create_schedule_answer(day_info, full_place, user_id=None, personal=True,
     return answer
 
 
+def create_master_schedule_answer(day_info):
+    from constants import emoji, subject_short_type
+    answer = "{} {}\n\n".format(emoji["calendar"], day_info["DayString"])
+    for event in day_info["DayStudyEvents"]:
+        answer += "{} {} <i>({})</i>\n".format(
+            emoji["clock"], event["TimeIntervalString"],
+            "; ".join(event["Dates"]))
+        answer += "<b>"
+        subject_type = event["Subject"].split(", ")[-1]
+        if subject_type in subject_short_type.keys():
+            answer += subject_short_type[subject_type] + " - "
+        else:
+            answer += subject_type.capitalize() + " - "
+        answer += ", ".join(
+            event["Subject"].split(", ")[:-1]) + "</b>\n"
+        for location in event["EventLocations"]:
+            location_name = location["DisplayName"]
+            answer += location_name + " <i>({})</i>\n".format(
+                "; ".join(name["Item1"] for name in
+                          event["ContingentUnitNames"]))
+        answer += "\n"
+    return answer
+
+
 def is_user_exist(user_id):
     sql_con = sqlite3.connect("Bot_db")
     cursor = sql_con.cursor()
@@ -343,18 +367,3 @@ def delete_group(group_id, user_id):
     finally:
         cursor.close()
         sql_con.close()
-
-
-def is_text_in_group_ids(text):
-    try:
-        current_id = int(text)
-    except ValueError:
-        return False
-    sql_con = sqlite3.connect("Bot_db")
-    cursor = sql_con.cursor()
-    cursor.execute("""SELECT id FROM groups_data""")
-    ids = cursor.fetchall()
-    cursor.close()
-    sql_con.close()
-
-    return current_id in [group_id[0] for group_id in ids]

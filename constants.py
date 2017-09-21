@@ -25,7 +25,9 @@ emoji = {"info": u"\U00002139", "star": u"\U00002B50",
          "blue_diamond": u"\U0001F539", "runner": u"\U0001F3C3",
          "arrow_up": u"\U00002B06", "warning": u"\U000026A0",
          "arrows_counterclockwise": u"\U0001F504",
-         "bust_in_silhouette": u"\U0001F464", "back": u"\U0001F519"}
+         "bust_in_silhouette": u"\U0001F464", "back": u"\U0001F519",
+         "mag_right": u"\U0001F50E", "arrow_backward": u"\U000025C0",
+         ":arrow_forward:": u"\U000025B6"}
 
 week_day_number = {"Пн": 1, "Вт": 2, "Ср": 3, "Чт": 4, "Пт": 5, "Сб": 6}
 week_day_titles = {"Понедельник": "Пн", "Вторник": "Вт", "Среда": "Ср",

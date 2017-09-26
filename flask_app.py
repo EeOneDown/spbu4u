@@ -1036,7 +1036,7 @@ def select_day_handler(call_back):
 
 @bot.callback_query_handler(func=lambda call_back:
                             call_back.data == "Отмена")
-def another_day_handler(call_back):
+def cancel_handler(call_back):
     answer = "Отмена"
     bot.edit_message_text(text=answer, chat_id=call_back.message.chat.id,
                           message_id=call_back.message.message_id)
@@ -1044,7 +1044,7 @@ def another_day_handler(call_back):
 
 @bot.callback_query_handler(func=lambda call_back:
                             "Выбери занятие:" in call_back.message.text)
-def select_day_handler(call_back):
+def select_lesson_handler(call_back):
     answer = "Доступные занятия "
     answer += call_back.message.text.split("\n\n")[0][17:] + "\n\n"
     events = call_back.message.text.split("\n\n")[1:-1]
@@ -1182,7 +1182,7 @@ def statistics_handler(call_back):
         answer = "Пока что нет оценок."
     else:
         rate = emoji["star"] * round(data[0])
-        answer = "Средняя оценка: {}\n".format(data[0])
+        answer = "Средняя оценка: {}\n".format(round(data[0], 1))
         answer += "{} ({})".format(rate, data[1])
     try:
         bot.edit_message_text(text=answer,
@@ -1195,7 +1195,7 @@ def statistics_handler(call_back):
 
 @bot.callback_query_handler(func=lambda call_back:
                             call_back.data == "Связь")
-def statistics_handler(call_back):
+def feedback_handler(call_back):
     markup = telebot.types.ForceReply(False)
     try:
         bot.edit_message_text(text="Обратная связь",

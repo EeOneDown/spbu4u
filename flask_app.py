@@ -44,8 +44,8 @@ def start_handler(message):
     if message.text == "/start":
         answer += "Приветствую!\n"
     answer += "Укажи свое направление:"
-    divisions = requests.get(
-        "https://timetable.spbu.ru/api/v1/divisions").json()
+    url = "https://timetable.spbu.ru/api/v1/study/divisions"
+    divisions = requests.get(url).json()
     division_names = [division["Name"] for division in divisions]
     divisions_keyboard = telebot.types.ReplyKeyboardMarkup(True, False)
     for division_name in division_names:
@@ -503,6 +503,8 @@ def schedule_update_handler(message):
     bot.reply_to(message, answer)
 
 
+# TODO educator schedule
+'''
 @bot.message_handler(func=lambda mess: mess.text == emoji["bust_in_silhouette"],
                      content_types=["text"])
 def educator_schedule_handler(message):
@@ -511,6 +513,7 @@ def educator_schedule_handler(message):
     markup = telebot.types.ForceReply(False)
     bot.send_message(message.chat.id, answer, reply_markup=markup,
                      parse_mode="HTML")
+'''
 
 
 @bot.message_handler(func=lambda mess: mess.reply_to_message is not None and
@@ -522,7 +525,7 @@ def write_educator_name_handler(message):
     bot.send_chat_action(message.chat.id, "typing")
     answer = ""
     name = message.text
-    url = "https://timetable.spbu.ru/api/v1/educators?q={}".format(name)
+    url = "https://timetable.spbu.ru/api/v1/educators/search/{}".format(name)
     educators_data = requests.get(url).json()
 
     if educators_data["Educators"] is None or len(
@@ -1036,7 +1039,7 @@ def select_day_handler(call_back):
 
 @bot.callback_query_handler(func=lambda call_back:
                             call_back.data == "Отмена")
-def another_day_handler(call_back):
+def cancel_handler(call_back):
     answer = "Отмена"
     bot.edit_message_text(text=answer, chat_id=call_back.message.chat.id,
                           message_id=call_back.message.message_id)
@@ -1044,7 +1047,7 @@ def another_day_handler(call_back):
 
 @bot.callback_query_handler(func=lambda call_back:
                             "Выбери занятие:" in call_back.message.text)
-def select_day_handler(call_back):
+def select_lesson_handler(call_back):
     answer = "Доступные занятия "
     answer += call_back.message.text.split("\n\n")[0][17:] + "\n\n"
     events = call_back.message.text.split("\n\n")[1:-1]
@@ -1182,7 +1185,7 @@ def statistics_handler(call_back):
         answer = "Пока что нет оценок."
     else:
         rate = emoji["star"] * round(data[0])
-        answer = "Средняя оценка: {}\n".format(data[0])
+        answer = "Средняя оценка: {}\n".format(round(data[0], 1))
         answer += "{} ({})".format(rate, data[1])
     try:
         bot.edit_message_text(text=answer,
@@ -1195,7 +1198,7 @@ def statistics_handler(call_back):
 
 @bot.callback_query_handler(func=lambda call_back:
                             call_back.data == "Связь")
-def statistics_handler(call_back):
+def feedback_handler(call_back):
     markup = telebot.types.ForceReply(False)
     try:
         bot.edit_message_text(text="Обратная связь",
@@ -1295,7 +1298,7 @@ def change_template_group_handler(call_back):
                                                    in call_back.message.text)
 def select_master_id_handler(call_back):
     answer = "{} Расписание преподавателя: <b>{}</b>\n\n{} {}"
-    url = "https://timetable.spbu.ru/api/v1/educator/{}/events".format(
+    url = "https://timetable.spbu.ru/api/v1/educators/{}/events".format(
         call_back.data)
     educator_schedule = requests.get(url).json()
     answer = answer.format(emoji["bust_in_silhouette"],

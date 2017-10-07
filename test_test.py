@@ -1,5 +1,4 @@
 import requests
-import time
 import unittest
 from random import randint
 from functions import create_schedule_answer
@@ -11,7 +10,7 @@ def everything_ok():
 
 def get_all_aliases():
     aliases = []
-    url = "https://timetable.spbu.ru/api/v1/divisions"
+    url = "https://timetable.spbu.ru/api/v1/study/divisions"
     data = requests.get(url).json()
     for alias in data:
         aliases.append(alias["Alias"])
@@ -20,7 +19,8 @@ def get_all_aliases():
 
 def all_group_ids_for_alias(alias):
     group_ids = []
-    url = "https://timetable.spbu.ru/api/v1/{}/studyprograms".format(alias)
+    url = "https://timetable.spbu.ru/api/v1/study/divisions/{}/" \
+          "programs/levels".format(alias)
     study_programs_data = requests.get(url).json()
     for study_program in study_programs_data:
         for study_program_combination in study_program[
@@ -28,20 +28,18 @@ def all_group_ids_for_alias(alias):
             for admission_year in study_program_combination["AdmissionYears"]:
                 if not admission_year["IsEmpty"]:
                     study_program_id = admission_year["StudyProgramId"]
-                    url = "https://timetable.spbu.ru/api/v1/{}/studyprogram" \
-                          "/{}/studentgroups".format(alias, study_program_id)
+                    url = "https://timetable.spbu.ru/api/v1/progams/{}/" \
+                          "groups".format(study_program_id)
                     groups_data = requests.get(url).json()
-                    for group in groups_data:
+                    for group in groups_data["Groups"]:
                         group_ids.append(group["StudentGroupId"])
-                time.sleep(2)
     print(alias, "Done")
     return group_ids
 
 
-def get_group_week_schedules(alias, group_id):
+def get_group_week_schedules(group_id):
     answers = []
-    url = "https://timetable.spbu.ru/api/v1/{}/studentgroup/{}/" \
-          "events".format(alias, group_id)
+    url = "https://timetable.spbu.ru/api/v1/groups/{}/events".format(group_id)
     json_data = requests.get(url).json()
     for day_info in json_data["Days"]:
         answer = create_schedule_answer(day_info, full_place=True,
@@ -54,7 +52,7 @@ def get_all_schedules():
     all_answer = []
     for alias in get_all_aliases():
         for group_id in all_group_ids_for_alias(alias):
-            all_answer.append(get_group_week_schedules(alias, group_id))
+            all_answer.append(get_group_week_schedules(group_id))
     return all_answer
 
 
@@ -64,7 +62,7 @@ class TestAllSchedules(unittest.TestCase):
         aliases = get_all_aliases()
         alias = aliases[randint(0, len(aliases) - 1)]
         for group_id in all_group_ids_for_alias(alias):
-            for day_answer in get_group_week_schedules(alias, group_id):
+            for day_answer in get_group_week_schedules(group_id):
                 print(alias, group_id, day_answer.split("\n")[0][2:])
                 self.assertTrue(day_answer)
 

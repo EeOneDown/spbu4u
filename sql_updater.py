@@ -33,8 +33,8 @@ def schedule_update():
     groups = cursor.fetchall()
     for group in groups:
         group_id, alias = group[0], group[1]
-        url = "https://timetable.spbu.ru/api/v1/{}/".format(alias) + \
-              "studentgroup/{}/events".format(group_id)
+        url = "https://timetable.spbu.ru/api/v1/groups/{}/events".format(
+            group_id)
         json_week_data = requests.get(url).json()
         data = json.dumps(json_week_data)
         cursor.execute("""UPDATE groups_data

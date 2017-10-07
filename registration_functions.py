@@ -54,9 +54,9 @@ def select_division(message):
         study_programs_keyboard = telebot.types.ReplyKeyboardMarkup(True, False)
         index = division_names.index(message.text)
         alias = aliases[index]
-        study_programs = requests.get(
-            "https://timetable.spbu.ru/api/v1/{}/studyprograms".format(alias)
-        ).json()
+        url = "https://timetable.spbu.ru/api/v1/study/divisions/{}/" \
+              "programs/levels".format(alias)
+        study_programs = requests.get(url).json()
         for study_program in study_programs:
             study_programs_keyboard.row(study_program["StudyLevelName"])
         study_programs_keyboard.row("Другое направление")
@@ -210,7 +210,7 @@ def select_admission_year(message):
     sql_con = sqlite3.connect("Bot_db")
     cursor = sql_con.cursor()
     cursor.execute("""SELECT study_programs_json, study_level_name, 
-                             study_program_combination_name, alias
+                             study_program_combination_name
                       FROM user_choice 
                       WHERE user_id = ?""", (message.chat.id,))
     data = cursor.fetchone()
@@ -220,7 +220,6 @@ def select_admission_year(message):
     study_programs = json.loads(data[0])
     study_level_name = data[1]
     study_program_combination_name = data[2]
-    alias = data[3]
     study_level_names = []
     for study_program in study_programs:
         study_level_names.append(study_program["StudyLevelName"])
@@ -241,11 +240,11 @@ def select_admission_year(message):
         answer += "Укажи группу:"
         index = admission_year_names.index(message.text)
         study_program_id = admission_years[index]["StudyProgramId"]
-        url = "https://timetable.spbu.ru/api/v1/{}/".format(alias) + \
-              "studyprogram/{}/studentgroups".format(study_program_id)
+        url = "https://timetable.spbu.ru/api/v1/progams/{}/groups".format(
+            study_program_id)
         student_groups = requests.get(url).json()
         student_group_names = []
-        for student_group in student_groups:
+        for student_group in student_groups["Groups"]:
             student_group_names.append(student_group["StudentGroupName"])
         student_groups_keyboard = telebot.types.ReplyKeyboardMarkup(True, False)
         for student_group_name in student_group_names:
@@ -302,11 +301,11 @@ def select_student_group(message):
 
     student_groups = json.loads(data)
     student_group_names = []
-    for student_group in student_groups:
+    for student_group in student_groups["Groups"]:
         student_group_names.append(student_group["StudentGroupName"])
     if message.text in student_group_names:
         index = student_group_names.index(message.text)
-        student_group_id = student_groups[index]["StudentGroupId"]
+        student_group_id = student_groups["Groups"][index]["StudentGroupId"]
 
         sql_con = sqlite3.connect("Bot_db")
         cursor = sql_con.cursor()
@@ -382,8 +381,8 @@ def confirm_choice(message):
             cursor.execute("""DELETE FROM user_choice WHERE user_id = ?""",
                            (message.chat.id,))
             sql_con.commit()
-        url = "https://timetable.spbu.ru/api/v1/{}/".format(alias) + \
-              "studentgroup/{}/events".format(group_id)
+        url = "https://timetable.spbu.ru/api/v1/groups/{}/events".format(
+            group_id)
         week_data = requests.get(url).json()
         data = json.dumps(week_data)
         try:

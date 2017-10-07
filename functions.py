@@ -86,7 +86,7 @@ def get_json_week_data(user_id, next_week=False):
     sql_con = sqlite3.connect("Bot_db")
     cursor = sql_con.cursor()
     if next_week:
-        cursor.execute("""SELECT groups_data.alias, group_id, json_week_data
+        cursor.execute("""SELECT group_id, json_week_data
                           FROM groups_data
                             JOIN user_data
                               ON (groups_data.id = user_data.group_id AND 
@@ -94,11 +94,10 @@ def get_json_week_data(user_id, next_week=False):
                           WHERE  user_data.id= ?""", (user_id,))
         data = cursor.fetchone()
 
-        alias, group_id = data[0], data[1]
-        next_week_monday = json.loads(data[2])["NextWeekMonday"]
-        url = "https://timetable.spbu.ru/api/v1/{}/".format(alias) + \
-              "studentgroup/{}/events".format(group_id) + \
-              "?weekMonday={}".format(next_week_monday)
+        group_id = data[0]
+        next_week_monday = json.loads(data[1])["NextWeekMonday"]
+        url = "https://timetable.spbu.ru/api/v1/groups/{}/events/{}".format(
+            group_id, next_week_monday)
         json_week_data = requests.get(url).json()
     else:
         cursor.execute("""SELECT json_week_data
@@ -177,6 +176,10 @@ def create_schedule_answer(day_info, full_place, user_id=None, personal=True,
                          location["EducatorIds"]]
             answer += "; ".join(educators) + ")</i>\n"
         answer += "\n"
+
+    if len(answer.strip().split("\n\n")) == 1:
+        return emoji["sleep"] + " Выходной"
+
     return answer
 
 

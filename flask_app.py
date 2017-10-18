@@ -528,8 +528,6 @@ def schedule_update_handler(message):
     bot.reply_to(message, answer)
 
 
-# TODO educator schedule
-'''
 @bot.message_handler(func=lambda mess: mess.text == emoji["bust_in_silhouette"],
                      content_types=["text"])
 def educator_schedule_handler(message):
@@ -538,7 +536,6 @@ def educator_schedule_handler(message):
     markup = telebot.types.ForceReply(False)
     bot.send_message(message.chat.id, answer, reply_markup=markup,
                      parse_mode="HTML")
-'''
 
 
 @bot.message_handler(func=lambda mess: mess.reply_to_message is not None and
@@ -1426,12 +1423,6 @@ def select_master_id_handler(call_back):
             except telebot.apihelper.ApiException:
                 bot.send_message(call_back.message.chat.id, answer[:1000],
                                  parse_mode="HTML")
-
-
-# TODO
-@bot.callback_query_handler(func=lambda call_back: True)
-def other_callback_handler(call_back):
-    logging.error(call_back)
 
 
 @app.route("/reset_webhook", methods=["GET", "HEAD"])

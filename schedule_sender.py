@@ -6,6 +6,7 @@ import telebot
 from datetime import datetime, timedelta
 from functions import get_json_day_data, create_schedule_answer, is_full_place
 from constants import release_token
+from sql_updater import schedule_update
 
 
 def schedule_sender():
@@ -43,4 +44,5 @@ def schedule_sender():
 
 
 if __name__ == '__main__':
+    schedule_update("spbu4u/Bot_db")
     schedule_sender()

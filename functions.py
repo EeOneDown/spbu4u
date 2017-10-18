@@ -284,13 +284,13 @@ def get_rate_statistics():
     cursor.execute("""SELECT sum(rate), count(id) 
                       FROM user_data
                       WHERE rate != 0""")
-    date = cursor.fetchone()
+    data = cursor.fetchone()
     cursor.close()
     sql_con.close()
-    if date[0] is None:
+    if data[0] is None:
         return None
     else:
-        return [date[0] / date[1], date[1]]
+        return [data[0] / data[1], data[1]]
 
 
 def set_rate(user_id, count_of_stars):
@@ -370,3 +370,78 @@ def delete_group(group_id, user_id):
     finally:
         cursor.close()
         sql_con.close()
+
+
+def get_statistics_for_admin():
+    data = {}
+    sql_con = sqlite3.connect("Bot_db")
+    cursor = sql_con.cursor()
+
+    cursor.execute("""SELECT count(id)
+                      FROM user_data""")
+    data["count_of_users"] = cursor.fetchone()[0]
+
+    cursor.execute("""SELECT count(id)
+                      FROM groups_data""")
+    data["count_of_groups"] = cursor.fetchone()[0]
+
+    cursor.execute("""SELECT count(id)
+                      FROM user_data
+                      WHERE sending = 1
+                      GROUP BY sending;""")
+    data["count_of_sending"] = cursor.fetchone()[0]
+
+    cursor.close()
+    sql_con.close()
+    return data
+
+
+def get_fom_station_code(user_id):
+    sql_con = sqlite3.connect("Bot_db")
+    cursor = sql_con.cursor()
+    cursor.execute("""SELECT home_station_code
+                      FROM user_data
+                      WHERE id = ?""", (user_id, ))
+    from_station = cursor.fetchone()[0]
+    cursor.close()
+    sql_con.close()
+    return from_station
+
+
+def is_univer(user_id):
+    sql_con = sqlite3.connect("Bot_db")
+    cursor = sql_con.cursor()
+    cursor.execute("""SELECT is_univer
+                      FROM user_data
+                      WHERE id = ?""", (user_id,))
+    univer = cursor.fetchone()[0]
+    cursor.close()
+    sql_con.close()
+    return univer
+
+
+def change_home_station(user_id, station_title):
+    from constants import all_stations
+
+    home_station_code = all_stations[station_title]
+    sql_con = sqlite3.connect("Bot_db")
+    cursor = sql_con.cursor()
+    cursor.execute("""UPDATE user_data
+                      SET home_station_code = ?
+                      WHERE id = ?""",
+                   (home_station_code, user_id))
+    sql_con.commit()
+    cursor.close()
+    sql_con.close()
+
+
+def change_univer_station(user_id, univer):
+    sql_con = sqlite3.connect("Bot_db")
+    cursor = sql_con.cursor()
+    cursor.execute("""UPDATE user_data
+                      SET is_univer = ?
+                      WHERE id = ?""",
+                   (univer, user_id))
+    sql_con.commit()
+    cursor.close()
+    sql_con.close()

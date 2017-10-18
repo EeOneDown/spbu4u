@@ -165,9 +165,11 @@ def not_exist_user_handler(message):
 def help_handler(message):
     bot.send_chat_action(message.chat.id, "typing")
     inline_full_info_keyboard = telebot.types.InlineKeyboardMarkup()
+    ''' delete this?
     inline_full_info_keyboard.row(
         *[telebot.types.InlineKeyboardButton(text=name, callback_data=name) for
           name in ["Полное ИНФО"]])
+    '''
     answer = briefly_info_answer
     bot.send_message(message.chat.id, answer,
                      parse_mode="HTML",
@@ -292,8 +294,8 @@ def suburban_handler(message):
     bot.send_chat_action(message.chat.id, "typing")
     answer = "Меню расписания электричек"
     suburban_keyboard = telebot.types.ReplyKeyboardMarkup(True, False)
-    suburban_keyboard.row('Из Универа', 'В Универ')
-    suburban_keyboard.row('Назад', 'Свой маршрут')
+    suburban_keyboard.row("Домой", "В Универ", "Маршрут")
+    suburban_keyboard.row("Назад", "Персонализация")
     answer += "\n\nДанные предоставлены сервисом "
     answer += "<a href = 'http://rasp.yandex.ru/'>Яндекс.Расписания</a>"
     bot.send_message(message.chat.id,
@@ -306,8 +308,13 @@ def suburban_handler(message):
 @bot.message_handler(func=lambda mess: mess.text == "В Универ")
 def to_university_handler(message):
     bot.send_chat_action(message.chat.id, "typing")
-    from_station = all_stations["Санкт-Петербург"]
-    to_station = all_stations["Университетская (Университет)"]
+
+    from_station = func.get_fom_station_code(message.chat.id)
+    if func.is_univer(message.chat.id):
+        to_station = all_stations["Университетская (Университет)"]
+    else:
+        to_station = all_stations["Старый Петергоф"]
+
     server_datetime = datetime.today() + server_timedelta
     data = get_yandex_timetable_data(from_station, to_station, server_datetime)
     answer = data["answer"]
@@ -329,12 +336,15 @@ def to_university_handler(message):
                      disable_web_page_preview=True)
 
 
-@bot.message_handler(func=lambda mess: mess.text == "Из Универа")
+@bot.message_handler(func=lambda mess: mess.text == "Домой")
 def from_university_handler(message):
     bot.send_chat_action(message.chat.id, "typing")
 
-    from_station = all_stations["Университетская (Университет)"]
-    to_station = all_stations["Санкт-Петербург"]
+    to_station = func.get_fom_station_code(message.chat.id)
+    if func.is_univer(message.chat.id):
+        from_station = all_stations["Университетская (Университет)"]
+    else:
+        from_station = all_stations["Старый Петергоф"]
 
     server_datetime = datetime.today() + server_timedelta
     data = get_yandex_timetable_data(from_station, to_station, server_datetime)
@@ -357,7 +367,7 @@ def from_university_handler(message):
                      disable_web_page_preview=True)
 
 
-@bot.message_handler(func=lambda mess: mess.text == "Свой маршрут")
+@bot.message_handler(func=lambda mess: mess.text == "Маршрут")
 def own_trail_handler(message):
     answer = "Выбери начальную станцию:"
     start_station_keyboard = telebot.types.InlineKeyboardMarkup(True)
@@ -366,6 +376,20 @@ def own_trail_handler(message):
             text=name, callback_data=name) for name in [station_title]])
     bot.send_message(message.chat.id, answer,
                      reply_markup=start_station_keyboard)
+
+
+@bot.message_handler(func=lambda mess: mess.text == "Персонализация")
+def personalisation_handler(message):
+    answer = "Здесь ты можешь настроить <b>домашнюю</b> и " \
+             "<b>Университетскую</b> станции для команд <i>Домой</i> и " \
+             "<i>В Универ</i>"
+    inline_keyboard = telebot.types.InlineKeyboardMarkup(True)
+    inline_keyboard.row(*[telebot.types.InlineKeyboardButton(
+            text=name, callback_data=name) for name in ["Домашняя"]])
+    inline_keyboard.row(*[telebot.types.InlineKeyboardButton(
+            text=name, callback_data=name) for name in ["Университетская"]])
+    bot.send_message(message.chat.id, answer,
+                     reply_markup=inline_keyboard, parse_mode="HTML")
 
 
 @bot.message_handler(func=lambda mess: mess.text == emoji["editor"])
@@ -492,19 +516,18 @@ def group_templates_handler(message):
                      parse_mode="HTML")
 
 
-@bot.message_handler(func=lambda mess: mess.text == "Скул",
+@bot.message_handler(func=lambda mess: mess.text == "Скул"
+                     and mess.chat.id == my_id,
                      content_types=["text"])
 def schedule_update_handler(message):
     bot.send_chat_action(message.chat.id, "typing")
     tic = time.time()
     schedule_update()
     toc = time.time() - tic
-    answer = "Done\n\nWork time: {}".format(toc)
+    answer = "Done\nWork time: {}".format(toc)
     bot.reply_to(message, answer)
 
 
-# TODO educator schedule
-'''
 @bot.message_handler(func=lambda mess: mess.text == emoji["bust_in_silhouette"],
                      content_types=["text"])
 def educator_schedule_handler(message):
@@ -513,7 +536,6 @@ def educator_schedule_handler(message):
     markup = telebot.types.ForceReply(False)
     bot.send_message(message.chat.id, answer, reply_markup=markup,
                      parse_mode="HTML")
-'''
 
 
 @bot.message_handler(func=lambda mess: mess.reply_to_message is not None and
@@ -963,6 +985,72 @@ def build_trail_handler(call_back):
 
 
 @bot.callback_query_handler(func=lambda call_back:
+                            call_back.data == "Домашняя")
+def home_station_handler(call_back):
+    answer = "Выбери домашнюю станцию:"
+    stations_keyboard = telebot.types.InlineKeyboardMarkup(True)
+    for station_title in all_stations_const:
+        if station_title in ("Старый Петергоф",
+                             "Университетская (Университет)"):
+            continue
+        stations_keyboard.row(*[telebot.types.InlineKeyboardButton(
+            text=name, callback_data=name) for name in [station_title]])
+    bot.edit_message_text(text=answer,
+                          chat_id=call_back.message.chat.id,
+                          message_id=call_back.message.message_id,
+                          reply_markup=stations_keyboard)
+
+
+@bot.callback_query_handler(func=lambda call_back:
+                            call_back.message.text == "Выбери домашнюю "
+                                                      "станцию:")
+def change_home_station_handler(call_back):
+    answer = "Домашняя станция изменена на <b>{}</b>".format(call_back.data)
+    func.change_home_station(call_back.message.chat.id, call_back.data)
+    bot.edit_message_text(text=answer,
+                          chat_id=call_back.message.chat.id,
+                          message_id=call_back.message.message_id,
+                          parse_mode="HTML")
+
+
+@bot.callback_query_handler(func=lambda call_back:
+                            call_back.data == "Университетская")
+def univer_station_handler(call_back):
+    stations = ("Старый Петергоф", "Университетская (Университет)")
+    answer = "Изменить станцию <i>{}</i> на <b>{}</b>?"
+    if func.is_univer(call_back.message.chat.id):
+        answer = answer.format(stations[1], stations[0])
+    else:
+        answer = answer.format(stations[0], stations[1])
+    inline_keyboard = telebot.types.InlineKeyboardMarkup(True)
+    inline_keyboard.row(*[telebot.types.InlineKeyboardButton(
+            text=name, callback_data=name) for name in ["Отмена", "Да"]])
+    bot.edit_message_text(text=answer,
+                          chat_id=call_back.message.chat.id,
+                          message_id=call_back.message.message_id,
+                          reply_markup=inline_keyboard,
+                          parse_mode="HTML")
+
+
+@bot.callback_query_handler(func=lambda call_back:
+                            call_back.data == "Да" and
+                            "Изменить станцию" in call_back.message.text)
+def change_univer_station_handler(call_back):
+    answer = "Используется <b>{}</b>"
+    if func.is_univer(call_back.message.chat.id):
+        is_univer = 0
+        station = "Старый Петергоф"
+    else:
+        is_univer = 1
+        station = "Университетская (Университет)"
+    func.change_univer_station(call_back.message.chat.id, is_univer)
+    bot.edit_message_text(text=answer.format(station),
+                          chat_id=call_back.message.chat.id,
+                          message_id=call_back.message.message_id,
+                          parse_mode="HTML")
+
+
+@bot.callback_query_handler(func=lambda call_back:
                             call_back.data == "Полностью")
 def full_place_on_handler(call_back):
     func.set_full_place(call_back.message.chat.id, True)
@@ -1187,6 +1275,15 @@ def statistics_handler(call_back):
         rate = emoji["star"] * round(data[0])
         answer = "Средняя оценка: {}\n".format(round(data[0], 1))
         answer += "{} ({})".format(rate, data[1])
+    if call_back.message.chat.id == my_id:
+        admin_data = func.get_statistics_for_admin()
+        admin_answer = "\n\nКолличество пользователей: {}\n" \
+                       "Колличество групп: {}\nКолличество пользователей с " \
+                       "активной рассылкой: {}".format(
+                                    admin_data["count_of_users"],
+                                    admin_data["count_of_groups"],
+                                    admin_data["count_of_sending"])
+        bot.send_message(my_id, admin_answer)
     try:
         bot.edit_message_text(text=answer,
                               chat_id=call_back.message.chat.id,
@@ -1326,12 +1423,6 @@ def select_master_id_handler(call_back):
             except telebot.apihelper.ApiException:
                 bot.send_message(call_back.message.chat.id, answer[:1000],
                                  parse_mode="HTML")
-
-
-# TODO
-@bot.callback_query_handler(func=lambda call_back: True)
-def other_callback_handler(call_back):
-    logging.error(call_back)
 
 
 @app.route("/reset_webhook", methods=["GET", "HEAD"])

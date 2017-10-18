@@ -4,10 +4,10 @@ import sqlite3
 import requests
 
 
-def schedule_update():
-    sql_con = sqlite3.connect("Bot_db")
+def schedule_update(db_path="Bot_db"):
+    sql_con = sqlite3.connect(db_path)
     cursor = sql_con.cursor()
-    # WITH construction don't work :(
+    # WITH construction doesn't work :(
     cursor.execute("""DELETE
                       FROM groups_data
                       WHERE id in (

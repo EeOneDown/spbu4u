@@ -16,7 +16,7 @@
 - [x] next week schedule
 - [x] educators schedule
 - [ ] interim/final attestation schedule
-- [ ] physical training schedule ?
+- [ ] physical training schedule
 - [x] groups templates
 - [x] sending
 * __Suburbans__

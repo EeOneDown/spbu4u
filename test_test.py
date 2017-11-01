@@ -64,8 +64,16 @@ class TestAllSchedules(unittest.TestCase):
         for group_id in all_group_ids_for_alias(alias):
             for day_answer in get_group_week_schedules(group_id):
                 print(alias, group_id, day_answer.split("\n")[0][2:])
-                self.assertTrue(day_answer)
-
+                self.assertTrue(len(day_answer) <= 4096)
+    '''
+    def test_check_db_answers(self):
+        for group_data in select_all_group_data():
+            for day_data in group_data["Days"]:
+                day_answer = create_schedule_answer(day_data, full_place=True,
+                                                    personal=False)
+                print(group_data["StudentGroupId"], len(day_answer))
+                self.assertTrue(len(day_answer) <= 4096)
+    '''
     def test_everything_ok(self):
         self.assertTrue(everything_ok())
 

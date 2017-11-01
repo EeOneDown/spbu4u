@@ -82,6 +82,19 @@ def date_from_iso(iso):
                              "%Y%W%w").date()
 
 
+def select_all_group_data():
+    sql_con = sqlite3.connect("Bot_db")
+    cursor = sql_con.cursor()
+    cursor.execute("""SELECT json_week_data
+                      FROM groups_data""")
+    data = cursor.fetchall()
+    cursor.close()
+    sql_con.close()
+
+    data = [json.loads(group_data[0]) for group_data in data]
+    return data
+
+
 def get_json_week_data(user_id, next_week=False):
     sql_con = sqlite3.connect("Bot_db")
     cursor = sql_con.cursor()

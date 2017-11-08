@@ -1453,11 +1453,24 @@ def webhook():
             answer += " - @Spbu4u_news\n"
             answer += "И ты всегда можешь связаться с разработчиком @EeOneDown"
             logging.error(update)
+            was_sent = False
             if update.message is not None:
-                bot.send_message(update.message.chat.id, answer)
+                try:
+                    bot.send_message(update.message.chat.id, answer)
+                    was_sent = True
+                except telebot.apihelper.ApiException as ApiExcept:
+                    json_err = json.loads(ApiExcept.result.text)
+                    if json_err["description"] == \
+                            "Forbidden: bot was blocked by the user":
+                        logging.info("user left {0}".format(
+                            update.message.chat.id))
+                    else:
+                        logging.info(json_err["description"])
             else:
                 pass
-            bot.send_message(my_id, str(err), disable_notification=True)
+            bot.send_message(my_id,
+                             str(err) + "\n\nWas sent: {0}".format(was_sent),
+                             disable_notification=True)
         return "OK", 200
     else:
         flask.abort(403)

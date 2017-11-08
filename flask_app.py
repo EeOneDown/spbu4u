@@ -13,12 +13,12 @@ import registration_functions as reg_func
 import functions as func
 from yandex_timetable import get_yandex_timetable_data
 from sql_updater import schedule_update
-from constants import release_token, emoji, briefly_info_answer, my_id, \
+from constants import test_token, emoji, briefly_info_answer, my_id, \
     full_info_answer, webhook_url_base, webhook_url_path, week_day_number, \
     all_stations, all_stations_const, week_day_titles, subject_short_type_revert
 
-
-bot = telebot.TeleBot(release_token, threaded=False)
+# TODO change token
+bot = telebot.TeleBot(test_token, threaded=False)
 app = flask.Flask(__name__)
 sslify = SSLify(app)
 
@@ -78,7 +78,9 @@ def problem_text_handler(message):
              " - @Spbu4u_news;\n" \
              "2. ты всегда можешь связаться с " \
              "<a href='https://t.me/eeonedown'>разработчиком</a>."
-    bot.send_message(message.chat.id, answer, disable_web_page_preview=True)
+    bot.send_message(message.chat.id, answer,
+                     disable_web_page_preview=True,
+                     parse_mode="HTML")
 
 
 @bot.message_handler(commands=["exit"])
@@ -1480,7 +1482,8 @@ def webhook():
                 try:
                     bot.send_message(update.message.chat.id,
                                      answer,
-                                     disable_web_page_preview=True)
+                                     disable_web_page_preview=True,
+                                     parse_mode="HTML")
                     was_sent = True
                 except telebot.apihelper.ApiException as ApiExcept:
                     json_err = json.loads(ApiExcept.result.text)

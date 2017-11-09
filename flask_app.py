@@ -1346,7 +1346,7 @@ def feedback_handler(call_back):
 
 
 @bot.callback_query_handler(func=lambda call_back:
-                            call_back.data in ["2", "3", "4", "5"])
+                            call_back.data in ["1", "2", "3", "4", "5"])
 def set_rate_handler(call_back):
     rate = call_back.data
     answer = ""
@@ -1360,6 +1360,11 @@ def set_rate_handler(call_back):
                   "Буду стараться лучше.".format(emoji["cold_sweat"])
     elif rate == "2":
         answer += "{0} Двойка? Быть может, я могу что-то исправить? " \
+                  "Сделать лучше?\n\nОпиши проблему " \
+                  "<a href='https://t.me/eeonedown'>разработчику</a> " \
+                  "и вместе мы ее решим!".format(emoji["disappointed"])
+    elif rate == "1":
+        answer += "{0} Единица? Быть может, я могу что-то исправить? " \
                   "Сделать лучше?\n\nОпиши проблему " \
                   "<a href='https://t.me/eeonedown'>разработчику</a> " \
                   "и вместе мы ее решим!".format(emoji["disappointed"])

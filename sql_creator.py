@@ -68,9 +68,12 @@ def create_sql(db_name):
                         (
                             lesson_id INT NOT NULL,
                             user_id INT NOT NULL,
-                            CONSTRAINT skips_lesson_id_user_id_pk PRIMARY KEY (lesson_id, user_id),
-                            CONSTRAINT skips_user_data_id_fk FOREIGN KEY (user_id) REFERENCES user_data (id),
-                            CONSTRAINT skips_lessons_id_fk FOREIGN KEY (lesson_id) REFERENCES lessons (id)
+                            CONSTRAINT skips_lesson_id_user_id_pk 
+                              PRIMARY KEY (lesson_id, user_id),
+                            CONSTRAINT skips_user_data_id_fk 
+                              FOREIGN KEY (user_id) REFERENCES user_data (id),
+                            CONSTRAINT skips_lessons_id_fk 
+                              FOREIGN KEY (lesson_id) REFERENCES lessons (id)
                         )""")
     sql_con.commit()
 
@@ -79,9 +82,12 @@ def create_sql(db_name):
                         (
                             group_id INT NOT NULL,
                             user_id INT NOT NULL,
-                            CONSTRAINT user_groups_group_id_user_id_pk PRIMARY KEY (group_id, user_id),
-                            CONSTRAINT user_groups_user_data_id_fk FOREIGN KEY (user_id) REFERENCES user_data (id),
-                            CONSTRAINT user_groups_groups_data_id_fk FOREIGN KEY (group_id) REFERENCES groups_data (id)
+                            CONSTRAINT user_groups_group_id_user_id_pk 
+                              PRIMARY KEY (group_id, user_id),
+                            CONSTRAINT user_groups_user_data_id_fk 
+                              FOREIGN KEY (user_id) REFERENCES user_data (id),
+                            CONSTRAINT user_groups_groups_data_id_fk 
+                              FOREIGN KEY (group_id) REFERENCES groups_data (id)
                         )""")
     sql_con.commit()
     

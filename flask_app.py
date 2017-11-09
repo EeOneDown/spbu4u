@@ -279,15 +279,12 @@ def sending_handler(message):
 def rate_handler(message):
     bot.send_chat_action(message.chat.id, "typing")
     answer = "Оцените качество сервиса:"
+    user_rate = func.get_user_rate(message.chat.id)
     rate_keyboard = telebot.types.InlineKeyboardMarkup(row_width=5)
-    rate_keyboard.add(
-        *[
-            telebot.types.InlineKeyboardButton(
-                text=emoji["star"],
-                callback_data=str(count_of_stars))
-            for count_of_stars in (1, 2, 3, 4, 5)
-        ]
-    )
+    rate_keyboard.add(*[telebot.types.InlineKeyboardButton(
+        text=emoji["star2"] if user_rate < count_of_stars else emoji["star"],
+        callback_data=str(count_of_stars))
+        for count_of_stars in (1, 2, 3, 4, 5)])
     rate_keyboard.add(
         *[telebot.types.InlineKeyboardButton(text=name,
                                              callback_data=name)
@@ -1217,7 +1214,7 @@ def select_time_handler(call_back):
                                                     "\n".join(event_data[2:]))
         times_keyboard.row(
             *[telebot.types.InlineKeyboardButton(text=name, callback_data=name)
-              for name in [event_data[0][2:]]])
+              for name in [event_data[0].split(emoji["clock"])[-1].strip()]])
     times_keyboard.row(
         *[telebot.types.InlineKeyboardButton(text=name, callback_data=name) for
           name in ["Отмена", "Любое время"]])
@@ -1368,11 +1365,25 @@ def set_rate_handler(call_back):
                   "Сделать лучше?\n\nОпиши проблему " \
                   "<a href='https://t.me/eeonedown'>разработчику</a> " \
                   "и вместе мы ее решим!".format(emoji["disappointed"])
-    bot.edit_message_text(text=answer,
-                          chat_id=call_back.message.chat.id,
-                          message_id=call_back.message.message_id,
-                          parse_mode="HTML",
-                          disable_web_page_preview=True)
+    user_rate = func.get_user_rate(call_back.message.chat.id)
+    rate_keyboard = telebot.types.InlineKeyboardMarkup(row_width=5)
+    rate_keyboard.add(*[telebot.types.InlineKeyboardButton(
+        text=emoji["star2"] if user_rate < count_of_stars else emoji["star"],
+        callback_data=str(count_of_stars))
+        for count_of_stars in (1, 2, 3, 4, 5)])
+    rate_keyboard.add(
+        *[telebot.types.InlineKeyboardButton(text=name,
+                                             callback_data=name)
+          for name in ["Связь", "Статистика"]])
+    try:
+        bot.edit_message_text(text=answer,
+                              chat_id=call_back.message.chat.id,
+                              message_id=call_back.message.message_id,
+                              parse_mode="HTML",
+                              reply_markup=rate_keyboard,
+                              disable_web_page_preview=True)
+    except telebot.apihelper.ApiException:
+        pass
 
 
 @bot.callback_query_handler(func=lambda call_back:

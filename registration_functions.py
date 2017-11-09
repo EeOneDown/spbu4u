@@ -404,11 +404,12 @@ def confirm_choice(message):
                  "{1} - оценить бота\n" \
                  "{2} - настройки\n" \
                  "{3} - электрички\n" \
-                 "{4} - редактор расписания".format(emoji["info"],
-                                                    emoji["star"],
-                                                    emoji["settings"],
-                                                    emoji["suburban"],
-                                                    emoji["editor"])
+                 "{4} - редактор расписания\n" \
+                 "@Spbu4u_news - новости бота".format(emoji["info"],
+                                                      emoji["star"],
+                                                      emoji["settings"],
+                                                      emoji["suburban"],
+                                                      emoji["editor"])
         bot.send_message(message.chat.id, answer, reply_markup=main_keyboard,
                          parse_mode="HTML")
     elif message.text == "Другая группа":

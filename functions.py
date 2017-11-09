@@ -172,8 +172,12 @@ def create_schedule_answer(day_info, full_place, user_id=None, personal=True,
         if is_event_in_skips(event, skips,
                              day_info["DayString"].split(", ")[0]):
             continue
-        answer += emoji["clock"] + " " + event["TimeIntervalString"] + "\n"
-        answer += "<b>"
+        if event["IsAssigned"]:
+            answer += emoji["new"] + " "
+        answer += emoji["clock"] + " " + event["TimeIntervalString"]
+        if event["TimeWasChanged"]:
+            answer += " " + emoji["warning"]
+        answer += "\n<b>"
         subject_type = event["Subject"].split(", ")[-1]
         if subject_type in subject_short_type.keys():
             answer += subject_short_type[subject_type] + " - "
@@ -188,7 +192,11 @@ def create_schedule_answer(day_info, full_place, user_id=None, personal=True,
             answer += location_name + " <i>("
             educators = [educator["Item2"].split(", ")[0] for educator in
                          location["EducatorIds"]]
-            answer += "; ".join(educators) + ")</i>\n"
+            answer += "; ".join(educators) + ")</i>"
+            if event["LocationsWereChanged"] or \
+                    event["EducatorsWereReassigned"]:
+                answer += " " + emoji["warning"]
+            answer += "\n"
         answer += "\n"
 
     if len(answer.strip().split("\n\n")) == 1:
@@ -405,7 +413,7 @@ def get_statistics_for_admin():
                       WHERE sending = 1
                       GROUP BY sending""")
     r_data = cursor.fetchone()
-    data["count_of_sending"] = 0 if r_data is None else cursor.fetchone()[0]
+    data["count_of_sending"] = 0 if r_data is None else r_data[0]
 
     cursor.close()
     sql_con.close()
@@ -474,3 +482,15 @@ def send_long_message(bot, text, user_id):
             second_part = "\n\n".join(text.split("\n\n")[event_count // 2:])
             send_long_message(bot, first_part, user_id)
             send_long_message(bot, second_part, user_id)
+
+
+def get_user_rate(user_id):
+    sql_con = sqlite3.connect("Bot_db")
+    cursor = sql_con.cursor()
+    cursor.execute("""SELECT rate
+                      FROM user_data
+                      WHERE id = ?""", (user_id,))
+    rate = cursor.fetchone()[0]
+    cursor.close()
+    sql_con.close()
+    return rate

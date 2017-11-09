@@ -319,7 +319,7 @@ def set_rate(user_id, count_of_stars):
     sql_con.close()
 
 
-def write_log(update, work_time):
+def write_log(update, work_time, was_error=False):
     if update.message is not None:
         chat_id = update.message.chat.id
         user_text = update.message.text
@@ -328,6 +328,8 @@ def write_log(update, work_time):
         user_text = update.callback_query.data
     log = "CHAT: {0} ===== TEXT: {1} ===== TIME: {2}".format(
         chat_id, user_text, work_time)
+    if was_error:
+        log += "        ERROR"
     logging.info(log)
 
 

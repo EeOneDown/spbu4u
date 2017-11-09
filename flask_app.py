@@ -613,9 +613,9 @@ def write_educator_name_handler(message):
 
 @bot.message_handler(func=lambda mess: True, content_types=["text"])
 def other_text_handler(message):
-    logger.info(message)
+    # logger.info(message)
     bot.send_chat_action(message.chat.id, "typing")
-    answer = "Некоторые функции сейчас недоступны.\nПодробнее - @Spbu4u_news"
+    answer = "Не понимаю"
     bot.send_message(message.chat.id, answer)
 
 
@@ -1470,16 +1470,16 @@ def webhook():
     if flask.request.headers.get("content-type") == "application/json":
         json_string = flask.request.get_data().decode("utf-8")
         update = telebot.types.Update.de_json(json_string)
+        was_error = False
+        tic = time.time()
         try:
-            tic = time.time()
             bot.process_new_updates([update])
-            func.write_log(update, time.time() - tic)
         except Exception as err:
             answer = "Кажется, произошла ошибка.\n" \
                      "Возможно, информация по этому поводу есть в нашем " \
                      "канале - @Spbu4u_news\nИ ты всегда можешь связаться с " \
                      "<a href='https://t.me/eeonedown'>разработчиком</a>"
-            logging.error(update)
+            was_error = True
             was_sent = False
             if update.message is not None:
                 try:
@@ -1493,15 +1493,18 @@ def webhook():
                     if json_err["description"] == "Forbidden: bot was " \
                                                   "blocked by the user":
                         func.delete_user(update.message.chat.id)
-                        logging.info("user left {0}".format(
+                        logging.info("USER LEFT {0}".format(
                             update.message.chat.id))
                     else:
-                        logging.info(json_err["description"])
+                        logging.info("ERROR: {0}".format(
+                            json_err["description"]))
             else:
                 pass
             bot.send_message(my_id,
                              str(err) + "\n\nWas sent: {0}".format(was_sent),
                              disable_notification=True)
+        finally:
+            func.write_log(update, time.time() - tic, was_error)
         return "OK", 200
     else:
         flask.abort(403)

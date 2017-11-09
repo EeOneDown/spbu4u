@@ -1,5 +1,6 @@
 import requests
 import unittest
+import re
 from random import randint
 from functions import create_schedule_answer
 
@@ -56,8 +57,28 @@ def get_all_schedules():
     return all_answer
 
 
-class TestAllSchedules(unittest.TestCase):
+def get_all_educators_names():
+    url = "https://timetable.spbu.ru/api/v1/educators/search/_"
+    req = requests.get(url).json()
+    names = []
+    for educator in req["Educators"]:
+        names.append(educator["FullName"])
+        comb = educator["FullName"].split()[0]
+        names.append(comb)
+        for word in educator["FullName"].split()[1:]:
+            comb += " " + word
+            names.append(comb)
+        names.append(educator["DisplayName"])
+        comb = educator["DisplayName"].split()[0]
+        names.append(comb)
+        for word in educator["DisplayName"].split()[1:]:
+            comb += " " + word
+            names.append(comb)
+    return names
 
+
+class TestAllSchedules(unittest.TestCase):
+    '''
     def test_string(self):
         aliases = get_all_aliases()
         alias = aliases[randint(0, len(aliases) - 1)]
@@ -65,6 +86,7 @@ class TestAllSchedules(unittest.TestCase):
             for day_answer in get_group_week_schedules(group_id):
                 print(alias, group_id, day_answer.split("\n")[0][2:])
                 self.assertTrue(len(day_answer) <= 4096)
+    '''
     '''
     def test_check_db_answers(self):
         for group_data in select_all_group_data():
@@ -76,6 +98,16 @@ class TestAllSchedules(unittest.TestCase):
     '''
     def test_everything_ok(self):
         self.assertTrue(everything_ok())
+
+    def test_re_full_names(self):
+        for name in get_all_educators_names():
+            print(name)
+            self.assertTrue(re.fullmatch(r' *\w[^_#%&*+:?>/\\]*', name))
+
+    def test_re_err_names(self):
+        for name in ("Смирнов\В", "Смирнов&В. О.", "Смирнов_"):
+            print(name)
+            self.assertTrue(not re.fullmatch(r' *\w[^_#%&*+:?>/\\]*', name))
 
 
 if __name__ == '__main__':

@@ -553,7 +553,7 @@ def write_educator_name_handler(message):
     bot.send_chat_action(message.chat.id, "typing")
     answer = ""
     name = message.text
-    if re.fullmatch(r' *\w\D[^_]*', name):
+    if not re.fullmatch(r' *\w[^_#%&*+:?>/\\]*', name):
         answer = "Недопустимые символы"
         schedule_keyboard = telebot.types.ReplyKeyboardMarkup(True)
         schedule_keyboard.row("Сегодня", "Завтра", "Неделя")

@@ -1214,7 +1214,9 @@ def select_time_handler(call_back):
                                                     "\n".join(event_data[2:]))
         times_keyboard.row(
             *[telebot.types.InlineKeyboardButton(text=name, callback_data=name)
-              for name in [event_data[0].split(emoji["clock"])[-1].strip()]])
+              # TODO
+              for name in [event_data[0].split(emoji["clock"])[-1].split(
+                    emoji["warning"])[0].strip()]])
     times_keyboard.row(
         *[telebot.types.InlineKeyboardButton(text=name, callback_data=name) for
           name in ["Отмена", "Любое время"]])

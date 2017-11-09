@@ -279,13 +279,16 @@ def sending_handler(message):
 def rate_handler(message):
     bot.send_chat_action(message.chat.id, "typing")
     answer = "Оцените качество сервиса:"
-    rate_keyboard = telebot.types.InlineKeyboardMarkup(True)
-    for count_of_stars in range(5, 1, -1):
-        rate_keyboard.row(
-            *[telebot.types.InlineKeyboardButton(text=name, callback_data=str(
-                count_of_stars))
-              for name in [emoji["star"] * count_of_stars]])
-    rate_keyboard.row(
+    rate_keyboard = telebot.types.InlineKeyboardMarkup(row_width=5)
+    rate_keyboard.add(
+        *[
+            telebot.types.InlineKeyboardButton(
+                text=emoji["star"],
+                callback_data=str(count_of_stars))
+            for count_of_stars in (1, 2, 3, 4, 5)
+        ]
+    )
+    rate_keyboard.add(
         *[telebot.types.InlineKeyboardButton(text=name,
                                              callback_data=name)
           for name in ["Связь", "Статистика"]])
@@ -416,17 +419,17 @@ def place_handler(message):
     answer = "В каком формате отображать адрес занятий?\nСейчас: "
     place_keyboard = telebot.types.InlineKeyboardMarkup(True)
     if func.is_full_place(message.chat.id):
-        answer += "<b>Полностью</b> " + emoji["school"]
+        answer += "<b>Полностью</b>"
         place_keyboard.row(
             *[telebot.types.InlineKeyboardButton(text=name,
                                                  callback_data="Аудитория")
-              for name in [emoji["door"] + " Только аудитория"]])
+              for name in ["Только аудитория"]])
     else:
-        answer += "<b>Только аудитория</b> " + emoji["door"]
+        answer += "<b>Только аудитория</b>"
         place_keyboard.row(
             *[telebot.types.InlineKeyboardButton(text=name,
                                                  callback_data="Полностью")
-              for name in [emoji["school"] + " Полностью"]])
+              for name in ["Полностью"]])
     bot.send_message(message.chat.id, answer, parse_mode="HTML",
                      reply_markup=place_keyboard)
 
@@ -1087,8 +1090,7 @@ def change_univer_station_handler(call_back):
                             call_back.data == "Полностью")
 def full_place_on_handler(call_back):
     func.set_full_place(call_back.message.chat.id, True)
-    answer = "Теперь адрес отображается <b>полностью</b> " \
-             "{0}".format(emoji["school"])
+    answer = "Теперь адрес отображается <b>полностью</b>"
     bot.edit_message_text(text=answer,
                           chat_id=call_back.message.chat.id,
                           message_id=call_back.message.message_id,
@@ -1099,8 +1101,7 @@ def full_place_on_handler(call_back):
                             call_back.data == "Аудитория")
 def full_place_off_handler(call_back):
     func.set_full_place(call_back.message.chat.id, False)
-    answer = "Теперь отображается <b>только аудитория</b> " \
-             "{0}".format(emoji["door"])
+    answer = "Теперь отображается <b>только аудитория</b>"
     bot.edit_message_text(text=answer,
                           chat_id=call_back.message.chat.id,
                           message_id=call_back.message.message_id,

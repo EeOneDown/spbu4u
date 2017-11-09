@@ -401,8 +401,9 @@ def get_statistics_for_admin():
     cursor.execute("""SELECT count(id)
                       FROM user_data
                       WHERE sending = 1
-                      GROUP BY sending;""")
-    data["count_of_sending"] = cursor.fetchone()[0]
+                      GROUP BY sending""")
+    r_data = cursor.fetchone()
+    data["count_of_sending"] = 0 if r_data is None else cursor.fetchone()[0]
 
     cursor.close()
     sql_con.close()

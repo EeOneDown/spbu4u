@@ -682,7 +682,7 @@ def select_week_day_schedule_handler(call_back):
                             "Расписание на: Неделя" in call_back.message.text)
 def all_week_schedule_handler(call_back):
     user_id = call_back.message.chat.id
-    bot_msg = call_back.message.message_id
+    bot_msg = call_back.message
     if call_back.data == "Текущее":
         json_week = func.get_json_week_data(user_id)
     else:
@@ -714,7 +714,7 @@ def all_week_schedule_handler(call_back):
                             call_back.data == "Текущее" or
                             call_back.data == "Следующее")
 def week_day_schedule_handler(call_back):
-    bot_msg = call_back.message.message_id
+    bot_msg = call_back.message
     is_next_week = False
     iso_day_date = list((datetime.today() + server_timedelta).isocalendar())
     if iso_day_date[2] == 7:

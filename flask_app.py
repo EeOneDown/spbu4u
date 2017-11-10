@@ -517,6 +517,10 @@ def group_templates_handler(message):
         *[telebot.types.InlineKeyboardButton(text=name, callback_data=name)
             for name in last_row]
     )
+    inline_keyboard.row(
+        *[telebot.types.InlineKeyboardButton(text=name, callback_data=name)
+          for name in ["Сменить группу"]]
+    )
     bot.send_message(message.chat.id, answer, reply_markup=inline_keyboard,
                      parse_mode="HTML")
 
@@ -1355,17 +1359,17 @@ def set_rate_handler(call_back):
     elif rate == "4":
         answer += "{0} Стабильная четверочка. Спасибо!".format(emoji["halo"])
     elif rate == "3":
-        answer += "{0} Удовлетворительно? Ничего...тоже оценка. " \
+        answer += "{0} Удовлетворительно? Ничего... тоже оценка. " \
                   "Буду стараться лучше.".format(emoji["cold_sweat"])
     elif rate == "2":
         answer += "{0} Двойка? Быть может, я могу что-то исправить? " \
                   "Сделать лучше?\n\nОпиши проблему " \
-                  "<a href='https://t.me/eeonedown'>разработчику</a> " \
+                  "<a href='https://t.me/eeonedown'>разработчику</a>, " \
                   "и вместе мы ее решим!".format(emoji["disappointed"])
     elif rate == "1":
         answer += "{0} Единица? Быть может, я могу что-то исправить? " \
                   "Сделать лучше?\n\nОпиши проблему " \
-                  "<a href='https://t.me/eeonedown'>разработчику</a> " \
+                  "<a href='https://t.me/eeonedown'>разработчику</a>, " \
                   "и вместе мы ее решим!".format(emoji["disappointed"])
     user_rate = func.get_user_rate(call_back.message.chat.id)
     rate_keyboard = telebot.types.InlineKeyboardMarkup(row_width=5)
@@ -1412,6 +1416,19 @@ def delete_current_group_handler(call_back):
                           chat_id=user_id,
                           message_id=call_back.message.message_id,
                           parse_mode="HTML")
+
+
+@bot.callback_query_handler(func=lambda call_back:
+                            call_back.data == "Сменить группу")
+def change_group_handler(call_back):
+    answer = "{0}\nДля отмены используй /home".format(call_back.data)
+    bot.edit_message_text(text=answer,
+                          chat_id=call_back.message.chat.id,
+                          message_id=call_back.message.message_id,
+                          parse_mode="HTML")
+    call_back.message.text = call_back.data
+    start_handler(call_back.message)
+    return
 
 
 @bot.callback_query_handler(func=lambda call_back:
@@ -1479,7 +1496,7 @@ def reset_webhook():
 
 @app.route("/", methods=["GET", "HEAD"])
 def main_page():
-    page = "<a href='https://t.me/Spbu4UBot'>@SPbU4U</a>"
+    page = '<meta http-equiv="refresh" content="1;url=https://t.me/Spbu4UBot">'
     return page, 200
 
 

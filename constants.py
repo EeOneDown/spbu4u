@@ -38,7 +38,7 @@ emoji = {"info": u"\U00002139", "star": u"\U00002B50",
          "arrows_counterclockwise": u"\U0001F504",
          "bust_in_silhouette": u"\U0001F464", "back": u"\U0001F519",
          "mag_right": u"\U0001F50E", "arrow_backward": u"\U000025C0",
-         "arrow_forward": u"\U000025B6", "star2": u"\U0001F31F",
+         "arrow_forward": u"\U000025B6", "star2": u"\U00002728",
          "new": u"\U0001F195"}
 
 week_day_number = {"Пн": 1, "Вт": 2, "Ср": 3, "Чт": 4, "Пт": 5, "Сб": 6}

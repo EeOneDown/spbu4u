@@ -185,14 +185,18 @@ def create_schedule_answer(day_info, full_place, user_id=None, personal=True,
             answer += subject_type.capitalize() + " - "
         answer += ", ".join(event["Subject"].split(", ")[:-1]) + "</b>\n"
         for location in event["EventLocations"]:
+            if location["IsEmpty"]:
+                continue
             if full_place:
-                location_name = location["DisplayName"]
+                location_name = location["DisplayName"].strip(", ")
             else:
                 location_name = location["DisplayName"].split(", ")[-1]
-            answer += location_name + " <i>("
-            educators = [educator["Item2"].split(", ")[0] for educator in
-                         location["EducatorIds"]]
-            answer += "; ".join(educators) + ")</i>"
+            answer += location_name
+            if location["HasEducators"]:
+                answer += " <i>("
+                educators = [educator["Item2"].split(", ")[0] for educator in
+                             location["EducatorIds"]]
+                answer += "; ".join(educators) + ")</i>"
             if event["LocationsWereChanged"] or \
                     event["EducatorsWereReassigned"]:
                 answer += " " + emoji["warning"]

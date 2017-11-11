@@ -498,3 +498,8 @@ def get_user_rate(user_id):
     cursor.close()
     sql_con.close()
     return rate
+
+
+def is_correct_educator_name(text):
+    return text.replace(".", "").replace("-", "").replace(" - ", "").replace(
+        " ", "").isalnum()

@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import telebot
-import re
 import requests
 import sqlite3
 import logging
@@ -556,8 +555,8 @@ def educator_schedule_handler(message):
 def write_educator_name_handler(message):
     bot.send_chat_action(message.chat.id, "typing")
     answer = ""
-    name = message.text
-    if not re.fullmatch(r' *\w[^_#%&*+:?>/\\]*', name):
+    name = message.text.strip(". ")
+    if not func.is_correct_educator_name(name):
         answer = "Недопустимые символы"
         schedule_keyboard = telebot.types.ReplyKeyboardMarkup(True)
         schedule_keyboard.row("Сегодня", "Завтра", "Неделя")
@@ -568,9 +567,11 @@ def write_educator_name_handler(message):
                          reply_markup=schedule_keyboard)
         return
     url = "https://timetable.spbu.ru/api/v1/educators/search/{0}".format(name)
-    educators_data = requests.get(url).json()
+    request = requests.get(url)
+    request_code = request.status_code
+    educators_data = request.json() if request_code == 200 else {}
 
-    if educators_data["Educators"] is None or len(
+    if request_code != 200 or educators_data["Educators"] is None or len(
             educators_data["Educators"]) == 0:
         answer = "Никого не найдено"
         schedule_keyboard = telebot.types.ReplyKeyboardMarkup(True)
@@ -696,22 +697,28 @@ def all_week_schedule_handler(call_back):
         json_week = func.get_json_week_data(user_id, next_week=True)
     inline_answer = json_week["WeekDisplayText"]
     bot.answer_callback_query(call_back.id, inline_answer, cache_time=1)
-    for day in json_week["Days"]:
-        full_place = func.is_full_place(call_back.message.chat.id)
-        answer = func.create_schedule_answer(day, full_place,
-                                             call_back.message.chat.id)
-        if "Выходной" in answer:
-            continue
-        if json_week["Days"].index(day) == 0:
-            try:
-                bot.edit_message_text(text=answer,
-                                      chat_id=user_id,
-                                      message_id=bot_msg.message_id,
-                                      parse_mode="HTML")
-            except telebot.apihelper.ApiException:
+    if len(json_week["Days"]):
+        for day in json_week["Days"]:
+            full_place = func.is_full_place(call_back.message.chat.id)
+            answer = func.create_schedule_answer(day, full_place,
+                                                 call_back.message.chat.id)
+            if "Выходной" in answer:
+                continue
+            if json_week["Days"].index(day) == 0:
+                try:
+                    bot.edit_message_text(text=answer,
+                                          chat_id=user_id,
+                                          message_id=bot_msg.message_id,
+                                          parse_mode="HTML")
+                except telebot.apihelper.ApiException:
+                    func.send_long_message(bot, answer, user_id)
+            else:
                 func.send_long_message(bot, answer, user_id)
-        else:
-            func.send_long_message(bot, answer, user_id)
+    else:
+        answer = "{0} Выходная неделя".format(emoji["sleep"])
+        bot.edit_message_text(text=answer,
+                              chat_id=user_id,
+                              message_id=bot_msg.message_id)
 
 
 @bot.callback_query_handler(func=lambda call_back:
@@ -1218,7 +1225,6 @@ def select_time_handler(call_back):
                                                     "\n".join(event_data[2:]))
         times_keyboard.row(
             *[telebot.types.InlineKeyboardButton(text=name, callback_data=name)
-              # TODO
               for name in [event_data[0].split(emoji["clock"])[-1].split(
                     emoji["warning"])[0].strip()]])
     times_keyboard.row(

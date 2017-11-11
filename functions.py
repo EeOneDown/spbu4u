@@ -5,6 +5,7 @@ import telebot
 import sqlite3
 import requests
 from datetime import datetime
+from random import randint
 
 
 def insert_skip(hide_event_data, hide_day, hide_time, user_id):
@@ -205,6 +206,9 @@ def create_schedule_answer(day_info, full_place, user_id=None, personal=True,
 
     if len(answer.strip().split("\n\n")) == 1:
         return emoji["sleep"] + " Выходной"
+
+    if randint(1, 3) > 2:
+        answer += "Наш канал @Spbu4U_news"
 
     return answer
 

@@ -33,7 +33,7 @@ def schedule_update(db_path="Bot_db"):
     groups = cursor.fetchall()
     for group in groups:
         group_id, alias = group[0], group[1]
-        url = "https://timetable.spbu.ru/api/v1/groups/{}/events".format(
+        url = "https://timetable.spbu.ru/api/v1/groups/{0}/events".format(
             group_id)
         json_week_data = requests.get(url).json()
         data = json.dumps(json_week_data)
@@ -44,3 +44,7 @@ def schedule_update(db_path="Bot_db"):
         sql_con.commit()
     cursor.close()
     sql_con.close()
+
+
+if __name__ == '__main__':
+    schedule_update()

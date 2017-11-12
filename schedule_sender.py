@@ -4,7 +4,8 @@ import json
 import sqlite3
 import telebot
 from datetime import datetime, timedelta
-from functions import get_json_day_data, create_schedule_answer, is_full_place
+from functions import get_json_day_data, create_schedule_answer, \
+    is_full_place, send_long_message
 from constants import release_token
 from sql_updater import schedule_update
 
@@ -37,7 +38,7 @@ def schedule_sender():
         print(user_id, answer)
         try:
             answer = "Расписание на завтра:\n\n" + answer
-            bot.send_message(user_id, answer, parse_mode="HTML")
+            send_long_message(bot, answer, user_id)
         except Exception as err:
             print(err)
             continue

@@ -7,14 +7,14 @@ from constants import emoji, yandex_key
 
 def get_yandex_timetable_data(from_station, to_station, date, limit=3):
     from flask_app import server_timedelta
-    url = 'https://api.rasp.yandex.net/v3.0/search/?' \
-          'from={}' \
-          '&to={}' \
-          '&format=json' \
-          '&lang=ru_RU' \
-          '&apikey={}' \
-          '&date={}' \
-          '&transport_types=suburban'.format(from_station, to_station,
+    url = "https://api.rasp.yandex.net/v3.0/search/?" \
+          "from={0}" \
+          "&to={1}" \
+          "&format=json" \
+          "&lang=ru_RU" \
+          "&apikey={2}" \
+          "&date={3}" \
+          "&transport_types=suburban".format(from_station, to_station,
                                              yandex_key, date)
     data = requests.get(url).json()
 
@@ -43,21 +43,21 @@ def get_yandex_timetable_data(from_station, to_station, date, limit=3):
         if total_minutes >= 60:
             hours = total_minutes // 60
             segment_answer = emoji["blue_diamond"] + segment_answer
-            segment_answer += "{} ч ".format(hours)
+            segment_answer += "{0} ч ".format(hours)
             total_minutes %= 60
         elif 15.0 < total_minutes < 60:
             segment_answer = emoji["orange_diamond"] + segment_answer
         else:
             segment_answer = emoji["runner"] + segment_answer
-        segment_answer += "{} мин\n".format(total_minutes)
-        segment_answer += "Отправление в <b>{}</b> ({})\n\n".format(
+        segment_answer += "{0} мин\n".format(total_minutes)
+        segment_answer += "Отправление в <b>{0}</b> ({1})\n\n".format(
             departure_datetime.time().strftime("%H:%M"),
             arrival_datetime.time().strftime("%H:%M"))
 
         answer += segment_answer
 
     if answer != "":
-        answer = "<b>{}</b> => <b>{}</b>\n\n".format(from_title, to_title) + \
+        answer = "<b>{0}</b> => <b>{1}</b>\n\n".format(from_title, to_title) + \
                  answer
         is_tomorrow = False
     else:

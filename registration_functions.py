@@ -54,7 +54,7 @@ def select_division(message):
         study_programs_keyboard = telebot.types.ReplyKeyboardMarkup(True, False)
         index = division_names.index(message.text)
         alias = aliases[index]
-        url = "https://timetable.spbu.ru/api/v1/study/divisions/{}/" \
+        url = "https://timetable.spbu.ru/api/v1/study/divisions/{0}/" \
               "programs/levels".format(alias)
         study_programs = requests.get(url).json()
         for study_program in study_programs:
@@ -240,7 +240,7 @@ def select_admission_year(message):
         answer += "Укажи группу:"
         index = admission_year_names.index(message.text)
         study_program_id = admission_years[index]["StudyProgramId"]
-        url = "https://timetable.spbu.ru/api/v1/progams/{}/groups".format(
+        url = "https://timetable.spbu.ru/api/v1/progams/{0}/groups".format(
             study_program_id)
         student_groups = requests.get(url).json()
         student_group_names = []
@@ -381,7 +381,7 @@ def confirm_choice(message):
             cursor.execute("""DELETE FROM user_choice WHERE user_id = ?""",
                            (message.chat.id,))
             sql_con.commit()
-        url = "https://timetable.spbu.ru/api/v1/groups/{}/events".format(
+        url = "https://timetable.spbu.ru/api/v1/groups/{0}/events".format(
             group_id)
         week_data = requests.get(url).json()
         data = json.dumps(week_data)
@@ -399,12 +399,17 @@ def confirm_choice(message):
             sql_con.commit()
             cursor.close()
             sql_con.close()
-        answer = "Главное меню\n\n"
-        answer += emoji["info"] + " - информация о боте\n"
-        answer += emoji["star"] + " - оценить бота\n"
-        answer += emoji["settings"] + " - настройки\n"
-        answer += emoji["suburban"] + " - электрички\n"
-        answer += emoji["editor"] + " - редактор расписания"
+        answer = "Главное меню\n\n" \
+                 "{0} - информация о боте\n" \
+                 "{1} - оценить бота\n" \
+                 "{2} - настройки\n" \
+                 "{3} - электрички\n" \
+                 "{4} - редактор расписания\n" \
+                 "@Spbu4u_news - новости бота".format(emoji["info"],
+                                                      emoji["star"],
+                                                      emoji["settings"],
+                                                      emoji["suburban"],
+                                                      emoji["editor"])
         bot.send_message(message.chat.id, answer, reply_markup=main_keyboard,
                          parse_mode="HTML")
     elif message.text == "Другая группа":

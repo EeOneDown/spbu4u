@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
 import json
 import logging
+import telebot
 import sqlite3
 import requests
 from datetime import datetime
+from random import randint
 
 
 def insert_skip(hide_event_data, hide_day, hide_time, user_id):
@@ -82,6 +84,19 @@ def date_from_iso(iso):
                              "%Y%W%w").date()
 
 
+def select_all_group_data():
+    sql_con = sqlite3.connect("Bot_db")
+    cursor = sql_con.cursor()
+    cursor.execute("""SELECT json_week_data
+                      FROM groups_data""")
+    data = cursor.fetchall()
+    cursor.close()
+    sql_con.close()
+
+    data = [json.loads(group_data[0]) for group_data in data]
+    return data
+
+
 def get_json_week_data(user_id, next_week=False):
     sql_con = sqlite3.connect("Bot_db")
     cursor = sql_con.cursor()
@@ -96,7 +111,7 @@ def get_json_week_data(user_id, next_week=False):
 
         group_id = data[0]
         next_week_monday = json.loads(data[1])["NextWeekMonday"]
-        url = "https://timetable.spbu.ru/api/v1/groups/{}/events/{}".format(
+        url = "https://timetable.spbu.ru/api/v1/groups/{0}/events/{1}".format(
             group_id, next_week_monday)
         json_week_data = requests.get(url).json()
     else:
@@ -158,8 +173,12 @@ def create_schedule_answer(day_info, full_place, user_id=None, personal=True,
         if is_event_in_skips(event, skips,
                              day_info["DayString"].split(", ")[0]):
             continue
-        answer += emoji["clock"] + " " + event["TimeIntervalString"] + "\n"
-        answer += "<b>"
+        if event["IsAssigned"]:
+            answer += emoji["new"] + " "
+        answer += emoji["clock"] + " " + event["TimeIntervalString"]
+        if event["TimeWasChanged"]:
+            answer += " " + emoji["warning"]
+        answer += "\n<b>"
         subject_type = event["Subject"].split(", ")[-1]
         if subject_type in subject_short_type.keys():
             answer += subject_short_type[subject_type] + " - "
@@ -167,27 +186,38 @@ def create_schedule_answer(day_info, full_place, user_id=None, personal=True,
             answer += subject_type.capitalize() + " - "
         answer += ", ".join(event["Subject"].split(", ")[:-1]) + "</b>\n"
         for location in event["EventLocations"]:
+            if location["IsEmpty"]:
+                continue
             if full_place:
-                location_name = location["DisplayName"]
+                location_name = location["DisplayName"].strip(", ")
             else:
                 location_name = location["DisplayName"].split(", ")[-1]
-            answer += location_name + " <i>("
-            educators = [educator["Item2"].split(", ")[0] for educator in
-                         location["EducatorIds"]]
-            answer += "; ".join(educators) + ")</i>\n"
+            answer += location_name
+            if location["HasEducators"]:
+                answer += " <i>("
+                educators = [educator["Item2"].split(", ")[0] for educator in
+                             location["EducatorIds"]]
+                answer += "; ".join(educators) + ")</i>"
+            if event["LocationsWereChanged"] or \
+                    event["EducatorsWereReassigned"]:
+                answer += " " + emoji["warning"]
+            answer += "\n"
         answer += "\n"
 
     if len(answer.strip().split("\n\n")) == 1:
         return emoji["sleep"] + " Выходной"
+
+    if randint(1, 3) > 2:
+        answer += "Наш канал @Spbu4U_news"
 
     return answer
 
 
 def create_master_schedule_answer(day_info):
     from constants import emoji, subject_short_type
-    answer = "{} {}\n\n".format(emoji["calendar"], day_info["DayString"])
+    answer = "{0} {1}\n\n".format(emoji["calendar"], day_info["DayString"])
     for event in day_info["DayStudyEvents"]:
-        answer += "{} {} <i>({})</i>\n".format(
+        answer += "{0} {1} <i>({2})</i>\n".format(
             emoji["clock"], event["TimeIntervalString"],
             "; ".join(event["Dates"]))
         answer += "<b>"
@@ -200,7 +230,7 @@ def create_master_schedule_answer(day_info):
             event["Subject"].split(", ")[:-1]) + "</b>\n"
         for location in event["EventLocations"]:
             location_name = location["DisplayName"]
-            answer += location_name + " <i>({})</i>\n".format(
+            answer += location_name + " <i>({0})</i>\n".format(
                 "; ".join(name["Item1"] for name in
                           event["ContingentUnitNames"]))
         answer += "\n"
@@ -305,16 +335,17 @@ def set_rate(user_id, count_of_stars):
     sql_con.close()
 
 
-def write_log(update, work_time):
-    log = ""
+def write_log(update, work_time, was_error=False):
     if update.message is not None:
         chat_id = update.message.chat.id
         user_text = update.message.text
     else:
         chat_id = update.callback_query.message.chat.id
         user_text = update.callback_query.data
-    log += "CHAT: {} ===== TEXT: {} ===== TIME: {}".format(
+    log = "CHAT: {0} ===== TEXT: {1} ===== TIME: {2}".format(
         chat_id, user_text, work_time)
+    if was_error:
+        log += "        ERROR"
     logging.info(log)
 
 
@@ -388,8 +419,9 @@ def get_statistics_for_admin():
     cursor.execute("""SELECT count(id)
                       FROM user_data
                       WHERE sending = 1
-                      GROUP BY sending;""")
-    data["count_of_sending"] = cursor.fetchone()[0]
+                      GROUP BY sending""")
+    r_data = cursor.fetchone()
+    data["count_of_sending"] = 0 if r_data is None else r_data[0]
 
     cursor.close()
     sql_con.close()
@@ -445,3 +477,33 @@ def change_univer_station(user_id, univer):
     sql_con.commit()
     cursor.close()
     sql_con.close()
+
+
+def send_long_message(bot, text, user_id):
+    try:
+        bot.send_message(user_id, text, parse_mode="HTML")
+    except telebot.apihelper.ApiException as ApiExcept:
+        json_err = json.loads(ApiExcept.result.text)
+        if json_err["description"] == "Bad Request: message is too long":
+            event_count = len(text.split("\n\n"))
+            first_part = "\n\n".join(text.split("\n\n")[:event_count // 2])
+            second_part = "\n\n".join(text.split("\n\n")[event_count // 2:])
+            send_long_message(bot, first_part, user_id)
+            send_long_message(bot, second_part, user_id)
+
+
+def get_user_rate(user_id):
+    sql_con = sqlite3.connect("Bot_db")
+    cursor = sql_con.cursor()
+    cursor.execute("""SELECT rate
+                      FROM user_data
+                      WHERE id = ?""", (user_id,))
+    rate = cursor.fetchone()[0]
+    cursor.close()
+    sql_con.close()
+    return rate
+
+
+def is_correct_educator_name(text):
+    return text.replace(".", "").replace("-", "").replace(" - ", "").replace(
+        " ", "").isalnum()

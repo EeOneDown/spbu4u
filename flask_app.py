@@ -12,12 +12,12 @@ import registration_functions as reg_func
 import functions as func
 from yandex_timetable import get_yandex_timetable_data
 from sql_updater import schedule_update
-from constants import release_token, emoji, briefly_info_answer, my_id, \
+from constants import test_token, emoji, briefly_info_answer, my_id, \
     full_info_answer, webhook_url_base, webhook_url_path, week_day_number, \
     all_stations, all_stations_const, week_day_titles, subject_short_type_revert
 
-
-bot = telebot.TeleBot(release_token, threaded=False)
+# TODO change token
+bot = telebot.TeleBot(test_token, threaded=False)
 app = flask.Flask(__name__)
 sslify = SSLify(app)
 
@@ -478,8 +478,9 @@ def return_hided_lesson(message):
                      reply_markup=ids_keyboard, parse_mode="HTML")
 
 
+# TODO change bot name
 @bot.message_handler(func=lambda mess: mess.reply_to_message is not None and
-                     mess.reply_to_message.from_user.username == "Spbu4UBot" and
+                     mess.reply_to_message.from_user.username == "tt202_bot" and
                      mess.reply_to_message.text == "Напиши мне что-нибудь:",
                      content_types=["text"])
 def users_callback_handler(message):
@@ -545,8 +546,9 @@ def educator_schedule_handler(message):
                      parse_mode="HTML")
 
 
+# TODO change bot name
 @bot.message_handler(func=lambda mess: mess.reply_to_message is not None and
-                     mess.reply_to_message.from_user.username == "Spbu4UBot" and
+                     mess.reply_to_message.from_user.username == "tt202_bot" and
                      "Введи Фамилию преподавателя:" in
                      mess.reply_to_message.text,
                      content_types=["text"])

@@ -15,8 +15,8 @@ sha_string = hmac.new(bytearray(secret_key, "utf-8"),
 my_id = 200466757
 ks_id = 71591548
 
-
-webhook_host = "eeonedown.pythonanywhere.com"
+# TODO change domain
+webhook_host = "spbu4u.pythonanywhere.com"
 webhook_port = 443
 webhook_url_base = "https://{0}:{1}".format(webhook_host, webhook_port)
 webhook_url_path = "/{0}/".format(sha_string)

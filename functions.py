@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 import json
 import logging
-import telebot
 import sqlite3
 import requests
 from datetime import datetime
+from telebot.apihelper import ApiException
 from random import randint
 
 
@@ -485,7 +485,7 @@ def change_univer_station(user_id, univer):
 def send_long_message(bot, text, user_id):
     try:
         bot.send_message(user_id, text, parse_mode="HTML")
-    except telebot.apihelper.ApiException as ApiExcept:
+    except ApiException as ApiExcept:
         json_err = json.loads(ApiExcept.result.text)
         if json_err["description"] == "Bad Request: message is too long":
             event_count = len(text.split("\n\n"))

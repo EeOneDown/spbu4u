@@ -39,11 +39,13 @@ server_timedelta = timedelta(hours=3)
 @bot.message_handler(func=lambda mess: mess.text == "Сменить группу",
                      content_types=["text"])
 def start_handler(message):
-    bot.send_chat_action(message.chat.id, "typing")
     answer = ""
     if message.text == "/start":
-        answer += "Приветствую!\n"
-    answer += "Укажи свое направление:"
+        answer = "Приветствую!\n"
+    answer += "Загружаю список направлений..."
+    bot_msg = bot.send_message(message.chat.id, answer)
+    bot.send_chat_action(message.chat.id, "typing")
+    answer = "Укажи свое направление:"
     url = "https://timetable.spbu.ru/api/v1/study/divisions"
     divisions = requests.get(url).json()
     division_names = [division["Name"] for division in divisions]
@@ -63,8 +65,9 @@ def start_handler(message):
     sql_con.commit()
     cursor.close()
     sql_con.close()
-    bot.send_message(message.chat.id, answer,
-                     reply_markup=divisions_keyboard)
+    bot.edit_message_text(text=answer, chat_id=message.chat.id,
+                          message_id=bot_msg.message_id,
+                          reply_markup=divisions_keyboard)
     reg_func.set_next_step(message.chat.id, "select_division")
 
 

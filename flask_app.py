@@ -65,9 +65,9 @@ def start_handler(message):
     sql_con.commit()
     cursor.close()
     sql_con.close()
-    bot.edit_message_text(text=answer, chat_id=message.chat.id,
-                          message_id=bot_msg.message_id,
-                          reply_markup=divisions_keyboard)
+    bot.edit_message_text(text="Готово!", chat_id=message.chat.id,
+                          message_id=bot_msg.message_id)
+    bot.send_message(message.chat.id, answer, reply_markup=divisions_keyboard)
     reg_func.set_next_step(message.chat.id, "select_division")
 
 

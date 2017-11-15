@@ -39,11 +39,13 @@ server_timedelta = timedelta(hours=3)
 @bot.message_handler(func=lambda mess: mess.text == "Сменить группу",
                      content_types=["text"])
 def start_handler(message):
-    bot.send_chat_action(message.chat.id, "typing")
     answer = ""
     if message.text == "/start":
-        answer += "Приветствую!\n"
-    answer += "Укажи свое направление:"
+        answer = "Приветствую!\n"
+    answer += "Загружаю список направлений..."
+    bot_msg = bot.send_message(message.chat.id, answer)
+    bot.send_chat_action(message.chat.id, "typing")
+    answer = "Укажи свое направление:"
     url = "https://timetable.spbu.ru/api/v1/study/divisions"
     divisions = requests.get(url).json()
     division_names = [division["Name"] for division in divisions]
@@ -63,8 +65,9 @@ def start_handler(message):
     sql_con.commit()
     cursor.close()
     sql_con.close()
-    bot.send_message(message.chat.id, answer,
-                     reply_markup=divisions_keyboard)
+    bot.edit_message_text(text="Готово!", chat_id=message.chat.id,
+                          message_id=bot_msg.message_id)
+    bot.send_message(message.chat.id, answer, reply_markup=divisions_keyboard)
     reg_func.set_next_step(message.chat.id, "select_division")
 
 
@@ -539,7 +542,7 @@ def schedule_update_handler(message):
                      content_types=["text"])
 def educator_schedule_handler(message):
     bot.send_chat_action(message.chat.id, "typing")
-    answer = "Введи Фамилию преподавателя: <i>(и ИО или инициалы с точкой)</i>"
+    answer = "Введи Фамилию преподавателя: <i>(и И. О.)</i>"
     markup = telebot.types.ForceReply(False)
     bot.send_message(message.chat.id, answer, reply_markup=markup,
                      parse_mode="HTML")
@@ -581,10 +584,9 @@ def write_educator_name_handler(message):
                          reply_markup=schedule_keyboard)
     elif len(educators_data["Educators"]) > 200:
         answer = "Слишком много преподавателей\n" \
-                 "Пожалуйста, <b>уточни</b> фамилию"
+                 "Пожалуйста, <b>уточни</b>"
         bot.send_message(message.chat.id, answer, parse_mode="HTML")
-        answer = "Введи Фамилию преподавателя: <i>(и ИО или инициалы с " \
-                 "точкой)</i>"
+        answer = "Введи Фамилию преподавателя: <i>(и И. О.)</i>"
         markup = telebot.types.ForceReply(False)
         bot.send_message(message.chat.id, answer, reply_markup=markup,
                          parse_mode="HTML")

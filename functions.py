@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 import json
 import logging
-import telebot
 import sqlite3
 import requests
 from datetime import datetime
+from telebot.apihelper import ApiException
 from random import randint
 
 
@@ -339,9 +339,12 @@ def write_log(update, work_time, was_error=False):
     if update.message is not None:
         chat_id = update.message.chat.id
         user_text = update.message.text
-    else:
+    elif update.callback_query is not None:
         chat_id = update.callback_query.message.chat.id
         user_text = update.callback_query.data
+    else:
+        chat_id = "ERROR"
+        user_text = str(update)
     log = "CHAT: {0} ===== TEXT: {1} ===== TIME: {2}".format(
         chat_id, user_text, work_time)
     if was_error:
@@ -482,7 +485,7 @@ def change_univer_station(user_id, univer):
 def send_long_message(bot, text, user_id):
     try:
         bot.send_message(user_id, text, parse_mode="HTML")
-    except telebot.apihelper.ApiException as ApiExcept:
+    except ApiException as ApiExcept:
         json_err = json.loads(ApiExcept.result.text)
         if json_err["description"] == "Bad Request: message is too long":
             event_count = len(text.split("\n\n"))
@@ -505,5 +508,4 @@ def get_user_rate(user_id):
 
 
 def is_correct_educator_name(text):
-    return text.replace(".", "").replace("-", "").replace(" - ", "").replace(
-        " ", "").isalnum()
+    return text.replace(".", "").replace("-", "").replace(" ", "").isalnum()

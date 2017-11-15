@@ -508,5 +508,4 @@ def get_user_rate(user_id):
 
 
 def is_correct_educator_name(text):
-    return text.replace(".", "").replace("-", "").replace(" - ", "").replace(
-        " ", "").isalnum()
+    return text.replace(".", "").replace("-", "").replace(" ", "").isalnum()

@@ -97,7 +97,7 @@ def select_all_group_data():
     return data
 
 
-def get_json_week_data(user_id, next_week=False):
+def get_json_week_data(user_id, next_week=False, for_day=None):
     sql_con = sqlite3.connect("Bot_db")
     cursor = sql_con.cursor()
     if next_week:
@@ -113,6 +113,16 @@ def get_json_week_data(user_id, next_week=False):
         next_week_monday = json.loads(data[1])["NextWeekMonday"]
         url = "https://timetable.spbu.ru/api/v1/groups/{0}/events/{1}".format(
             group_id, next_week_monday)
+        json_week_data = requests.get(url).json()
+    elif for_day is not None:
+        cursor.execute("""SELECT group_id
+                          FROM user_data 
+                          WHERE  id= ?""", (user_id,))
+        data = cursor.fetchone()
+
+        group_id = data[0]
+        url = "https://timetable.spbu.ru/api/v1/groups/{0}/events/{1}".format(
+            group_id, for_day)
         json_week_data = requests.get(url).json()
     else:
         cursor.execute("""SELECT json_week_data
@@ -509,3 +519,29 @@ def get_user_rate(user_id):
 
 def is_correct_educator_name(text):
     return text.replace(".", "").replace("-", "").replace(" ", "").isalnum()
+
+
+def text_to_date(text):
+    from constants import months
+
+    text = text.replace(".", " ").replace(",", " ")
+    if text.replace(" ", "").isalnum():
+        words = text.split()[:3]
+        for word in words:
+            if not (word.isdecimal() or (
+                    word.isalpha() and (word.lower() in months.keys()))):
+                return False
+        try:
+            day = int(words[0])
+            month = datetime.today().month
+            year = datetime.today().year
+            if len(words) > 1:
+                month = int(words[1]) if words[1].isdecimal() else months[
+                                                                    words[1]]
+                if len(words) > 2:
+                    year = int(words[2])
+            return datetime.today().replace(day=day, month=month,
+                                            year=year).date()
+        except ValueError:
+            return False
+    return False

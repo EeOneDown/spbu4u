@@ -15,8 +15,8 @@ sha_string = hmac.new(bytearray(secret_key, "utf-8"),
 my_id = 200466757
 ks_id = 71591548
 
-
-webhook_host = "eeonedown.pythonanywhere.com"
+# TODO change domain
+webhook_host = "spbu4u.pythonanywhere.com"
 webhook_port = 443
 webhook_url_base = "https://{0}:{1}".format(webhook_host, webhook_port)
 webhook_url_path = "/{0}/".format(sha_string)
@@ -64,6 +64,10 @@ all_stations_const = ["Санкт-Петербург", "Броневая", "Ле
                       "Лигово", "Сосновая Поляна", "Стрельна", "Новый Петергоф",
                       "Старый Петергоф", "Университетская (Университет)",
                       "Ораниенбаум-1", "Лебяжье", "Калище"]
+
+months = {"января": 1, "фераля": 2, "марта": 3, "апреля": 4, "мая": 5,
+          "июня": 6, "июля": 7, "августа": 8, "сентября": 9, "октября": 10,
+          "ноября": 11, "декабря": 12}
 
 full_info_answer = \
     'ИНФОРМАЦИЯ\n\n' \

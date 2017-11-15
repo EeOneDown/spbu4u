@@ -4,7 +4,7 @@ import json
 import sqlite3
 import telebot
 from datetime import datetime, timedelta
-from time import sleep
+from time import sleep, localtime
 from functions import get_json_day_data, create_schedule_answer, \
     is_full_place, send_long_message
 from constants import release_token
@@ -49,5 +49,6 @@ if __name__ == '__main__':
     schedule_update("spbu4u/Bot_db")
     schedule_sender()
     if datetime.today().weekday() == 5:
-        sleep(10800)
+        loc_time = localtime()
+        sleep((59 - loc_time.tm_min) * 60 + (23 - loc_time.tm_hour) * 3600)
         schedule_update("spbu4u/Bot_db")

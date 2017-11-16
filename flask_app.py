@@ -46,7 +46,9 @@ def start_handler(message):
     elif "/start" in message.text:
         answer = "Приветствую!\n"
         answer += "Добавляю тебя в группу..."
-        bot_msg = bot.send_message(message.chat.id, answer)
+        remove_keyboard = telebot.types.ReplyKeyboardRemove(True)
+        bot_msg = bot.send_message(message.chat.id, answer,
+                                   reply_markup=remove_keyboard)
         try:
             group_id = int(message.text.split()[1])
         except ValueError:
@@ -1507,7 +1509,8 @@ def change_template_group_handler(call_back):
     chosen_group_title = json.loads(data)["StudentGroupDisplayName"][7:]
     cursor.execute("""UPDATE user_data 
                       SET group_id = ?
-                      WHERE id = ?""", (chosen_group_id, call_back.message.chat.id))
+                      WHERE id = ?""",
+                   (chosen_group_id, call_back.message.chat.id))
     sql_con.commit()
     cursor.close()
     sql_con.close()

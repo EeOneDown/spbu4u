@@ -3,7 +3,7 @@ import json
 import logging
 import sqlite3
 import requests
-from datetime import datetime
+from datetime import datetime, date
 from telebot.apihelper import ApiException
 from random import randint
 
@@ -160,7 +160,7 @@ def is_event_in_skips(event, skips, week_day_string):
 
 
 def create_schedule_answer(day_info, full_place, user_id=None, personal=True,
-                           db_path="Bot_db"):
+                           db_path="Bot_db", only_exams=False):
     from constants import emoji, subject_short_type
 
     if day_info is None:
@@ -176,7 +176,8 @@ def create_schedule_answer(day_info, full_place, user_id=None, personal=True,
         skips = []
 
     for event in day_study_events:
-        if event["IsCancelled"]:
+        if event["IsCancelled"] or \
+                (only_exams and "пересдача" in event["Subject"]):
             continue
         if is_event_in_skips(event, skips,
                              day_info["DayString"].split(", ")[0]):
@@ -582,3 +583,19 @@ def add_new_user(user_id, group_id, week_data=None):
         sql_con.commit()
         cursor.close()
         sql_con.close()
+
+
+def get_semester_dates(today):
+    if today.month in range(2, 8):
+        start_year = today.year
+        end_year = today.year
+        start_month = 2
+        end_month = 8
+    else:
+        start_year = today.year - 1 if today.month < 2 else today.year
+        end_year = today.year + 1 if today.month > 7 else today.year
+        start_month = 8
+        end_month = 2
+
+    return [date(year=start_year, month=start_month, day=1),
+            date(year=end_year, month=end_month, day=1)]

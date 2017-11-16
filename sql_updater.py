@@ -15,32 +15,22 @@ def schedule_update(db_path="Bot_db"):
                           groups_data.id
                         FROM groups_data
                           LEFT OUTER JOIN user_data
-                            ON (groups_data.id = user_data.group_id
-                              AND groups_data.alias = user_data.alias)
+                            ON groups_data.id = user_data.group_id
                         WHERE user_data.id ISNULL
-                      )
-                            AND alias in (
-                        SELECT
-                          groups_data.alias
-                        FROM groups_data
-                          LEFT OUTER JOIN user_data
-                            ON (groups_data.id = user_data.group_id
-                              AND groups_data.alias = user_data.alias)
-                        WHERE user_data.id ISNULL
-                      );""")
+                      )""")
     sql_con.commit()
-    cursor.execute("""SELECT id, alias FROM groups_data""")
+    cursor.execute("""SELECT id FROM groups_data""")
     groups = cursor.fetchall()
     for group in groups:
-        group_id, alias = group[0], group[1]
+        group_id = group[0]
         url = "https://timetable.spbu.ru/api/v1/groups/{0}/events".format(
             group_id)
         json_week_data = requests.get(url).json()
         data = json.dumps(json_week_data)
         cursor.execute("""UPDATE groups_data
                           SET json_week_data = ?
-                          WHERE id = ? AND alias = ?""",
-                       (data, group_id, alias))
+                          WHERE id = ?""",
+                       (data, group_id))
         sql_con.commit()
     cursor.close()
     sql_con.close()

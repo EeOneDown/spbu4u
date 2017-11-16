@@ -19,10 +19,12 @@
 - [ ] physical training schedule
 - [x] groups templates
 - [x] sending
+- [x] schedule for the entered day
 * __Suburbans__
 - [x] from SPb to University station
 - [x] from University station to SPb
 - [x] own trail on the Baltic direction (today/tomorrow)
+- [x] personalization home and university stations
 * __Schedule__ __editor__
 - [x] place format
 - [x] hide lessons
@@ -32,7 +34,7 @@
 - [x] end work (exit)
 - [x] change group
 * __Info__
-- [x] full info
+- [ ] full info
 - [x] briefly info
 * __Rate__
 - [x] rate bot

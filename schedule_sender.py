@@ -20,7 +20,6 @@ def schedule_sender():
                       FROM user_data
                         JOIN groups_data
                           ON (user_data.group_id = groups_data.id
-                              AND groups_data.alias = user_data.alias
                               AND sending = 1)""")
     data = cursor.fetchall()
     cursor.close()

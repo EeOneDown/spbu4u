@@ -70,10 +70,9 @@ def start_handler(message):
 
         week_data = req.json()
         func.add_new_user(message.chat.id, group_id, week_data)
-        answer = "Готово! Твоя группа: <b>{0}</b>".format(
+        answer = "Готово!\n{0}".format(
             week_data["StudentGroupDisplayName"])
-        bot.edit_message_text(answer, message.chat.id, bot_msg.message_id,
-                              parse_mode="HTML")
+        bot.edit_message_text(answer, message.chat.id, bot_msg.message_id)
         answer = "Главное меню\n\n" \
                  "{0} - информация о боте\n" \
                  "{1} - оценить бота\n" \

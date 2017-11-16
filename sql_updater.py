@@ -16,7 +16,10 @@ def schedule_update(db_path="Bot_db"):
                         FROM groups_data
                           LEFT OUTER JOIN user_data
                             ON groups_data.id = user_data.group_id
+                          LEFT OUTER JOIN user_groups
+                            ON groups_data.id = user_groups.group_id
                         WHERE user_data.id ISNULL
+                          AND user_groups.group_id ISNULL
                       )""")
     sql_con.commit()
     cursor.execute("""SELECT id FROM groups_data""")

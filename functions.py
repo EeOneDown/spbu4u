@@ -545,7 +545,7 @@ def text_to_date(text):
     return False
 
 
-def add_new_user(user_id, group_id):
+def add_new_user(user_id, group_id, week_data=None):
     sql_con = sqlite3.connect("Bot_db")
     cursor = sql_con.cursor()
     try:
@@ -563,9 +563,10 @@ def add_new_user(user_id, group_id):
         cursor.execute("""DELETE FROM user_choice WHERE user_id = ?""",
                        (user_id,))
         sql_con.commit()
-    url = "https://timetable.spbu.ru/api/v1/groups/{0}/events".format(
-        group_id)
-    week_data = requests.get(url).json()
+    if week_data is None:
+        url = "https://timetable.spbu.ru/api/v1/groups/{0}/events".format(
+            group_id)
+        week_data = requests.get(url).json()
     data = json.dumps(week_data)
     try:
         cursor.execute("""INSERT INTO groups_data 

@@ -47,8 +47,33 @@ def start_handler(message):
         answer = "Приветствую!\n"
         answer += "Добавляю тебя в группу..."
         bot_msg = bot.send_message(message.chat.id, answer)
-        func.add_new_user(message.chat.id, int(message.text.split()[1]))
-        bot.edit_message_text("Готово!", message.chat.id, bot_msg.message_id)
+        try:
+            group_id = int(message.text.split()[1])
+        except ValueError:
+            answer = "Ошибка в id группы."
+            bot.edit_message_text(answer, message.chat.id,
+                                  bot_msg.message_id)
+            message.text = "/start"
+            start_handler(message)
+            return
+
+        url = "https://timetable.spbu.ru/api/v1/groups/{0}/events".format(
+            group_id)
+        req = requests.get(url)
+        if req.status_code != 200:
+            answer = "Ошибка в id группы."
+            bot.edit_message_text(answer, message.chat.id,
+                                  bot_msg.message_id)
+            message.text = "/start"
+            start_handler(message)
+            return
+
+        week_data = req.json()
+        func.add_new_user(message.chat.id, group_id, week_data)
+        answer = "Готово! Твоя группа: <b>{0}</b>".format(
+            week_data["StudentGroupDisplayName"])
+        bot.edit_message_text(answer, message.chat.id, bot_msg.message_id,
+                              parse_mode="HTML")
         answer = "Главное меню\n\n" \
                  "{0} - информация о боте\n" \
                  "{1} - оценить бота\n" \
@@ -60,9 +85,9 @@ def start_handler(message):
                                                       emoji["settings"],
                                                       emoji["suburban"],
                                                       emoji["editor"])
-        bot.edit_message_text(chat_id=message.chat.id, text=answer,
-                              reply_markup=main_keyboard,
-                              parse_mode="HTML")
+        bot.send_message(chat_id=message.chat.id, text=answer,
+                         reply_markup=main_keyboard,
+                         parse_mode="HTML")
         return
     answer += "Загружаю список направлений..."
     bot_msg = bot.send_message(message.chat.id, answer)

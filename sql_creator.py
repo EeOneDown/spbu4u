@@ -27,7 +27,6 @@ def create_sql(db_name):
     cursor.execute("""CREATE TABLE groups_data
                         (
                             id INT PRIMARY KEY NOT NULL,
-                            alias TEXT NOT NULL,
                             json_week_data TEXT,
                             interim_attestation TEXT
                         )""")
@@ -37,7 +36,6 @@ def create_sql(db_name):
     cursor.execute("""CREATE TABLE user_data
                         (
                             id INT PRIMARY KEY NOT NULL,
-                            alias TEXT,
                             group_id INT NOT NULL,
                             full_place INT DEFAULT 1 NOT NULL,
                             sending INT DEFAULT 0 NOT NULL,

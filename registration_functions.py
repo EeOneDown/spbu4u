@@ -3,6 +3,7 @@ import json
 import sqlite3
 import requests
 import telebot
+from functions import add_new_user
 
 
 def set_next_step(user_id, next_step):
@@ -360,45 +361,17 @@ def confirm_choice(message):
     if message.text == "Все верно":
         sql_con = sqlite3.connect("Bot_db")
         cursor = sql_con.cursor()
-        cursor.execute("""SELECT alias, student_group_id
+        cursor.execute("""SELECT student_group_id
                           FROM user_choice 
                           WHERE user_id = ?""", (message.chat.id,))
-        data = cursor.fetchone()
-        alias = data[0]
-        group_id = data[1]
-        try:
-            cursor.execute("""INSERT INTO user_data (id, alias, group_id)
-                              VALUES (?, ?, ?)""",
-                           (message.chat.id, alias, group_id))
-        except sqlite3.IntegrityError:
-            sql_con.rollback()
-            cursor.execute("""UPDATE user_data 
-                              SET alias = ?, group_id = ?
-                              WHERE id = ?""",
-                           (alias, group_id, message.chat.id))
-        finally:
-            sql_con.commit()
-            cursor.execute("""DELETE FROM user_choice WHERE user_id = ?""",
-                           (message.chat.id,))
-            sql_con.commit()
-        url = "https://timetable.spbu.ru/api/v1/groups/{0}/events".format(
-            group_id)
-        week_data = requests.get(url).json()
-        data = json.dumps(week_data)
-        try:
-            cursor.execute("""INSERT INTO groups_data 
-                              (id, alias, json_week_data)
-                              VALUES (?, ?, ?)""",
-                           (group_id, alias, data))
-        except sqlite3.IntegrityError:
-            cursor.execute("""UPDATE groups_data
-                              SET json_week_data = ?
-                              WHERE id = ? AND alias = ?""",
-                           (data, group_id, alias))
-        finally:
-            sql_con.commit()
-            cursor.close()
-            sql_con.close()
+        group_id = cursor.fetchone()[0]
+        user_id = message.chat.id
+
+        cursor.close()
+        sql_con.close()
+
+        add_new_user(user_id, group_id)
+
         answer = "Главное меню\n\n" \
                  "{0} - информация о боте\n" \
                  "{1} - оценить бота\n" \

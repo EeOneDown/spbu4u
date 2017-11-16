@@ -43,6 +43,27 @@ def start_handler(message):
     answer = ""
     if message.text == "/start":
         answer = "Приветствую!\n"
+    elif "/start" in message.text:
+        answer = "Приветствую!\n"
+        answer += "Добавляю тебя в группу..."
+        bot_msg = bot.send_message(message.chat.id, answer)
+        func.add_new_user(message.chat.id, int(message.text.split()[1]))
+        bot.edit_message_text("Готово!", message.chat.id, bot_msg.message_id)
+        answer = "Главное меню\n\n" \
+                 "{0} - информация о боте\n" \
+                 "{1} - оценить бота\n" \
+                 "{2} - настройки\n" \
+                 "{3} - электрички\n" \
+                 "{4} - редактор расписания\n" \
+                 "@Spbu4u_news - новости бота".format(emoji["info"],
+                                                      emoji["star"],
+                                                      emoji["settings"],
+                                                      emoji["suburban"],
+                                                      emoji["editor"])
+        bot.edit_message_text(chat_id=message.chat.id, text=answer,
+                              reply_markup=main_keyboard,
+                              parse_mode="HTML")
+        return
     answer += "Загружаю список направлений..."
     bot_msg = bot.send_message(message.chat.id, answer)
     bot.send_chat_action(message.chat.id, "typing")
@@ -1455,17 +1476,14 @@ def change_template_group_handler(call_back):
     chosen_group_id = int(call_back.data)
     sql_con = sqlite3.connect("Bot_db")
     cursor = sql_con.cursor()
-    cursor.execute("""SELECT alias, json_week_data
+    cursor.execute("""SELECT json_week_data
                       FROM groups_data
                       WHERE id = ?""", (chosen_group_id, ))
-    data = cursor.fetchone()
-    chosen_group_alias = data[0]
-    chosen_group_title = json.loads(data[1])["StudentGroupDisplayName"][7:]
+    data = cursor.fetchone()[0]
+    chosen_group_title = json.loads(data)["StudentGroupDisplayName"][7:]
     cursor.execute("""UPDATE user_data 
-                      SET alias = ?, group_id = ?
-                      WHERE id = ?""",
-                   (chosen_group_alias, chosen_group_id,
-                    call_back.message.chat.id))
+                      SET group_id = ?
+                      WHERE id = ?""", (chosen_group_id, call_back.message.chat.id))
     sql_con.commit()
     cursor.close()
     sql_con.close()

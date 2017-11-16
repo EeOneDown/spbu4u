@@ -104,8 +104,7 @@ def get_json_week_data(user_id, next_week=False, for_day=None):
         cursor.execute("""SELECT group_id, json_week_data
                           FROM groups_data
                             JOIN user_data
-                              ON (groups_data.id = user_data.group_id AND 
-                                  groups_data.alias = user_data.alias) 
+                              ON groups_data.id = user_data.group_id 
                           WHERE  user_data.id= ?""", (user_id,))
         data = cursor.fetchone()
 
@@ -128,8 +127,7 @@ def get_json_week_data(user_id, next_week=False, for_day=None):
         cursor.execute("""SELECT json_week_data
                           FROM groups_data
                             JOIN user_data
-                              ON (groups_data.id = user_data.group_id AND 
-                                  groups_data.alias = user_data.alias) 
+                              ON groups_data.id = user_data.group_id 
                           WHERE  user_data.id= ?""", (user_id, ))
         data = cursor.fetchone()
 
@@ -545,3 +543,41 @@ def text_to_date(text):
         except ValueError:
             return False
     return False
+
+
+def add_new_user(user_id, group_id):
+    sql_con = sqlite3.connect("Bot_db")
+    cursor = sql_con.cursor()
+    try:
+        cursor.execute("""INSERT INTO user_data (id, group_id)
+                          VALUES (?, ?)""",
+                       (user_id, group_id))
+    except sqlite3.IntegrityError:
+        sql_con.rollback()
+        cursor.execute("""UPDATE user_data 
+                          SET group_id = ?
+                          WHERE id = ?""",
+                       (group_id, user_id))
+    finally:
+        sql_con.commit()
+        cursor.execute("""DELETE FROM user_choice WHERE user_id = ?""",
+                       (user_id,))
+        sql_con.commit()
+    url = "https://timetable.spbu.ru/api/v1/groups/{0}/events".format(
+        group_id)
+    week_data = requests.get(url).json()
+    data = json.dumps(week_data)
+    try:
+        cursor.execute("""INSERT INTO groups_data 
+                          (id, json_week_data)
+                          VALUES (?, ?)""",
+                       (group_id, data))
+    except sqlite3.IntegrityError:
+        cursor.execute("""UPDATE groups_data
+                          SET json_week_data = ?
+                          WHERE id = ?""",
+                       (data, group_id))
+    finally:
+        sql_con.commit()
+        cursor.close()
+        sql_con.close()

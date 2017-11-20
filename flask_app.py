@@ -1578,6 +1578,7 @@ def select_months_att_handler(call_back):
                                                   personal=False,
                                                   only_exams=False)
     bot.edit_message_text(text=answer, chat_id=call_back.message.chat.id,
+                          message_id=call_back.message.message_id,
                           parse_mode="HTML")
 
 

@@ -330,7 +330,8 @@ def sending_handler(message):
 def attestation_handler(message):
     month = func.get_available_months(message.chat.id)
     if len(month) == 0:
-        bot.send_message(message.chat.id, "Нет событий")
+        bot.send_message(message.chat.id, "<i>Нет событий</i>",
+                         parse_mode="HTML")
         return
     inline_keyboard = telebot.types.InlineKeyboardMarkup()
     for key in month.keys():
@@ -1571,15 +1572,20 @@ def select_master_id_handler(call_back):
 def select_months_att_handler(call_back):
     json_attestation = func.get_json_attestation(call_back.message.chat.id)
     answer = ""
+    is_full_place = func.is_full_place(call_back.message.chat.id)
     for day_data in json_attestation["Days"]:
         data = datetime.strptime(day_data["Day"], "%Y-%m-%dT%H:%M:%S")
         if call_back.data == str(data.month):
-            answer += func.create_schedule_answer(day_data, True,
+            answer += func.create_schedule_answer(day_data, is_full_place,
                                                   personal=False,
                                                   only_exams=False)
-    bot.edit_message_text(text=answer, chat_id=call_back.message.chat.id,
-                          message_id=call_back.message.message_id,
-                          parse_mode="HTML")
+    try:
+        bot.edit_message_text(text=answer,
+                              chat_id=call_back.message.chat.id,
+                              message_id=call_back.message_id,
+                              parse_mode="HTML")
+    except telebot.apihelper.ApiException:
+        func.send_long_message(bot, answer, call_back.message.chat.id)
 
 
 @app.route("/reset_webhook", methods=["GET", "HEAD"])

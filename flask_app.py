@@ -44,11 +44,8 @@ def start_handler(message):
     if message.text == "/start":
         answer = "Приветствую!\n"
     elif "/start" in message.text:
-        answer = "Приветствую!\n"
-        answer += "Добавляю тебя в группу..."
-        remove_keyboard = telebot.types.ReplyKeyboardRemove(True)
-        bot_msg = bot.send_message(message.chat.id, answer,
-                                   reply_markup=remove_keyboard)
+        answer = "Приветствую!\nДобавляю тебя в группу..."
+        bot_msg = bot.send_message(message.chat.id, answer)
         try:
             group_id = int(message.text.split()[1])
         except ValueError:

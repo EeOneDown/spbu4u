@@ -9,7 +9,7 @@ from constants import months_date
 
 
 def insert_skip(hide_event_data, hide_day, hide_time, user_id):
-    sql_con = sqlite3.connect("Bot_db")
+    sql_con = sqlite3.connect("Bot.db")
     cursor = sql_con.cursor()
     try:
         cursor.execute("""INSERT INTO lessons (name, type, day, time) 
@@ -40,7 +40,7 @@ def insert_skip(hide_event_data, hide_day, hide_time, user_id):
         sql_con.close()
 
 
-def get_hide_lessons_data(user_id, db_path="Bot_db"):
+def get_hide_lessons_data(user_id, db_path="Bot.db"):
     sql_con = sqlite3.connect(db_path)
     cursor = sql_con.cursor()
     cursor.execute("""SELECT
@@ -60,7 +60,7 @@ def get_hide_lessons_data(user_id, db_path="Bot_db"):
 
 
 def delete_user(user_id, only_choice=False):
-    sql_con = sqlite3.connect("Bot_db")
+    sql_con = sqlite3.connect("Bot.db")
     cursor = sql_con.cursor()
     cursor.execute("""DELETE FROM user_choice 
                       WHERE user_id = ?""", (user_id,))
@@ -85,7 +85,7 @@ def date_from_iso(iso):
 
 
 def select_all_group_data():
-    sql_con = sqlite3.connect("Bot_db")
+    sql_con = sqlite3.connect("Bot.db")
     cursor = sql_con.cursor()
     cursor.execute("""SELECT json_week_data
                       FROM groups_data""")
@@ -98,7 +98,7 @@ def select_all_group_data():
 
 
 def get_json_week_data(user_id, next_week=False, for_day=None):
-    sql_con = sqlite3.connect("Bot_db")
+    sql_con = sqlite3.connect("Bot.db")
     cursor = sql_con.cursor()
     if next_week:
         cursor.execute("""SELECT group_id, json_week_data
@@ -160,7 +160,7 @@ def is_event_in_skips(event, skips, week_day_string):
 
 
 def create_schedule_answer(day_info, full_place, user_id=None, personal=True,
-                           db_path="Bot_db", only_exams=False):
+                           db_path="Bot.db", only_exams=False):
     from constants import emoji, subject_short_type
 
     if day_info is None:
@@ -245,7 +245,7 @@ def create_master_schedule_answer(day_info):
 
 
 def is_user_exist(user_id):
-    sql_con = sqlite3.connect("Bot_db")
+    sql_con = sqlite3.connect("Bot.db")
     cursor = sql_con.cursor()
     cursor.execute("""SELECT count(id) 
                       FROM user_data
@@ -257,7 +257,7 @@ def is_user_exist(user_id):
 
 
 def is_sending_on(user_id):
-    sql_con = sqlite3.connect("Bot_db")
+    sql_con = sqlite3.connect("Bot.db")
     cursor = sql_con.cursor()
     cursor.execute("""SELECT sending 
                       FROM user_data
@@ -269,7 +269,7 @@ def is_sending_on(user_id):
 
 
 def set_sending(user_id, on=True):
-    sql_con = sqlite3.connect("Bot_db")
+    sql_con = sqlite3.connect("Bot.db")
     cursor = sql_con.cursor()
     cursor.execute("""UPDATE user_data
                       SET sending = ?
@@ -281,7 +281,7 @@ def set_sending(user_id, on=True):
 
 
 def select_all_users():
-    sql_con = sqlite3.connect("Bot_db")
+    sql_con = sqlite3.connect("Bot.db")
     cursor = sql_con.cursor()
     cursor.execute("""SELECT id 
                       FROM user_data""")
@@ -291,7 +291,7 @@ def select_all_users():
     return ids
 
 
-def is_full_place(user_id, db_path="Bot_db"):
+def is_full_place(user_id, db_path="Bot.db"):
     sql_con = sqlite3.connect(db_path)
     cursor = sql_con.cursor()
     cursor.execute("""SELECT full_place 
@@ -304,7 +304,7 @@ def is_full_place(user_id, db_path="Bot_db"):
 
 
 def set_full_place(user_id, on=True):
-    sql_con = sqlite3.connect("Bot_db")
+    sql_con = sqlite3.connect("Bot.db")
     cursor = sql_con.cursor()
     cursor.execute("""UPDATE user_data
                       SET full_place = ?
@@ -316,7 +316,7 @@ def set_full_place(user_id, on=True):
 
 
 def get_rate_statistics():
-    sql_con = sqlite3.connect("Bot_db")
+    sql_con = sqlite3.connect("Bot.db")
     cursor = sql_con.cursor()
     cursor.execute("""SELECT sum(rate), count(id) 
                       FROM user_data
@@ -331,7 +331,7 @@ def get_rate_statistics():
 
 
 def set_rate(user_id, count_of_stars):
-    sql_con = sqlite3.connect("Bot_db")
+    sql_con = sqlite3.connect("Bot.db")
     cursor = sql_con.cursor()
     cursor.execute("""UPDATE user_data
                       SET rate = ?
@@ -360,7 +360,7 @@ def write_log(update, work_time, was_error=False):
 
 
 def get_templates(user_id):
-    sql_con = sqlite3.connect("Bot_db")
+    sql_con = sqlite3.connect("Bot.db")
     cursor = sql_con.cursor()
     cursor.execute("""SELECT gd.id, gd.json_week_data
                       FROM user_groups AS ug
@@ -384,7 +384,7 @@ def get_current_group(user_id):
 
 
 def save_group(group_id, user_id):
-    sql_con = sqlite3.connect("Bot_db")
+    sql_con = sqlite3.connect("Bot.db")
     cursor = sql_con.cursor()
     try:
         cursor.execute("""INSERT INTO user_groups VALUES (?, ?)""",
@@ -398,7 +398,7 @@ def save_group(group_id, user_id):
 
 
 def delete_group(group_id, user_id):
-    sql_con = sqlite3.connect("Bot_db")
+    sql_con = sqlite3.connect("Bot.db")
     cursor = sql_con.cursor()
     try:
         cursor.execute("""DELETE FROM user_groups 
@@ -415,7 +415,7 @@ def delete_group(group_id, user_id):
 
 def get_statistics_for_admin():
     data = {}
-    sql_con = sqlite3.connect("Bot_db")
+    sql_con = sqlite3.connect("Bot.db")
     cursor = sql_con.cursor()
 
     cursor.execute("""SELECT count(id)
@@ -439,7 +439,7 @@ def get_statistics_for_admin():
 
 
 def get_fom_station_code(user_id):
-    sql_con = sqlite3.connect("Bot_db")
+    sql_con = sqlite3.connect("Bot.db")
     cursor = sql_con.cursor()
     cursor.execute("""SELECT home_station_code
                       FROM user_data
@@ -451,7 +451,7 @@ def get_fom_station_code(user_id):
 
 
 def is_univer(user_id):
-    sql_con = sqlite3.connect("Bot_db")
+    sql_con = sqlite3.connect("Bot.db")
     cursor = sql_con.cursor()
     cursor.execute("""SELECT is_univer
                       FROM user_data
@@ -466,7 +466,7 @@ def change_home_station(user_id, station_title):
     from constants import all_stations
 
     home_station_code = all_stations[station_title]
-    sql_con = sqlite3.connect("Bot_db")
+    sql_con = sqlite3.connect("Bot.db")
     cursor = sql_con.cursor()
     cursor.execute("""UPDATE user_data
                       SET home_station_code = ?
@@ -478,7 +478,7 @@ def change_home_station(user_id, station_title):
 
 
 def change_univer_station(user_id, univer):
-    sql_con = sqlite3.connect("Bot_db")
+    sql_con = sqlite3.connect("Bot.db")
     cursor = sql_con.cursor()
     cursor.execute("""UPDATE user_data
                       SET is_univer = ?
@@ -503,7 +503,7 @@ def send_long_message(bot, text, user_id):
 
 
 def get_user_rate(user_id):
-    sql_con = sqlite3.connect("Bot_db")
+    sql_con = sqlite3.connect("Bot.db")
     cursor = sql_con.cursor()
     cursor.execute("""SELECT rate
                       FROM user_data
@@ -545,7 +545,7 @@ def text_to_date(text):
 
 
 def add_new_user(user_id, group_id, week_data=None):
-    sql_con = sqlite3.connect("Bot_db")
+    sql_con = sqlite3.connect("Bot.db")
     cursor = sql_con.cursor()
     try:
         cursor.execute("""INSERT INTO user_data (id, group_id)
@@ -600,7 +600,7 @@ def get_semester_dates(today):
 
 
 def get_json_attestation(user_id):
-    sql_con = sqlite3.connect("Bot_db")
+    sql_con = sqlite3.connect("Bot.db")
     cursor = sql_con.cursor()
     cursor.execute("""SELECT groups_data.interim_attestation
                       FROM user_data

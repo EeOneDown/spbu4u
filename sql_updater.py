@@ -4,7 +4,7 @@ import sqlite3
 import requests
 
 
-def schedule_update(db_path="Bot_db"):
+def schedule_update(db_path="Bot.db"):
     sql_con = sqlite3.connect(db_path)
     cursor = sql_con.cursor()
     # WITH construction doesn't work :(

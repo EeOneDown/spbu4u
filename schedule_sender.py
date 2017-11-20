@@ -13,7 +13,7 @@ from sql_updater import schedule_update
 
 def schedule_sender():
     bot = telebot.TeleBot(release_token)
-    db_path = "spbu4u/Bot_db"
+    db_path = "spbu4u/Bot.db"
     sql_con = sqlite3.connect(db_path)
     cursor = sql_con.cursor()
     cursor.execute("""SELECT user_data.id, groups_data.json_week_data
@@ -45,9 +45,9 @@ def schedule_sender():
 
 
 if __name__ == '__main__':
-    schedule_update("spbu4u/Bot_db")
+    schedule_update("spbu4u/Bot.db")
     schedule_sender()
     if datetime.today().weekday() == 5:
         loc_time = localtime()
         sleep((59 - loc_time.tm_min) * 60 + (23 - loc_time.tm_hour) * 3600)
-        schedule_update("spbu4u/Bot_db")
+        schedule_update("spbu4u/Bot.db")

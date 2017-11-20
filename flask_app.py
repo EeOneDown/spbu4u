@@ -100,7 +100,7 @@ def start_handler(message):
     divisions_keyboard.row("Проблема", "Завершить")
     data = json.dumps(divisions)
 
-    sql_con = sqlite3.connect("Bot_db")
+    sql_con = sqlite3.connect("Bot.db")
     cursor = sql_con.cursor()
     cursor.execute("""DELETE FROM user_choice WHERE user_id = ?""",
                    (message.chat.id, ))
@@ -1342,7 +1342,7 @@ def confirm_hide_lesson_handler(call_back):
 @bot.callback_query_handler(func=lambda call_back:
                             call_back.data == "Вернуть всё")
 def return_all(call_back):
-    sql_con = sqlite3.connect("Bot_db")
+    sql_con = sqlite3.connect("Bot.db")
     cursor = sql_con.cursor()
     cursor.execute("""DELETE FROM skips 
                       WHERE user_id = ?""", (call_back.message.chat.id, ))
@@ -1367,7 +1367,7 @@ def return_lesson_handler(call_back):
             lesson_title = event.split("\n")[1].split(": ")[1]
             lesson_type = event.split("\n")[2].split(": ")[1]
             break
-    sql_con = sqlite3.connect("Bot_db")
+    sql_con = sqlite3.connect("Bot.db")
     cursor = sql_con.cursor()
     cursor.execute("""DELETE FROM skips 
                       WHERE user_id = ?
@@ -1515,7 +1515,7 @@ def change_group_handler(call_back):
 def change_template_group_handler(call_back):
     answer = "Группа успешно изменена на <b>{0}</b>"
     chosen_group_id = int(call_back.data)
-    sql_con = sqlite3.connect("Bot_db")
+    sql_con = sqlite3.connect("Bot.db")
     cursor = sql_con.cursor()
     cursor.execute("""SELECT json_week_data
                       FROM groups_data

@@ -1582,7 +1582,7 @@ def select_months_att_handler(call_back):
     try:
         bot.edit_message_text(text=answer,
                               chat_id=call_back.message.chat.id,
-                              message_id=call_back.message_id,
+                              message_id=call_back.message.message_id,
                               parse_mode="HTML")
     except telebot.apihelper.ApiException:
         func.send_long_message(bot, answer, call_back.message.chat.id)

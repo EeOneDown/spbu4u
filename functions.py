@@ -5,7 +5,7 @@ import sqlite3
 import requests
 from datetime import datetime, date
 from telebot.apihelper import ApiException
-from random import randint
+from constants import months_date
 
 
 def insert_skip(hide_event_data, hide_day, hide_time, user_id):
@@ -177,7 +177,8 @@ def create_schedule_answer(day_info, full_place, user_id=None, personal=True,
 
     for event in day_study_events:
         if event["IsCancelled"] or \
-                (only_exams and "пересдача" in event["Subject"]):
+                (only_exams and "пересдача" in event["Subject"]) or \
+                (only_exams and "комиссия" in event["Subject"]):
             continue
         if is_event_in_skips(event, skips,
                              day_info["DayString"].split(", ")[0]):
@@ -215,9 +216,6 @@ def create_schedule_answer(day_info, full_place, user_id=None, personal=True,
 
     if len(answer.strip().split("\n\n")) == 1:
         return emoji["sleep"] + " Выходной"
-
-    if randint(1, 3) > 2:
-        answer += "Наш канал @Spbu4U_news"
 
     return answer
 
@@ -599,3 +597,27 @@ def get_semester_dates(today):
 
     return [date(year=start_year, month=start_month, day=1),
             date(year=end_year, month=end_month, day=1)]
+
+
+def get_json_attestation(user_id):
+    sql_con = sqlite3.connect("Bot_db")
+    cursor = sql_con.cursor()
+    cursor.execute("""SELECT groups_data.interim_attestation
+                      FROM user_data
+                        JOIN groups_data
+                          ON user_data.group_id = groups_data.id
+                      WHERE user_data.id = ?""", (user_id, ))
+    data = cursor.fetchone()[0]
+    cursor.close()
+    sql_con.close()
+    return json.loads(data)
+
+
+def get_available_months(user_id):
+    json_att = get_json_attestation(user_id)
+    available_months = {}
+    for day_data in json_att["Days"]:
+        data = datetime.strptime(day_data["Day"], "%Y-%m-%dT%H:%M:%S")
+        available_months[data.month] = "{0} {1}".format(months_date[data.month],
+                                                        data.year)
+    return available_months

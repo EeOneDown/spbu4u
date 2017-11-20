@@ -26,7 +26,7 @@ logger = telebot.logger
 telebot.logger.setLevel(logging.INFO)
 
 main_keyboard = telebot.types.ReplyKeyboardMarkup(True)
-if time.localtime().tm_mon in [12, 1, 5, 6]:
+if time.localtime().tm_mon in [11, 12, 1, 5, 6]:        # TODO remove 11
     main_keyboard.row("СЕССИЯ", "Расписание")
 else:
     main_keyboard.row("Расписание")
@@ -323,6 +323,23 @@ def sending_handler(message):
               for name in [emoji["check_mark"] + " Подписаться"]])
     bot.send_message(message.chat.id, answer, parse_mode="HTML",
                      reply_markup=sending_keyboard)
+
+
+@bot.message_handler(func=lambda mess: mess.text == "СЕССИЯ",
+                     content_types=["text"])
+def attestation_handler(message):
+    month = func.get_available_months(message.chat.id)
+    if len(month) == 0:
+        bot.send_message(message.chat.id, "Нет событий")
+        return
+    inline_keyboard = telebot.types.InlineKeyboardMarkup()
+    for key in month.keys():
+        inline_keyboard.row(
+            *[telebot.types.InlineKeyboardButton(text=month[key],
+                                                 callback_data=str(key))]
+        )
+    answer = "Выбери месяц:"
+    bot.send_message(message.chat.id, answer, reply_markup=inline_keyboard)
 
 
 @bot.message_handler(func=lambda mess: mess.text == emoji["star"])
@@ -1547,6 +1564,21 @@ def select_master_id_handler(call_back):
         for day in days:
             answer = func.create_master_schedule_answer(day)
             func.send_long_message(bot, answer, call_back.message.chat.id)
+
+
+@bot.callback_query_handler(func=lambda call_back:
+                            "Выбери месяц:" in call_back.message.text)
+def select_months_att_handler(call_back):
+    json_attestation = func.get_json_attestation(call_back.message.chat.id)
+    answer = ""
+    for day_data in json_attestation["Days"]:
+        data = datetime.strptime(day_data["Day"], "%Y-%m-%dT%H:%M:%S")
+        if call_back.data == str(data.month):
+            answer += func.create_schedule_answer(day_data, True,
+                                                  personal=False,
+                                                  only_exams=False)
+    bot.edit_message_text(text=answer, chat_id=call_back.message.chat.id,
+                          parse_mode="HTML")
 
 
 @app.route("/reset_webhook", methods=["GET", "HEAD"])

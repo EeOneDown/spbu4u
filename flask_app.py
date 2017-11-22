@@ -1226,9 +1226,9 @@ def select_day_handler(call_back):
                           parse_mode="HTML")
     for block in blocks[1]:
         events_keyboard = telebot.types.InlineKeyboardMarkup(True)
-        events = block.split("\n\n")[1:]
+        events = block.split("\n\n")[1:-1]
         for num, event in enumerate(events, start=1):
-            event_name = event.split[3:-4].split(" - ")
+            event_name = event[3:-4].split(" - ")
             button_text = "{0}. {1} - {2}".format(num, event_name[0],
                                                   event_name[1].split(". ")[-1])
             events_keyboard.row(

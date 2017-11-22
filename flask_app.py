@@ -1226,7 +1226,7 @@ def select_day_handler(call_back):
                           parse_mode="HTML")
     first_block = blocks[1][0]
     day_string = blocks[0].split(", ")[-1]
-    answer = "1 из {0} <i>({1})</i>\n\n{2}".format(len(blocks[1]), day_string,
+    answer = "<b>1 из {0}</b> <i>({1})</i>\n\n{2}".format(len(blocks[1]), day_string,
                                                    first_block)
     events_keyboard = telebot.types.InlineKeyboardMarkup(True)
     events = first_block.split("\n\n")[1:-1]
@@ -1259,10 +1259,10 @@ def cancel_handler(call_back):
                             call_back.data == "next_block")
 def next_block_handler(call_back):
     current_block = int(call_back.message.text.split(" ")[0])
-    day_string = call_back.message.text.split("</i>")[0].split("<i>")[-1]
+    day_string = call_back.message.text.split(")")[0].split("(")[-1]
 
     day_date = func.text_to_date(day_string)
-    blocks = func.get_blocks(call_back.message.chat.id, day_date)
+    blocks = func.get_blocks(call_back.message.chat.id, day_date)[1]
     block = blocks[current_block]
 
     answer = "{0} из {1} <i>({2})</i>\n\n{3}".format(
@@ -1291,10 +1291,10 @@ def next_block_handler(call_back):
                             call_back.data == "prev_block")
 def prev_block_handler(call_back):
     current_block = int(call_back.message.text.split(" ")[0])
-    day_string = call_back.message.text.split("</i>")[0].split("<i>")[-1]
+    day_string = call_back.message.text.split(")")[0].split("(")[-1]
 
     day_date = func.text_to_date(day_string)
-    blocks = func.get_blocks(call_back.message.chat.id, day_date)
+    blocks = func.get_blocks(call_back.message.chat.id, day_date)[1]
     block = blocks[current_block - 2]
 
     answer = "{0} из {1} <i>({2})</i>\n\n{3}".format(

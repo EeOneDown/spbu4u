@@ -661,7 +661,7 @@ def get_current_block(message_text, user_id, is_prev=False):
         block = blocks[current_block - 1]
         block_index = current_block - 1
     else:
-        block = blocks[current_block] + 1
+        block = blocks[current_block + 1]
         block_index = current_block + 1
 
     answer = "{0} из {1} <i>({2})</i>\n\n{3}".format(

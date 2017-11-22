@@ -5,7 +5,6 @@ import sqlite3
 import requests
 from datetime import datetime, date
 from telebot.apihelper import ApiException
-from constants import months_date
 
 
 def insert_skip(hide_event_data, hide_day, hide_time, user_id):
@@ -614,6 +613,8 @@ def get_json_attestation(user_id):
 
 
 def get_available_months(user_id):
+    from constants import months_date
+
     json_att = get_json_attestation(user_id)
     available_months = {}
     for day_data in json_att["Days"]:
@@ -621,3 +622,31 @@ def get_available_months(user_id):
         available_months[data.month] = "{0} {1}".format(months_date[data.month],
                                                         data.year)
     return available_months
+
+
+def get_blocks(user_id, day_date):
+    from constants import emoji, subject_short_type
+
+    json_day = get_json_day_data(user_id, day_date)
+    day_string = json_day["DayString"].capitalize()
+
+    day_study_events = json_day["DayStudyEvents"]
+    block_answers = []
+    for event in day_study_events:
+        answer = "\n<b>"
+        subject_type = event["Subject"].split(", ")[-1]
+        if subject_type in subject_short_type.keys():
+            answer += subject_short_type[subject_type] + " - "
+        else:
+            answer += subject_type.capitalize() + " - "
+        answer += ", ".join(event["Subject"].split(", ")[:-1]) + "</b>\n"
+        # TODO change if to HasTheSameTimeAsPreviousItem
+        if event != day_study_events[0] and event["TimeIntervalString"] == \
+                day_study_events[day_study_events.index(event) - 1][
+                    "TimeIntervalString"]:
+            block_answers[-1] += answer
+        else:
+            answer = "{0} {1}\n".format(emoji["clock"],
+                                        event["TimeIntervalString"]) + answer
+            block_answers.append(answer)
+    return day_string, block_answers

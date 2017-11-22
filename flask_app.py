@@ -1216,28 +1216,27 @@ def select_day_handler(call_back):
         iso_day_date[1] += 1
     iso_day_date[2] = week_day_number[week_day_titles[call_back.data]]
     day_date = func.date_from_iso(iso_day_date)
-    json_day = func.get_json_day_data(call_back.message.chat.id, day_date)
-    full_place = func.is_full_place(call_back.message.chat.id)
-    day_data = func.create_schedule_answer(json_day, full_place, personal=False)
-    answer = "Полное раписание на:" + day_data[1:] + "Выбери занятие:"
-    events_keyboard = telebot.types.InlineKeyboardMarkup(True)
-    events = day_data.split("\n\n")[1:-1]
-    for num, event in enumerate(events, start=1):
-        event_name = event.split("\n")[1][3:-4].split(" - ")
-        button_text = "{0}. {1} - {2}".format(num, event_name[0],
-                                              event_name[-1].split(". ")[-1])
-        events_keyboard.row(
-            *[telebot.types.InlineKeyboardButton(text=name, callback_data=name)
-              for name in [button_text[:32]]])
-    events_keyboard.row(
-        *[telebot.types.InlineKeyboardButton(text=name, callback_data=name)
-          for name in ["Отмена", "Другой день"]]
-    )
+
+    blocks = func.get_blocks(call_back.message.chat.id, day_date)
+    answer = "Полное раписание на: <b>{0}</b>\nДоступные блоки занятий:".format(
+        blocks[0])
     bot.edit_message_text(text=answer,
                           chat_id=call_back.message.chat.id,
                           message_id=call_back.message.message_id,
-                          parse_mode="HTML",
-                          reply_markup=events_keyboard)
+                          parse_mode="HTML")
+    for block in blocks[1]:
+        events_keyboard = telebot.types.InlineKeyboardMarkup(True)
+        events = block.split("\n\n")[1:]
+        for num, event in enumerate(events, start=1):
+            event_name = event.split[3:-4].split(" - ")
+            button_text = "{0}. {1} - {2}".format(num, event_name[0],
+                                                  event_name[1].split(". ")[-1])
+            events_keyboard.row(
+                *[telebot.types.InlineKeyboardButton(text=name,
+                                                     callback_data=name)
+                  for name in [button_text[:32]]])
+        bot.send_message(chat_id=call_back.message.chat.id, text=block,
+                         reply_markup=events_keyboard, parse_mode="HTML")
 
 
 @bot.callback_query_handler(func=lambda call_back:

@@ -1259,17 +1259,10 @@ def cancel_handler(call_back):
 @bot.callback_query_handler(func=lambda call_back:
                             call_back.data == "next_block")
 def next_block_handler(call_back):
-    current_block = int(call_back.message.text.split(" ")[0])
-    day_string = call_back.message.text.split(")")[0].split("(")[-1]
-
-    day_date = func.text_to_date(day_string)
-    blocks = func.get_blocks(call_back.message.chat.id, day_date)[1]
-    block = blocks[current_block]
-
-    answer = "{0} из {1} <i>({2})</i>\n\n{3}".format(
-        (current_block + 1) % len(blocks), len(blocks), day_string, block)
+    data = func.get_current_block(call_back.message.text,
+                                  call_back.message.chat.id)
+    answer, events = data[0], data[1]
     events_keyboard = telebot.types.InlineKeyboardMarkup(True)
-    events = block.split("\n\n")[1:-1]
     for num, event in enumerate(events, start=1):
         event_name = event[3:-4].split(" - ")
         button_text = "{0}. {1} - {2}".format(num, event_name[0],
@@ -1291,17 +1284,11 @@ def next_block_handler(call_back):
 @bot.callback_query_handler(func=lambda call_back:
                             call_back.data == "prev_block")
 def prev_block_handler(call_back):
-    current_block = int(call_back.message.text.split(" ")[0])
-    day_string = call_back.message.text.split(")")[0].split("(")[-1]
-
-    day_date = func.text_to_date(day_string)
-    blocks = func.get_blocks(call_back.message.chat.id, day_date)[1]
-    block = blocks[current_block - 2]
-
-    answer = "{0} из {1} <i>({2})</i>\n\n{3}".format(
-        (current_block - 1) % len(blocks), len(blocks), day_string, block)
+    data = func.get_current_block(call_back.message.text,
+                                  call_back.message.chat.id,
+                                  is_prev=True)
+    answer, events = data[0], data[1]
     events_keyboard = telebot.types.InlineKeyboardMarkup(True)
-    events = block.split("\n\n")[1:-1]
     for num, event in enumerate(events, start=1):
         event_name = event[3:-4].split(" - ")
         button_text = "{0}. {1} - {2}".format(num, event_name[0],

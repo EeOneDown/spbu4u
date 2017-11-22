@@ -646,8 +646,11 @@ def get_blocks(user_id, day_date):
                     "TimeIntervalString"]:
             block_answers[-1] += answer
         else:
-            block_answers[-1] += "\nВыбери занятие:"
+            if event != day_study_events[0]:
+                block_answers[-1] += "\nВыбери занятие:"
             answer = "{0} {1}\n".format(emoji["clock"],
                                         event["TimeIntervalString"]) + answer
             block_answers.append(answer)
+            if event != day_study_events[-1]:
+                block_answers[-1] += "\nВыбери занятие:"
     return day_string, block_answers

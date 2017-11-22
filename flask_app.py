@@ -1266,7 +1266,7 @@ def next_block_handler(call_back):
     block = blocks[current_block]
 
     answer = "{0} из {1} <i>({2})</i>\n\n{3}".format(
-        (current_block + 1) % len(blocks[1]), len(blocks[1]), block, day_string)
+        (current_block + 1) % len(blocks[1]), len(blocks[1]), day_string, block)
     events_keyboard = telebot.types.InlineKeyboardMarkup(True)
     events = block.split("\n\n")[1:-1]
     for num, event in enumerate(events, start=1):
@@ -1298,7 +1298,7 @@ def prev_block_handler(call_back):
     block = blocks[current_block - 2]
 
     answer = "{0} из {1} <i>({2})</i>\n\n{3}".format(
-        (current_block - 1) % len(blocks[1]), len(blocks[1]), block, day_string)
+        (current_block + 1) % len(blocks[1]), len(blocks[1]), day_string, block)
     events_keyboard = telebot.types.InlineKeyboardMarkup(True)
     events = block.split("\n\n")[1:-1]
     for num, event in enumerate(events, start=1):

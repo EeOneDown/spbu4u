@@ -652,19 +652,19 @@ def get_blocks(user_id, day_date):
 
 
 def get_current_block(message_text, user_id, is_prev=False):
-    current_block = int(message_text.split(" ")[0])
+    current_block = int(message_text.split(" ")[0]) - 1
     day_string = message_text.split(")")[0].split("(")[-1]
 
     day_date = text_to_date(day_string)
     blocks = get_blocks(user_id, day_date)[1]
     if is_prev:
-        block = blocks[current_block - 2]
+        block = blocks[current_block - 1]
         block_index = current_block - 1
     else:
-        block = blocks[current_block]
+        block = blocks[current_block] + 1
         block_index = current_block + 1
 
     answer = "{0} из {1} <i>({2})</i>\n\n{3}".format(
-        block_index % (len(blocks) + 1), len(blocks), day_string, block)
+        (block_index % len(blocks) + 1), len(blocks), day_string, block)
     events = block.split("\n\n")[1:-1]
     return answer, events

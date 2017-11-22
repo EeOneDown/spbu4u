@@ -1224,19 +1224,27 @@ def select_day_handler(call_back):
                           chat_id=call_back.message.chat.id,
                           message_id=call_back.message.message_id,
                           parse_mode="HTML")
-    for block in blocks[1]:
-        events_keyboard = telebot.types.InlineKeyboardMarkup(True)
-        events = block.split("\n\n")[1:-1]
-        for num, event in enumerate(events, start=1):
-            event_name = event[3:-4].split(" - ")
-            button_text = "{0}. {1} - {2}".format(num, event_name[0],
-                                                  event_name[1].split(". ")[-1])
-            events_keyboard.row(
-                *[telebot.types.InlineKeyboardButton(text=name,
-                                                     callback_data=name)
-                  for name in [button_text[:32]]])
-        bot.send_message(chat_id=call_back.message.chat.id, text=block,
-                         reply_markup=events_keyboard, parse_mode="HTML")
+    first_block = blocks[1][0]
+    day_string = blocks[0].split(", ")[-1]
+    answer = "1 из {0} <i>({1})</i>\n\n{2}".format(len(blocks[1]), first_block,
+                                                   day_string)
+    events_keyboard = telebot.types.InlineKeyboardMarkup(True)
+    events = first_block.split("\n\n")[1:-1]
+    for num, event in enumerate(events, start=1):
+        event_name = event[3:-4].split(" - ")
+        button_text = "{0}. {1} - {2}".format(num, event_name[0],
+                                              event_name[1].split(". ")[-1])
+        events_keyboard.row(
+            *[telebot.types.InlineKeyboardButton(text=name,
+                                                 callback_data=name)
+              for name in [button_text[:32]]])
+    events_keyboard.row(
+        *[telebot.types.InlineKeyboardButton(text=name,
+                                             callback_data=name)
+          for name in ["prev_block", "Отмена", "next_block"]]
+    )
+    bot.send_message(chat_id=call_back.message.chat.id, text=answer,
+                     reply_markup=events_keyboard, parse_mode="HTML")
 
 
 @bot.callback_query_handler(func=lambda call_back:
@@ -1245,6 +1253,70 @@ def cancel_handler(call_back):
     answer = "Отмена"
     bot.edit_message_text(text=answer, chat_id=call_back.message.chat.id,
                           message_id=call_back.message.message_id)
+
+
+@bot.callback_query_handler(func=lambda call_back:
+                            call_back.data == "next_block")
+def next_block_handler(call_back):
+    current_block = int(call_back.message.text.split(" ")[0])
+    day_string = call_back.message.text.split("</i>")[0].split("<i>")[-1]
+
+    day_date = func.text_to_date(day_string)
+    blocks = func.get_blocks(call_back.message.chat.id, day_date)
+    block = blocks[current_block]
+
+    answer = "{0} из {1} <i>({2})</i>\n\n{3}".format(
+        (current_block + 1) % len(blocks[1]), len(blocks[1]), block, day_string)
+    events_keyboard = telebot.types.InlineKeyboardMarkup(True)
+    events = block.split("\n\n")[1:-1]
+    for num, event in enumerate(events, start=1):
+        event_name = event[3:-4].split(" - ")
+        button_text = "{0}. {1} - {2}".format(num, event_name[0],
+                                              event_name[1].split(". ")[-1])
+        events_keyboard.row(
+            *[telebot.types.InlineKeyboardButton(text=name,
+                                                 callback_data=name)
+              for name in [button_text[:32]]])
+    events_keyboard.row(
+        *[telebot.types.InlineKeyboardButton(text=name,
+                                             callback_data=name)
+          for name in ["prev_block", "Отмена", "next_block"]]
+    )
+    bot.edit_message_text(text=answer, chat_id=call_back.message.chat.id,
+                          message_id=call_back.message.message_id,
+                          parse_mode="HTML", reply_markup=events_keyboard)
+
+
+@bot.callback_query_handler(func=lambda call_back:
+                            call_back.data == "prev_block")
+def prev_block_handler(call_back):
+    current_block = int(call_back.message.text.split(" ")[0])
+    day_string = call_back.message.text.split("</i>")[0].split("<i>")[-1]
+
+    day_date = func.text_to_date(day_string)
+    blocks = func.get_blocks(call_back.message.chat.id, day_date)
+    block = blocks[current_block - 2]
+
+    answer = "{0} из {1} <i>({2})</i>\n\n{3}".format(
+        (current_block - 1) % len(blocks[1]), len(blocks[1]), block, day_string)
+    events_keyboard = telebot.types.InlineKeyboardMarkup(True)
+    events = block.split("\n\n")[1:-1]
+    for num, event in enumerate(events, start=1):
+        event_name = event[3:-4].split(" - ")
+        button_text = "{0}. {1} - {2}".format(num, event_name[0],
+                                              event_name[1].split(". ")[-1])
+        events_keyboard.row(
+            *[telebot.types.InlineKeyboardButton(text=name,
+                                                 callback_data=name)
+              for name in [button_text[:32]]])
+    events_keyboard.row(
+        *[telebot.types.InlineKeyboardButton(text=name,
+                                             callback_data=name)
+          for name in ["prev_block", "Отмена", "next_block"]]
+    )
+    bot.edit_message_text(text=answer, chat_id=call_back.message.chat.id,
+                          message_id=call_back.message.message_id,
+                          parse_mode="HTML", reply_markup=events_keyboard)
 
 
 @bot.callback_query_handler(func=lambda call_back:

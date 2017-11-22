@@ -645,9 +645,7 @@ def get_blocks(user_id, day_date):
                 day_study_events[num - 1]["TimeIntervalString"]:
             block_answers[-1] += answer
         else:
-            answer = "{0} {1} " \
-                     "<i>({2})</i>\n".format(emoji["clock"],
-                                      event["TimeIntervalString"],
-                                      day_string.split(", ")[0]) + answer
+            answer = "{0} {1}\n".format(emoji["clock"],
+                                        event["TimeIntervalString"]) + answer
             block_answers.append(answer)
     return day_string, [block + "\nВыбери занятие:" for block in block_answers]

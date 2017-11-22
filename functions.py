@@ -652,7 +652,8 @@ def get_blocks(user_id, day_date):
 
 
 def get_current_block(message_text, user_id, is_prev=False):
-    current_block = int(message_text.split(" ")[0]) - 1
+    current_block = int(message_text.split(" ")[0]) % int(
+        message_text.split(" ")[2]) + 1
     day_string = message_text.split(")")[0].split("(")[-1]
 
     day_date = text_to_date(day_string)

@@ -1225,7 +1225,7 @@ def select_day_handler(call_back):
                           message_id=call_back.message.message_id,
                           parse_mode="HTML")
     first_block = blocks[1][0]
-    day_string = blocks[0].split(", ")[-1]
+    day_string = blocks[0].split(", ")[0]
     answer = "<b>1 из {0}</b> <i>({1})</i>\n\n{2}".format(len(blocks[1]),
                                                           day_string,
                                                           first_block)
@@ -1311,18 +1311,14 @@ def prev_block_handler(call_back):
                             "Выбери занятие:" in call_back.message.text)
 def select_lesson_handler(call_back):
     answer = "Выбранное занятие: \n"
-    answer += call_back.message.text.split("\n\n")[0][17:] + "\n\n"
-    events = call_back.message.text.split("\n\n")[1:-1]
-    chosen_event = events[int(call_back.data.split(". ")[0]) - 1].split("\n")[1]
+    events = call_back.message.text.split("\n\n")[2:-1]
+    chosen_event = events[int(call_back.data.split(". ")[0]) - 1]
     days_keyboard = telebot.types.InlineKeyboardMarkup(True)
     for event in events:
         if event.split("\n")[1] != chosen_event:
             continue
-        event_data = event.split("\n")
-        answer += "{0}\n<b>{1}</b>\n{2}\n\n".format(event_data[0],
-                                                    event_data[1],
-                                                    "\n".join(event_data[2:]))
-    day_title = answer.split("\n\n")[0].split(": ")[-1].split(", ")[0]
+        answer += "<b>{0}</b>".format(event)
+    day_title = call_back.message.text.split(")")[0].split("(")[-1]
     if day_title == "Понедельник" or day_title == "Вторник" or \
                     day_title == "Четверг":
         day_title += "и"

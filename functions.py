@@ -652,10 +652,17 @@ def get_blocks(user_id, day_date):
 
 
 def get_current_block(message_text, user_id, is_prev=False):
+    from flask_app import server_timedelta
+    from constants import week_day_number, week_day_titles
     current_block = int(message_text.split(" ")[0]) - 1
     day_string = message_text.split(")")[0].split("(")[-1]
 
-    day_date = text_to_date(day_string)
+    iso_day_date = list((datetime.today() + server_timedelta).isocalendar())
+    if iso_day_date[2] == 7:
+        iso_day_date[1] += 1
+    iso_day_date[2] = week_day_number[week_day_titles[day_string]]
+    day_date = date_from_iso(iso_day_date)
+
     blocks = get_blocks(user_id, day_date)[1]
     if is_prev:
         block_index = (current_block - 1) % len(blocks)

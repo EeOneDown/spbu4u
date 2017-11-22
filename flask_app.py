@@ -1226,8 +1226,9 @@ def select_day_handler(call_back):
                           parse_mode="HTML")
     first_block = blocks[1][0]
     day_string = blocks[0].split(", ")[-1]
-    answer = "<b>1 из {0}</b> <i>({1})</i>\n\n{2}".format(len(blocks[1]), day_string,
-                                                   first_block)
+    answer = "<b>1 из {0}</b> <i>({1})</i>\n\n{2}".format(len(blocks[1]),
+                                                          day_string,
+                                                          first_block)
     events_keyboard = telebot.types.InlineKeyboardMarkup(True)
     events = first_block.split("\n\n")[1:-1]
     for num, event in enumerate(events, start=1):
@@ -1298,7 +1299,7 @@ def prev_block_handler(call_back):
     block = blocks[current_block - 2]
 
     answer = "{0} из {1} <i>({2})</i>\n\n{3}".format(
-        (current_block + 1) % len(blocks), len(blocks), day_string, block)
+        (current_block - 1) % len(blocks), len(blocks), day_string, block)
     events_keyboard = telebot.types.InlineKeyboardMarkup(True)
     events = block.split("\n\n")[1:-1]
     for num, event in enumerate(events, start=1):

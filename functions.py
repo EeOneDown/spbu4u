@@ -633,13 +633,13 @@ def get_blocks(user_id, day_date):
     day_study_events = json_day["DayStudyEvents"]
     block_answers = []
     for num, event in enumerate(day_study_events):
-        answer = "\n"
+        answer = "\n<b>"
         subject_type = event["Subject"].split(", ")[-1]
         if subject_type in subject_short_type.keys():
             answer += subject_short_type[subject_type] + " - "
         else:
             answer += subject_type.capitalize() + " - "
-        answer += ", ".join(event["Subject"].split(", ")[:-1]) + "\n"
+        answer += ", ".join(event["Subject"].split(", ")[:-1]) + "</b>\n"
         # TODO change if to HasTheSameTimeAsPreviousItem
         if num != 0 and event["TimeIntervalString"] == \
                 day_study_events[num - 1]["TimeIntervalString"]:

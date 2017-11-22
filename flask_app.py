@@ -1226,12 +1226,12 @@ def select_day_handler(call_back):
                           parse_mode="HTML")
     first_block = blocks[1][0]
     day_string = blocks[0].split(", ")[-1]
-    answer = "1 из {0} ({1})\n\n{2}".format(len(blocks[1]), first_block,
-                                                   day_string)
+    answer = "1 из {0} <i>({1})</i>\n\n{2}".format(len(blocks[1]), day_string,
+                                                   first_block)
     events_keyboard = telebot.types.InlineKeyboardMarkup(True)
     events = first_block.split("\n\n")[1:-1]
     for num, event in enumerate(events, start=1):
-        event_name = event.split(" - ")
+        event_name = event[3:-4].split(" - ")
         button_text = "{0}. {1} - {2}".format(num, event_name[0],
                                               event_name[1].split(". ")[-1])
         events_keyboard.row(

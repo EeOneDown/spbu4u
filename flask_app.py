@@ -1228,7 +1228,7 @@ def select_day_handler(call_back):
         events_keyboard = telebot.types.InlineKeyboardMarkup(True)
         events = block.split("\n\n")[1:-1]
         for num, event in enumerate(events, start=1):
-            event_name = event[3:-4].split(" - ")
+            event_name = event.split(" - ")
             button_text = "{0}. {1} - {2}".format(num, event_name[0],
                                                   event_name[1].split(". ")[-1])
             events_keyboard.row(
@@ -1250,7 +1250,7 @@ def cancel_handler(call_back):
 @bot.callback_query_handler(func=lambda call_back:
                             "Выбери занятие:" in call_back.message.text)
 def select_lesson_handler(call_back):
-    answer = "Доступные занятия "
+    answer = "Выбранное занятие: \n"
     answer += call_back.message.text.split("\n\n")[0][17:] + "\n\n"
     events = call_back.message.text.split("\n\n")[1:-1]
     chosen_event = events[int(call_back.data.split(". ")[0]) - 1].split("\n")[1]

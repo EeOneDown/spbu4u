@@ -652,11 +652,11 @@ def get_blocks(user_id, day_date):
                              location["EducatorIds"]]
                 answer += "; ".join(educators) + ")</i>"
             answer += "\n"
+        in_block_num += 1
         # TODO change if to HasTheSameTimeAsPreviousItem
         if num != 0 and event["TimeIntervalString"] == \
                 day_study_events[num - 1]["TimeIntervalString"]:
             block_answers[-1] += answer
-            in_block_num += 1
         else:
             answer = "{0} {1}\n".format(emoji["clock"],
                                         event["TimeIntervalString"]) + answer

@@ -1376,11 +1376,11 @@ def confirm_hide_lesson_handler(call_back):
     place_educator_keyboard = telebot.types.InlineKeyboardMarkup(True)
     place_educator_keyboard.row(
         *[telebot.types.InlineKeyboardButton(text=name, callback_data=name) for
-          name in ["Данные"]]
+          name in ["Данные преподаватели"]]
     )
     place_educator_keyboard.row(
         *[telebot.types.InlineKeyboardButton(text=name, callback_data=name) for
-          name in ["Отмена", "Любой преподаватель"]]
+          name in ["Отмена", "Любые"]]
     )
     """
     data = call_back.message.text.split("\n\n")

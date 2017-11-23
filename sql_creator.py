@@ -55,9 +55,8 @@ def create_sql(db_name):
                             type TEXT NOT NULL, 
                             day TEXT NOT NULL DEFAULT 'all', 
                             time TEXT NOT NULL DEFAULT 'all',
-                            place TEXT NOT NULL DEFAULT 'all',
-                            educator TEXT NOT NULL DEFAULT 'all', 
-                            UNIQUE (name, type, day, time, place, educator)
+                            place_educator TEXT DEFAULT 'all' NOT NULL, 
+                            UNIQUE (name, type, day, time, place_educator)
                         )""")
     sql_con.commit()
 
@@ -155,7 +154,7 @@ def copy_from_db(from_db_name, to_db_name):
 
     # lessons
     cursor.executemany("""INSERT INTO lessons 
-                          VALUES (?, ?, ?, ?, ?, ?, ?)""", lessons)
+                          VALUES (?, ?, ?, ?, ?, 'all')""", lessons)
     sql_con.commit()
 
     # skips

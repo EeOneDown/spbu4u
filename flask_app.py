@@ -1218,8 +1218,7 @@ def select_day_handler(call_back):
     day_date = func.date_from_iso(iso_day_date)
 
     blocks = func.get_blocks(call_back.message.chat.id, day_date)
-    answer = "Полное раписание на: <b>{0}</b>\nДоступные блоки занятий:".format(
-        blocks[0])
+    answer = "{0} <b>{1}</b>\n".format(emoji["calendar"], blocks[0])
     bot.edit_message_text(text=answer,
                           chat_id=call_back.message.chat.id,
                           message_id=call_back.message.message_id,

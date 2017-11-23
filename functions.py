@@ -149,21 +149,21 @@ def get_json_day_data(user_id, day_date, json_week_data=None, next_week=False):
 
 
 def is_event_in_skips(event, skips, week_day_string):
-    for skip_lesson in skips:
-        event_place_educator = ""
-        for location in event["EventLocations"]:
-            if location["IsEmpty"]:
-                continue
-            location_name = location["DisplayName"]
-            event_place_educator += location_name
-            if location["HasEducators"]:
-                event_place_educator += " ("
-                educators = [educator["Item2"].split(", ")[0] for educator in
-                             location["EducatorIds"]]
-                event_place_educator += "; ".join(educators) + ")"
-            event_place_educator += "\n"
-        event_place_educator = event_place_educator.strip("\n")
+    event_place_educator = ""
+    for location in event["EventLocations"]:
+        if location["IsEmpty"]:
+            continue
+        event_place_educator += location["DisplayName"]
+        if location["HasEducators"]:
+            event_place_educator += " ("
+            educators = [educator["Item2"].split(", ")[0] for educator in
+                         location["EducatorIds"]]
+            event_place_educator += "; ".join(educators) + ")"
+        event_place_educator += "\n"
+    event_place_educator = event_place_educator.strip("\n")
+    logging.info(event_place_educator + "====" + skips)
 
+    for skip_lesson in skips:
         if skip_lesson[1] == ", ".join(event["Subject"].split(", ")[:-1]) and \
            skip_lesson[2] == event["Subject"].split(", ")[-1] and \
            (skip_lesson[3] == week_day_string or

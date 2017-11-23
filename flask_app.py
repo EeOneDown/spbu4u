@@ -1314,7 +1314,8 @@ def select_lesson_handler(call_back):
     chosen_event = ". ".join(
         events[int(call_back.data.split(". ")[0]) - 1].split(". ")[1:])
     days_keyboard = telebot.types.InlineKeyboardMarkup(True)
-    answer += "<b>{0}</b>\n\n".format(chosen_event)
+    answer += "<b>{0}</b>\n\n".format(chosen_event.split("\n")[0],
+                                      "\n".join(chosen_event.split("\n")[1:]))
     day_title = call_back.message.text.split(")")[0].split("(")[-1]
     if day_title == "Понедельник" or day_title == "Вторник" or \
                     day_title == "Четверг":
@@ -1342,16 +1343,14 @@ def select_time_handler(call_back):
     answer = call_back.message.text.split("\n\n")[0] + "\n\n"
 
     times_keyboard = telebot.types.InlineKeyboardMarkup(True)
-    events = call_back.message.text.split("\n\n")[1:-1]
+    event = call_back.message.text.split("\n\n")[1].split("Выбранное занятие:\n")[1]
     lesson_time = call_back.message.text.split("\n\n")[0][2:]
-    for event in events:
-        event_data = event.split("\n")
-        answer += "{0}\n<b>{1}</b>\n{2}\n\n".format(event_data[0],
-                                                    event_data[1],
-                                                    "\n".join(event_data[2:]))
-        times_keyboard.row(
-            *[telebot.types.InlineKeyboardButton(text=name, callback_data=name)
-              for name in [lesson_time]])
+    event_data = event.split("\n")
+    answer += "{0}\n<b>{1}</b>\n{2}\n\n".format(event_data[0], event_data[1],
+                                                "\n".join(event_data[2:]))
+    times_keyboard.row(
+        *[telebot.types.InlineKeyboardButton(text=name, callback_data=name)
+          for name in [lesson_time]])
     times_keyboard.row(
         *[telebot.types.InlineKeyboardButton(text=name, callback_data=name) for
           name in ["Отмена", "Любое время"]])

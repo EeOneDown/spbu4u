@@ -3,7 +3,7 @@ import hmac
 from hashlib import sha256
 
 
-test_token = "337544102:AAF0cWhX7O7XTqd2uBQITIz3Wi17Vo9XCJA"
+test_token = ""
 release_token = ""
 yandex_key = ""
 secret_key = ""

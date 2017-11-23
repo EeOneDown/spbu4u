@@ -632,7 +632,8 @@ def get_blocks(user_id, day_date):
 
     day_study_events = json_day["DayStudyEvents"]
     block_answers = []
-    for num, event in enumerate(day_study_events):
+    num = 0
+    for event in day_study_events:
         answer = "\n<b>{0}. ".format(num + 1)
         subject_type = event["Subject"].split(", ")[-1]
         if subject_type in subject_short_type.keys():
@@ -655,10 +656,12 @@ def get_blocks(user_id, day_date):
         if num != 0 and event["TimeIntervalString"] == \
                 day_study_events[num - 1]["TimeIntervalString"]:
             block_answers[-1] += answer
+            num += 1
         else:
             answer = "{0} {1}\n".format(emoji["clock"],
                                         event["TimeIntervalString"]) + answer
             block_answers.append(answer)
+            num = 0
     return day_string, [block + "\nВыбери занятие:" for block in block_answers]
 
 

@@ -1230,7 +1230,7 @@ def select_day_handler(call_back):
                                                           day_string,
                                                           first_block)
     events_keyboard = telebot.types.InlineKeyboardMarkup(True)
-    events = [event.split["\n"][0] for event in first_block.split("\n\n")[1:-1]]
+    events = [event.split("\n")[0] for event in first_block.split("\n\n")[1:-1]]
     for num, event in enumerate(events, start=1):
         event_name = event[3:-4].split(" - ")
         button_text = "{0}. {1} - {2}".format(num, event_name[0],

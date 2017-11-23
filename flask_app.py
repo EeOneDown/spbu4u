@@ -1242,7 +1242,7 @@ def select_day_handler(call_back):
     events_keyboard.row(
         *[telebot.types.InlineKeyboardButton(text=emoji[name],
                                              callback_data=name)
-          for name in ["left_arrow", "Отмена", "right_arrow"]]
+          for name in ["prev_block", "Отмена", "next_block"]]
     )
     bot.send_message(chat_id=call_back.message.chat.id, text=answer,
                      reply_markup=events_keyboard, parse_mode="HTML")
@@ -1274,7 +1274,7 @@ def next_block_handler(call_back):
     events_keyboard.row(
         *[telebot.types.InlineKeyboardButton(text=emoji[name],
                                              callback_data=name)
-          for name in ["left_arrow", "Отмена", "right_arrow"]]
+          for name in ["prev_block", "Отмена", "next_block"]]
     )
     bot.edit_message_text(text=answer, chat_id=call_back.message.chat.id,
                           message_id=call_back.message.message_id,
@@ -1300,7 +1300,7 @@ def prev_block_handler(call_back):
     events_keyboard.row(
         *[telebot.types.InlineKeyboardButton(text=emoji[name],
                                              callback_data=name)
-          for name in ["left_arrow", "Отмена", "right_arrow"]]
+          for name in ["prev_block", "Отмена", "next_block"]]
     )
     bot.edit_message_text(text=answer, chat_id=call_back.message.chat.id,
                           message_id=call_back.message.message_id,

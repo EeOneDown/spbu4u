@@ -692,7 +692,9 @@ def other_text_handler(message):
             json_day = func.get_json_day_data(message.chat.id, day_date=day,
                                               json_week_data=json_week)
             full_place = func.is_full_place(message.chat.id)
-            answer = func.create_schedule_answer(json_day, full_place)
+            answer = func.create_schedule_answer(json_day, full_place,
+                                                 user_id=message.chat.id,
+                                                 personal=True)
     func.send_long_message(bot, answer, message.chat.id)
 
 

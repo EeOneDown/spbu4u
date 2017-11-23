@@ -1,24 +1,24 @@
 # -*- coding: utf-8 -*-
-import telebot
-import requests
-import sqlite3
-import logging
 import json
+import logging
+import sqlite3
 import time
 from datetime import datetime, timedelta, time as dt_time
+
 import flask
+import requests
+import telebot
 from flask_sslify import SSLify
-import registration_functions as reg_func
+
 import functions as func
-from yandex_timetable import get_yandex_timetable_data
-from sql_updater import schedule_update
-from constants import test_token, emoji, briefly_info_answer, my_id, \
+import registration_functions as reg_func
+from constants import release_token, emoji, briefly_info_answer, my_id, \
     full_info_answer, webhook_url_base, webhook_url_path, week_day_number, \
     all_stations, all_stations_const, week_day_titles, subject_short_type_revert
+from sql_updater import schedule_update
+from yandex_timetable import get_yandex_timetable_data
 
-
-# TODO change token
-bot = telebot.TeleBot(test_token, threaded=False)
+bot = telebot.TeleBot(release_token, threaded=False)
 app = flask.Flask(__name__)
 sslify = SSLify(app)
 
@@ -26,7 +26,7 @@ logger = telebot.logger
 telebot.logger.setLevel(logging.INFO)
 
 main_keyboard = telebot.types.ReplyKeyboardMarkup(True)
-if time.localtime().tm_mon in [11, 12, 1, 5, 6]:        # TODO remove 11
+if time.localtime().tm_mon in [11, 12, 1, 4, 5, 6]:
     main_keyboard.row("СЕССИЯ", "Расписание")
 else:
     main_keyboard.row("Расписание")
@@ -546,9 +546,8 @@ def return_hided_lesson(message):
                      reply_markup=ids_keyboard, parse_mode="HTML")
 
 
-# TODO change bot name
 @bot.message_handler(func=lambda mess: mess.reply_to_message is not None and
-                     mess.reply_to_message.from_user.username == "tt202_bot" and
+                     mess.reply_to_message.from_user.username == "Spbu4UBot" and
                      mess.reply_to_message.text == "Напиши мне что-нибудь:",
                      content_types=["text"])
 def users_callback_handler(message):
@@ -614,9 +613,8 @@ def educator_schedule_handler(message):
                      parse_mode="HTML")
 
 
-# TODO change bot name
 @bot.message_handler(func=lambda mess: mess.reply_to_message is not None and
-                     mess.reply_to_message.from_user.username == "tt202_bot" and
+                     mess.reply_to_message.from_user.username == "Spbu4UBot" and
                      "Введи Фамилию преподавателя:" in
                      mess.reply_to_message.text,
                      content_types=["text"])

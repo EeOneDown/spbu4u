@@ -154,7 +154,7 @@ def is_event_in_skips(event, skips, week_day_string):
         for location in event["EventLocations"]:
             if location["IsEmpty"]:
                 continue
-            location_name = location["DisplayName"].split(", ")[-1]
+            location_name = location["DisplayName"]
             event_place_educator += location_name
             if location["HasEducators"]:
                 event_place_educator += " ("

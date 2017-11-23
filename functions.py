@@ -640,6 +640,17 @@ def get_blocks(user_id, day_date):
         else:
             answer += subject_type.capitalize() + " - "
         answer += ", ".join(event["Subject"].split(", ")[:-1]) + "</b>\n"
+        for location in event["EventLocations"]:
+            if location["IsEmpty"]:
+                continue
+            location_name = location["DisplayName"].strip(", ")
+            answer += location_name
+            if location["HasEducators"]:
+                answer += " <i>("
+                educators = [educator["Item2"].split(", ")[0] for educator in
+                             location["EducatorIds"]]
+                answer += "; ".join(educators) + ")</i>"
+            answer += "\n"
         # TODO change if to HasTheSameTimeAsPreviousItem
         if num != 0 and event["TimeIntervalString"] == \
                 day_study_events[num - 1]["TimeIntervalString"]:

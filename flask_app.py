@@ -1394,8 +1394,8 @@ def select_place_educator_handler(call_back):
                             in call_back.message.text)
 def confirm_hide_lesson_handler(call_back):
     data = call_back.message.text.split("\n\n")[1:]
-    hide_event_data = data[0].split("занятие:\n")[1].split("\n")[0].split(" - ")
-    hide_place_edu = "\n".join(data[0].split("занятие:\n")[1].split("\n")[1:])
+    hide_event_data = data[0].split("\n")[1].split(" - ")
+    hide_place_edu = "\n".join(data[0].split("\n")[1:])
     hide_day = data[1].split(": ")[1]
     hide_time = data[2].split(": ")[1]
     if hide_event_data[0] in subject_short_type_revert.keys():

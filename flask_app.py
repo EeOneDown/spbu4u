@@ -522,7 +522,7 @@ def return_hided_lesson(message):
         for lesson in data:
             answer += "<b>id: {0}</b>\n<b>Название</b>: {1}\n<b>Тип</b>: {2}" \
                       "\n<b>День</b>: {3}\n<b>Время</b>: {4}\n" \
-                      "<b>Место (Преподаватель)</b>: {4}\n\n".format(
+                      "<b>Место (Преподаватель)</b>: {5}\n\n".format(
                           lesson[0], lesson[1], lesson[2], lesson[3], lesson[4],
                           lesson[5])
             ids_keyboard.row(

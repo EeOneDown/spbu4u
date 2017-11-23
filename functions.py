@@ -633,7 +633,7 @@ def get_blocks(user_id, day_date):
     day_study_events = json_day["DayStudyEvents"]
     block_answers = []
     for num, event in enumerate(day_study_events):
-        answer = "\n<b>"
+        answer = "\n{0}<b>".format(num + 1)
         subject_type = event["Subject"].split(", ")[-1]
         if subject_type in subject_short_type.keys():
             answer += subject_short_type[subject_type] + " - "

@@ -152,7 +152,8 @@ def copy_from_db(from_db_name, to_db_name):
     sql_con.commit()
 
     # lessons
-    cursor.executemany("""INSERT INTO lessons VALUES (?, ?, ?, ?, ?)""", lessons)
+    cursor.executemany("""INSERT INTO lessons 
+                          VALUES (?, ?, ?, ?, ?, ?, ?)""", lessons)
     sql_con.commit()
 
     # skips
@@ -160,7 +161,8 @@ def copy_from_db(from_db_name, to_db_name):
     sql_con.commit()
 
     # user groups
-    cursor.executemany("""INSERT INTO user_groups VALUES (?, ?)""", users_groups)
+    cursor.executemany("""INSERT INTO user_groups 
+                          VALUES (?, ?)""", users_groups)
     sql_con.commit()
 
     cursor.close()

@@ -1232,7 +1232,8 @@ def select_day_handler(call_back):
     events_keyboard = telebot.types.InlineKeyboardMarkup(True)
     events = [event.split("\n")[0] for event in first_block.split("\n\n")[1:-1]]
     for event in events:
-        event_name = event[3:-4].split(" - ")
+        event_name = event.strip(" {0}".format(emoji["cross_mark"]))[
+                     3:-4].split(" - ")
         button_text = "{0} - {1}".format(event_name[0],
                                          event_name[1].split(". ")[-1])
         events_keyboard.row(
@@ -1264,7 +1265,8 @@ def next_block_handler(call_back):
     answer, events = data[0], data[1]
     events_keyboard = telebot.types.InlineKeyboardMarkup(True)
     for event in events:
-        event_name = event[3:-4].split(" - ")
+        event_name = event.strip(" {0}".format(emoji["cross_mark"]))[
+                     3:-4].split(" - ")
         button_text = "{0} - {1}".format(event_name[0],
                                          event_name[1].split(". ")[-1])
         events_keyboard.row(
@@ -1290,7 +1292,8 @@ def prev_block_handler(call_back):
     answer, events = data[0], data[1]
     events_keyboard = telebot.types.InlineKeyboardMarkup(True)
     for event in events:
-        event_name = event[3:-4].split(" - ")
+        event_name = event.strip(" {0}".format(emoji["cross_mark"]))[
+                     3:-4].split(" - ")
         button_text = "{0} - {1}".format(event_name[0],
                                          event_name[1].split(". ")[-1])
         events_keyboard.row(

@@ -658,6 +658,9 @@ def get_blocks(user_id, day_date):
         else:
             answer += subject_type.capitalize() + " - "
         answer += ", ".join(event["Subject"].split(", ")[:-1]) + "</b>\n"
+        if is_event_in_skips(event, get_hide_lessons_data(user_id),
+                             json_day["DayString"].split(", ")[0]):
+            answer += " {0}".format(emoji["cross_mark"])
         for location in event["EventLocations"]:
             if location["IsEmpty"]:
                 continue

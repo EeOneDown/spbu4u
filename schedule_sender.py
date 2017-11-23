@@ -2,12 +2,14 @@
 # -*- coding: utf-8 -*-
 import json
 import sqlite3
-import telebot
 from datetime import datetime, timedelta
 from time import sleep, localtime
+
+import telebot
+
+from constants import release_token
 from functions import get_json_day_data, create_schedule_answer, \
     is_full_place, send_long_message
-from constants import release_token
 from sql_updater import schedule_update
 
 

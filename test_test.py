@@ -1,5 +1,7 @@
-import requests
 import unittest
+
+import requests
+
 from constants import emoji
 from functions import is_correct_educator_name
 

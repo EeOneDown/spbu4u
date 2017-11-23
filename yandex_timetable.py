@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
-import math
-import requests
 from datetime import datetime, timedelta, time
+from math import ceil
+
+import requests
+
 from constants import emoji, yandex_key
 
 
@@ -38,7 +40,7 @@ def get_yandex_timetable_data(from_station, to_station, date, limit=3):
             continue
 
         time_left = departure_datetime - server_now_date
-        total_minutes = math.ceil(time_left.total_seconds() / 60)
+        total_minutes = ceil(time_left.total_seconds() / 60)
 
         if total_minutes >= 60:
             hours = total_minutes // 60

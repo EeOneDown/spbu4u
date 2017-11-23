@@ -1344,7 +1344,7 @@ def select_time_handler(call_back):
 
     times_keyboard = telebot.types.InlineKeyboardMarkup(True)
     event = call_back.message.text.split("\n\n")[1].split(
-        "Выбранное занятие:\n")[1]
+        "Выбранное занятие:\n")[0]
     lesson_time = call_back.message.text.split("\n\n")[0][2:]
     event_data = event.split("\n")
     answer += "<b>{0}</b>\n{1}\n\n".format(event_data[0],

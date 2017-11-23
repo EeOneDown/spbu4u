@@ -161,7 +161,7 @@ def is_event_in_skips(event, skips, week_day_string):
             event_place_educator += "; ".join(educators) + ")"
         event_place_educator += "\n"
     event_place_educator = event_place_educator.strip("\n")
-    logging.info(event_place_educator + "====" + skips)
+    logging.info(event_place_educator + "====" + str(skips))
 
     for skip_lesson in skips:
         if skip_lesson[1] == ", ".join(event["Subject"].split(", ")[:-1]) and \

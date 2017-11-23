@@ -1218,11 +1218,10 @@ def select_day_handler(call_back):
     day_date = func.date_from_iso(iso_day_date)
 
     blocks = func.get_blocks(call_back.message.chat.id, day_date)
-    answer = "{0} <b>{1}</b>\n".format(emoji["calendar"], blocks[0])
+    answer = "{0} {1}\n".format(emoji["calendar"], blocks[0])
     bot.edit_message_text(text=answer,
                           chat_id=call_back.message.chat.id,
-                          message_id=call_back.message.message_id,
-                          parse_mode="HTML")
+                          message_id=call_back.message.message_id)
     first_block = blocks[1][0]
     day_string = blocks[0].split(", ")[0]
     answer = "<b>1 из {0}</b> <i>({1})</i>\n\n{2}".format(len(blocks[1]),
@@ -1309,9 +1308,11 @@ def prev_block_handler(call_back):
 @bot.callback_query_handler(func=lambda call_back:
                             "Выбери занятие:" in call_back.message.text)
 def select_lesson_handler(call_back):
-    answer = "Выбранное занятие: \n"
+    answer = "{0}\n\nВыбранное занятие: \n".format(
+        call_back.message.text.split("\n\n")[1])
     events = call_back.message.text.split("\n\n")[2:-1]
-    chosen_event = events[int(call_back.data.split(". ")[0]) - 1]
+    chosen_event = ". ".join(
+        events[int(call_back.data.split(". ")[0]) - 1].split(". ")[1:])
     days_keyboard = telebot.types.InlineKeyboardMarkup(True)
     answer += "<b>{0}</b>\n\n".format(chosen_event)
     day_title = call_back.message.text.split(")")[0].split("(")[-1]
@@ -1342,6 +1343,7 @@ def select_time_handler(call_back):
 
     times_keyboard = telebot.types.InlineKeyboardMarkup(True)
     events = call_back.message.text.split("\n\n")[1:-1]
+    lesson_time = call_back.message.text.split("\n\n")[0][2:]
     for event in events:
         event_data = event.split("\n")
         answer += "{0}\n<b>{1}</b>\n{2}\n\n".format(event_data[0],
@@ -1349,8 +1351,7 @@ def select_time_handler(call_back):
                                                     "\n".join(event_data[2:]))
         times_keyboard.row(
             *[telebot.types.InlineKeyboardButton(text=name, callback_data=name)
-              for name in [event_data[0].split(emoji["clock"])[-1].split(
-                    emoji["warning"])[0].strip()]])
+              for name in [lesson_time]])
     times_keyboard.row(
         *[telebot.types.InlineKeyboardButton(text=name, callback_data=name) for
           name in ["Отмена", "Любое время"]])

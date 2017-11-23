@@ -54,8 +54,10 @@ def create_sql(db_name):
                             name TEXT NOT NULL, 
                             type TEXT NOT NULL, 
                             day TEXT NOT NULL DEFAULT 'all', 
-                            time TEXT NOT NULL DEFAULT 'all', 
-                            UNIQUE (name, type, day, time)
+                            time TEXT NOT NULL DEFAULT 'all',
+                            place TEXT NOT NULL DEFAULT 'all',
+                            educator TEXT NOT NULL DEFAULT 'all', 
+                            UNIQUE (name, type, day, time, place, educator)
                         )""")
     sql_con.commit()
 

@@ -1230,7 +1230,7 @@ def select_day_handler(call_back):
                                                           day_string,
                                                           first_block)
     events_keyboard = telebot.types.InlineKeyboardMarkup(True)
-    events = first_block.split("\n\n")[1:-1]
+    events = [event.split["\n"][0] for event in first_block.split("\n\n")[1:-1]]
     for num, event in enumerate(events, start=1):
         event_name = event[3:-4].split(" - ")
         button_text = "{0}. {1} - {2}".format(num, event_name[0],
@@ -1314,7 +1314,7 @@ def select_lesson_handler(call_back):
     events = call_back.message.text.split("\n\n")[2:-1]
     chosen_event = events[int(call_back.data.split(". ")[0]) - 1]
     days_keyboard = telebot.types.InlineKeyboardMarkup(True)
-    answer += "<b>{0}</b>".format(chosen_event)
+    answer += "<b>{0}</b>\n\n".format(chosen_event)
     day_title = call_back.message.text.split(")")[0].split("(")[-1]
     if day_title == "Понедельник" or day_title == "Вторник" or \
                     day_title == "Четверг":

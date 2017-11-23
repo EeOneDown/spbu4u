@@ -1240,7 +1240,7 @@ def select_day_handler(call_back):
                                                  callback_data=name)
               for name in [button_text[:32]]])
     events_keyboard.row(
-        *[telebot.types.InlineKeyboardButton(text=name,
+        *[telebot.types.InlineKeyboardButton(text=emoji[name],
                                              callback_data=name)
           for name in ["prev_block", "Отмена", "next_block"]]
     )
@@ -1272,7 +1272,7 @@ def next_block_handler(call_back):
                                                  callback_data=name)
               for name in [button_text[:32]]])
     events_keyboard.row(
-        *[telebot.types.InlineKeyboardButton(text=name,
+        *[telebot.types.InlineKeyboardButton(text=emoji[name],
                                              callback_data=name)
           for name in ["prev_block", "Отмена", "next_block"]]
     )
@@ -1298,7 +1298,7 @@ def prev_block_handler(call_back):
                                                  callback_data=name)
               for name in [button_text[:32]]])
     events_keyboard.row(
-        *[telebot.types.InlineKeyboardButton(text=name,
+        *[telebot.types.InlineKeyboardButton(text=emoji[name],
                                              callback_data=name)
           for name in ["prev_block", "Отмена", "next_block"]]
     )

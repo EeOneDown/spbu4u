@@ -1364,13 +1364,13 @@ def select_time_handler(call_back):
 @bot.callback_query_handler(func=lambda call_back:
                             "Выбери время, в которе скрывать:" in
                             call_back.message.text)
-def confirm_hide_lesson_handler(call_back):
+def select_place_educator_handler(call_back):
     answer = call_back.message.text.split("\n\n")[0] + "\n\n"
     event_data = call_back.message.text.split("\n\n")[1].split("\n")
     answer += "{0}\n<b>{1}</b>\n{2}\n\n".format(event_data[0], event_data[1],
                                                 "\n".join(event_data[2:]))
     answer += "День: <b>{0}</b>\n\nВремя: <b>{1}</b>\n\nВыбери, у каких " \
-              "преподавателей скрывать занятие".format(
+              "преподавателей скрывать занятие:".format(
                         call_back.message.text.split("\n\n")[2].split(": ")[1],
                         call_back.data)
     place_educator_keyboard = telebot.types.InlineKeyboardMarkup(True)
@@ -1382,29 +1382,45 @@ def confirm_hide_lesson_handler(call_back):
         *[telebot.types.InlineKeyboardButton(text=name, callback_data=name) for
           name in ["Отмена", "Любые"]]
     )
-    """
-    data = call_back.message.text.split("\n\n")
-    hide_event_data = data[1].split("\n")[1].split(" - ")
-    hide_day = data[-2].split(": ")[1]
-    hide_time = call_back.data
-    if hide_event_data[0] in subject_short_type_revert.keys():
-        hide_event_data[0] = subject_short_type_revert[hide_event_data[0]]
-    if hide_day == "Все дни":
-        hide_day = "all"
-    else:
-        hide_day = data[0].split(": ")[1].split(", ")[0].lower()
-    if hide_time == "Любое время":
-        hide_time = "all"
-
-    func.insert_skip(hide_event_data, hide_day, hide_time, call_back.message.chat.id)
-    answer = "<b>Занятие скрыто:</b>\n{0}, {1}".format(hide_event_data[1],
-                                                       hide_event_data[0])
-                                                       """
     bot.edit_message_text(text=answer,
                           chat_id=call_back.message.chat.id,
                           message_id=call_back.message.message_id,
                           parse_mode="HTML",
                           reply_markup=place_educator_keyboard)
+
+
+@bot.callback_query_handler(func=lambda call_back:
+                            "Выбери, у каких преподавателей скрывать занятие:"
+                            in call_back.message.text)
+def confirm_hide_lesson_handler(call_back):
+    data = call_back.message.text.split("\n\n")[1:]
+    hide_event_data = data[0].split("занятие:\n")[1].split("\n")[0].split(" - ")
+    hide_place_edu = "\n".join(data[0].split("занятие:\n")[1].split("\n")[1:])
+    hide_day = data[1].split(": ")[1]
+    hide_time = data[2].split(": ")[1]
+    if hide_event_data[0] in subject_short_type_revert.keys():
+        hide_event_data[0] = subject_short_type_revert[hide_event_data[0]]
+    if hide_day == "Все дни":
+        hide_day = "all"
+    else:
+        hide_day = hide_day.split(" ")[1]
+        if hide_day[-1] == "и":
+            hide_day = hide_day[:-1]
+        else:
+            hide_day = "{0}а".format(hide_day[:-1])
+    if hide_time == "Любое время":
+        hide_time = "all"
+    if call_back.data == "Любые":
+        hide_place_edu = "all"
+
+    func.insert_skip(hide_event_data, hide_day, hide_time, hide_place_edu,
+                     call_back.message.chat.id)
+    answer = "<b>Занятие скрыто:</b>\n{0}, {1}".format(hide_event_data[1],
+                                                       hide_event_data[0])
+    bot.edit_message_text(text=answer,
+                          chat_id=call_back.message.chat.id,
+                          message_id=call_back.message.message_id,
+                          parse_mode="HTML")
 
 
 @bot.callback_query_handler(func=lambda call_back:

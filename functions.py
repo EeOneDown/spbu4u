@@ -634,7 +634,7 @@ def get_blocks(user_id, day_date):
     block_answers = []
     in_block_num = 0
     for num, event in enumerate(day_study_events):
-        answer = "\n<b>{0}. ".format(in_block_num + 1)
+        answer = "\n<b>{ibn}. "
         subject_type = event["Subject"].split(", ")[-1]
         if subject_type in subject_short_type.keys():
             answer += subject_short_type[subject_type] + " - "
@@ -652,16 +652,17 @@ def get_blocks(user_id, day_date):
                              location["EducatorIds"]]
                 answer += "; ".join(educators) + ")</i>"
             answer += "\n"
-        in_block_num += 1
         # TODO change if to HasTheSameTimeAsPreviousItem
         if num != 0 and event["TimeIntervalString"] == \
                 day_study_events[num - 1]["TimeIntervalString"]:
-            block_answers[-1] += answer
+
+            in_block_num += 1
+            block_answers[-1] += answer.format(ibn=in_block_num + 1)
         else:
+            in_block_num = 0 if num != 0 else in_block_num
             answer = "{0} {1}\n".format(emoji["clock"],
                                         event["TimeIntervalString"]) + answer
-            block_answers.append(answer)
-            in_block_num = 0 if num != 0 else in_block_num
+            block_answers.append(answer.format(ibn=in_block_num + 1))
     return day_string, [block + "\nВыбери занятие:" for block in block_answers]
 
 

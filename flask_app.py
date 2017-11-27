@@ -2,8 +2,8 @@
 import json
 import logging
 import sqlite3
-import time
 from datetime import datetime, timedelta, time as dt_time
+from time import time
 
 import flask
 import requests
@@ -27,10 +27,7 @@ logger = telebot.logger
 telebot.logger.setLevel(logging.INFO)
 
 main_keyboard = telebot.types.ReplyKeyboardMarkup(True)
-if time.localtime().tm_mon in [11, 12, 1, 4, 5, 6]:
-    main_keyboard.row("СЕССИЯ", "Расписание")
-else:
-    main_keyboard.row("Расписание")
+main_keyboard.row("Расписание")
 main_keyboard.row(emoji["info"], emoji["star"], emoji["settings"],
                   emoji["suburban"], emoji["editor"])
 
@@ -326,6 +323,7 @@ def sending_handler(message):
 @bot.message_handler(func=lambda mess: mess.text == "СЕССИЯ",
                      content_types=["text"])
 def attestation_handler(message):
+    return
     month = func.get_available_months(message.chat.id)
     if len(month) == 0:
         bot.send_message(message.chat.id, "<i>Нет событий</i>",
@@ -523,7 +521,7 @@ def return_hided_lesson(message):
         for lesson in data:
             answer += "<b>id: {0}</b>\n<b>Название</b>: {1}\n<b>Тип</b>: {2}" \
                       "\n<b>День</b>: {3}\n<b>Время</b>: {4}\n" \
-                      "<b>Место (Преподаватель)</b>: {5}\n\n".format(
+                      "<b>Преподаватели</b>: {5}\n\n".format(
                           lesson[0], lesson[1], lesson[2], lesson[3], lesson[4],
                           lesson[5])
             ids_keyboard.row(
@@ -597,10 +595,9 @@ def group_templates_handler(message):
                      content_types=["text"])
 def schedule_update_handler(message):
     bot.send_chat_action(message.chat.id, "typing")
-    tic = time.time()
+    tic = time()
     schedule_update()
-    toc = time.time() - tic
-    answer = "Done\nWork time: {0}".format(toc)
+    answer = "Done\nWork time: {0}".format(time() - tic)
     bot.reply_to(message, answer)
 
 
@@ -1193,25 +1190,6 @@ def full_place_off_handler(call_back):
 
 
 @bot.callback_query_handler(func=lambda call_back:
-                            call_back.data == "Другой день")
-def another_day_handler(call_back):
-    answer = "Выбери день, когда есть это занятие:"
-    json_week_data = func.get_json_week_data(my_id)
-    days = json_week_data["Days"]
-    days_keyboard = telebot.types.InlineKeyboardMarkup(True)
-    for day in days:
-        days_keyboard.row(
-            *[telebot.types.InlineKeyboardButton(text=name, callback_data=name)
-              for name in [day["DayString"].split(", ")[0].capitalize()]])
-    days_keyboard.row(
-        *[telebot.types.InlineKeyboardButton(text=name, callback_data=name)
-          for name in ["Отмена"]])
-    bot.edit_message_text(text=answer, chat_id=call_back.message.chat.id,
-                          message_id=call_back.message.message_id,
-                          reply_markup=days_keyboard)
-
-
-@bot.callback_query_handler(func=lambda call_back:
                             call_back.data in week_day_titles.keys())
 def select_day_handler(call_back):
     iso_day_date = list((datetime.today() + server_timedelta).isocalendar())
@@ -1279,9 +1257,12 @@ def next_block_handler(call_back):
                                              callback_data=name)
           for name in ["prev_block", "Отмена", "next_block"]]
     )
-    bot.edit_message_text(text=answer, chat_id=call_back.message.chat.id,
-                          message_id=call_back.message.message_id,
-                          parse_mode="HTML", reply_markup=events_keyboard)
+    try:
+        bot.edit_message_text(text=answer, chat_id=call_back.message.chat.id,
+                              message_id=call_back.message.message_id,
+                              parse_mode="HTML", reply_markup=events_keyboard)
+    except telebot.apihelper.ApiException:
+        pass
 
 
 @bot.callback_query_handler(func=lambda call_back:
@@ -1306,9 +1287,12 @@ def prev_block_handler(call_back):
                                              callback_data=name)
           for name in ["prev_block", "Отмена", "next_block"]]
     )
-    bot.edit_message_text(text=answer, chat_id=call_back.message.chat.id,
-                          message_id=call_back.message.message_id,
-                          parse_mode="HTML", reply_markup=events_keyboard)
+    try:
+        bot.edit_message_text(text=answer, chat_id=call_back.message.chat.id,
+                              message_id=call_back.message.message_id,
+                              parse_mode="HTML", reply_markup=events_keyboard)
+    except telebot.apihelper.ApiException:
+        pass
 
 
 @bot.callback_query_handler(func=lambda call_back:
@@ -1406,13 +1390,15 @@ def confirm_hide_lesson_handler(call_back):
     for place_edu in data[0].split("\n")[2:]:
         pos = place_edu.find("(")
         if pos != -1:
-            hide_educators += place_edu[pos:-1] + "; "
+            hide_educators += place_edu[pos + 1:-1] + "; "
     hide_educators = hide_educators.strip("; ")
 
     hide_day = data[1].split(": ")[1]
     hide_time = data[2].split(": ")[1]
     if hide_event_data[0] in subject_short_type_revert.keys():
         hide_event_data[0] = subject_short_type_revert[hide_event_data[0]]
+    else:
+        hide_event_data[0] = hide_event_data[0].lower()
     if hide_day == "Все дни":
         hide_day = "all"
     else:
@@ -1701,7 +1687,7 @@ def webhook():
         json_string = flask.request.get_data().decode("utf-8")
         update = telebot.types.Update.de_json(json_string)
         was_error = False
-        tic = time.time()
+        tic = time()
         try:
             bot.process_new_updates([update])
         except Exception as err:
@@ -1734,7 +1720,7 @@ def webhook():
                              str(err) + "\n\nWas sent: {0}".format(was_sent),
                              disable_notification=True)
         finally:
-            func.write_log(update, time.time() - tic, was_error)
+            func.write_log(update, time() - tic, was_error)
         return "OK", 200
     else:
         flask.abort(403)

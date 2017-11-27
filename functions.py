@@ -152,7 +152,7 @@ def get_json_day_data(user_id, day_date, json_week_data=None, next_week=False):
 def is_event_in_skips(event, skips, week_day_string):
     event_educators = ""
     for educator in event["EducatorIds"]:
-        event_educators += educator["Item2"] + "; "
+        event_educators += educator["Item2"].split(", ")[0] + "; "
     event_educators = event_educators.strip("; ")
 
     for skip_lesson in skips:
@@ -202,7 +202,7 @@ def create_schedule_answer(day_info, full_place, user_id=None, personal=True,
         if subject_type in subject_short_type.keys():
             answer += subject_short_type[subject_type] + " - "
         else:
-            answer += subject_type.capitalize() + " - "
+            answer += subject_type.upper() + " - "
         answer += ", ".join(event["Subject"].split(", ")[:-1]) + "</b>\n"
         for location in event["EventLocations"]:
             if location["IsEmpty"]:
@@ -241,7 +241,7 @@ def create_master_schedule_answer(day_info):
         if subject_type in subject_short_type.keys():
             answer += subject_short_type[subject_type] + " - "
         else:
-            answer += subject_type.capitalize() + " - "
+            answer += subject_type.upper() + " - "
         answer += ", ".join(
             event["Subject"].split(", ")[:-1]) + "</b>\n"
         for location in event["EventLocations"]:
@@ -649,7 +649,7 @@ def get_blocks(user_id, day_date):
         if subject_type in subject_short_type.keys():
             answer += subject_short_type[subject_type] + " - "
         else:
-            answer += subject_type.capitalize() + " - "
+            answer += subject_type.upper() + " - "
         answer += ", ".join(event["Subject"].split(", ")[:-1]) + "</b>"
         if is_event_in_skips(event, get_hide_lessons_data(user_id),
                              json_day["DayString"].split(", ")[0]):

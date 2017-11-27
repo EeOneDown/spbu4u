@@ -8,13 +8,14 @@ import requests
 from telebot.apihelper import ApiException
 
 
-def insert_skip(hide_event_data, hide_day, hide_time, hide_educators, user_id):
+def insert_skip(hide_event_name, hide_event_types, hide_day, hide_time,
+                hide_educators, user_id):
     sql_con = sqlite3.connect("Bot.db")
     cursor = sql_con.cursor()
     try:
         cursor.execute("""INSERT INTO lessons (name, types, day, time, educators) 
                               VALUES (?, ?, ?, ?, ?)""",
-                       (hide_event_data[1], hide_event_data[0],
+                       (hide_event_name, hide_event_types,
                         hide_day, hide_time, hide_educators))
         sql_con.commit()
     except sqlite3.IntegrityError:
@@ -27,7 +28,7 @@ def insert_skip(hide_event_data, hide_day, hide_time, hide_educators, user_id):
                             AND day = ? 
                             AND time = ?
                             AND educators = ?""",
-                       (hide_event_data[1], hide_event_data[0],
+                       (hide_event_name, hide_event_types,
                         hide_day, hide_time, hide_educators))
         lesson_id = cursor.fetchone()[0]
     try:
@@ -54,7 +55,7 @@ def get_hide_lessons_data(user_id, db_path="Bot.db"):
                       FROM skips AS s
                         JOIN lessons AS l
                           ON l.id = s.lesson_id
-                      WHERE user_id = ?""", (user_id, ))
+                      WHERE user_id = ?""", (user_id,))
     data = cursor.fetchall()
     cursor.close()
     sql_con.close()
@@ -130,7 +131,7 @@ def get_json_week_data(user_id, next_week=False, for_day=None):
                           FROM groups_data
                             JOIN user_data
                               ON groups_data.id = user_data.group_id 
-                          WHERE  user_data.id= ?""", (user_id, ))
+                          WHERE  user_data.id= ?""", (user_id,))
         data = cursor.fetchone()
 
         json_week_data = json.loads(data[0])
@@ -157,13 +158,14 @@ def is_event_in_skips(event, skips, week_day_string):
 
     for skip_lesson in skips:
         if skip_lesson[1] == ", ".join(event["Subject"].split(", ")[:-1]) and \
-           skip_lesson[2] == event["Subject"].split(", ")[-1] and \
-           (skip_lesson[3] == week_day_string or
-                skip_lesson[3] == "all") and \
-           (skip_lesson[4] == event["TimeIntervalString"] or
-                skip_lesson[4] == "all") and \
-           (skip_lesson[5] == event_educators or
-                skip_lesson[5] == "all"):
+                (event["Subject"].split(", ")[-1] in skip_lesson[2].split("; ")
+                 or skip_lesson[2] == "all") and \
+                (skip_lesson[3] == week_day_string or
+                 skip_lesson[3] == "all") and \
+                (skip_lesson[4] == event["TimeIntervalString"] or
+                 skip_lesson[4] == "all") and \
+                (skip_lesson[5] == event_educators or
+                 skip_lesson[5] == "all"):
             return True
     return False
 
@@ -258,7 +260,7 @@ def is_user_exist(user_id):
     cursor = sql_con.cursor()
     cursor.execute("""SELECT count(id) 
                       FROM user_data
-                      WHERE id = ?""", (user_id, ))
+                      WHERE id = ?""", (user_id,))
     data = cursor.fetchone()
     cursor.close()
     sql_con.close()
@@ -270,7 +272,7 @@ def is_sending_on(user_id):
     cursor = sql_con.cursor()
     cursor.execute("""SELECT sending 
                       FROM user_data
-                      WHERE id = ?""", (user_id, ))
+                      WHERE id = ?""", (user_id,))
     data = cursor.fetchone()
     cursor.close()
     sql_con.close()
@@ -305,7 +307,7 @@ def is_full_place(user_id, db_path="Bot.db"):
     cursor = sql_con.cursor()
     cursor.execute("""SELECT full_place 
                       FROM user_data
-                      WHERE id = ?""", (user_id, ))
+                      WHERE id = ?""", (user_id,))
     data = cursor.fetchone()
     cursor.close()
     sql_con.close()
@@ -375,7 +377,7 @@ def get_templates(user_id):
                       FROM user_groups AS ug
                         JOIN groups_data AS gd
                           ON ug.group_id = gd.id
-                      WHERE ug.user_id = ?;""", (user_id, ))
+                      WHERE ug.user_id = ?;""", (user_id,))
     data = cursor.fetchall()
     cursor.close()
     sql_con.close()
@@ -452,7 +454,7 @@ def get_fom_station_code(user_id):
     cursor = sql_con.cursor()
     cursor.execute("""SELECT home_station_code
                       FROM user_data
-                      WHERE id = ?""", (user_id, ))
+                      WHERE id = ?""", (user_id,))
     from_station = cursor.fetchone()[0]
     cursor.close()
     sql_con.close()
@@ -535,7 +537,7 @@ def text_to_date(text):
         words = text.split()[:3]
         for word in words:
             if not (word.isdecimal() or (
-                    word.isalpha() and (word.lower() in months.keys()))):
+                        word.isalpha() and (word.lower() in months.keys()))):
                 return False
         try:
             day = int(words[0])
@@ -543,7 +545,7 @@ def text_to_date(text):
             year = datetime.today().year
             if len(words) > 1:
                 month = int(words[1]) if words[1].isdecimal() else months[
-                                                                    words[1]]
+                    words[1]]
                 if len(words) > 2:
                     year = int(words[2])
             return datetime.today().replace(day=day, month=month,
@@ -615,7 +617,7 @@ def get_json_attestation(user_id):
                       FROM user_data
                         JOIN groups_data
                           ON user_data.group_id = groups_data.id
-                      WHERE user_data.id = ?""", (user_id, ))
+                      WHERE user_data.id = ?""", (user_id,))
     data = cursor.fetchone()[0]
     cursor.close()
     sql_con.close()

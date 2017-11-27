@@ -15,7 +15,8 @@ import registration_functions as reg_func
 from bots_constants import release_token, bot_name
 from constants import emoji, briefly_info_answer, my_id, \
     full_info_answer, webhook_url_base, webhook_url_path, week_day_number, \
-    all_stations, all_stations_const, week_day_titles, subject_short_type_revert
+    all_stations, all_stations_const, week_day_titles, subject_short_type, \
+    subject_short_type_revert
 from sql_updater import schedule_update
 from yandex_timetable import get_yandex_timetable_data
 
@@ -323,7 +324,8 @@ def sending_handler(message):
 @bot.message_handler(func=lambda mess: mess.text == "СЕССИЯ",
                      content_types=["text"])
 def attestation_handler(message):
-    return
+    if message.chat.id != my_id:
+        return
     month = func.get_available_months(message.chat.id)
     if len(month) == 0:
         bot.send_message(message.chat.id, "<i>Нет событий</i>",
@@ -519,8 +521,8 @@ def return_hided_lesson(message):
     if len(data):
         answer = "Вот список скрытых тобой занятий:\n\n"
         for lesson in data:
-            answer += "<b>id: {0}</b>\n<b>Название</b>: {1}\n<b>Тип</b>: {2}" \
-                      "\n<b>День</b>: {3}\n<b>Время</b>: {4}\n" \
+            answer += "<b>id: {0}</b>\n<b>Название</b>: {1}\n<b>Типы</b>: {2}" \
+                      "\n<b>Дни</b>: {3}\n<b>Время</b>: {4}\n" \
                       "<b>Преподаватели</b>: {5}\n\n".format(
                           lesson[0], lesson[1], lesson[2], lesson[3], lesson[4],
                           lesson[5])
@@ -1297,17 +1299,58 @@ def prev_block_handler(call_back):
 
 @bot.callback_query_handler(func=lambda call_back:
                             "Выбери занятие:" in call_back.message.text)
-def select_lesson_handler(call_back):
-    answer = "{0}\n\nВыбранное занятие: \n".format(
-        call_back.message.text.split("\n\n")[1])
-    events = call_back.message.text.split("\n\n")[2:-1]
+def lesson_selected_handler(call_back):
+    message_text_data = call_back.message.text.split("\n\n")
+    answer = "{0} ({1})\n\nВыбранное занятие: \n".format(
+        message_text_data[1], message_text_data[0].split(" ")[-1][1:-1])
+    events = message_text_data[2:-1]
     chosen_event = ". ".join(
         events[int(call_back.data.split(". ")[0]) - 1].split(". ")[1:])
+    event_title = chosen_event.split("\n")[0].strip(" {0}".format(
+        emoji["cross_mark"]))
+    event_type = event_title.split(" - ")[0]
+    is_special_type = True
+    event_title = " - ".join(event_title.split(" - ")[1:])
+    answer += "<b>{0}</b>\n{1}\n\nТипы: <b>{2}</b>\n\n".format(
+        event_title, "\n".join(chosen_event.split("\n")[1:]), event_type)
+    answer += "Укажи типы занятия, которые скрывать: "
+    types_keyboard = telebot.types.InlineKeyboardMarkup(row_width=3)
+    short_types = [short_type for short_type in subject_short_type.values()]
+    for i in range(len(short_types)):
+        if event_type == short_types[i]:
+            short_types[i] = "{0} {1}".format(emoji["heavy_check_mark"],
+                                              event_type)
+            is_special_type = False
+    types_keyboard.add(
+        *[telebot.types.InlineKeyboardButton(text=name, callback_data=name)
+          for name in short_types])
+    if is_special_type:
+        event_type = "{0} {1}".format(emoji["heavy_check_mark"], event_type)
+        types_keyboard.row(
+            *[telebot.types.InlineKeyboardButton(text=name, callback_data=name)
+              for name in [event_type]])
+    types_keyboard.row(
+        *[telebot.types.InlineKeyboardButton(text=name, callback_data=name)
+          for name in ["Отмена", "Далее"]])
+    bot.edit_message_text(text=answer,
+                          chat_id=call_back.message.chat.id,
+                          message_id=call_back.message.message_id,
+                          parse_mode="HTML",
+                          reply_markup=types_keyboard)
+
+
+@bot.callback_query_handler(func=lambda call_back:
+                            call_back.data == "Далее")
+def types_selected_handler(call_back):
+    message_text_data = call_back.message.text.split("\n\n")
+    answer = "{0}\n\n{1}\n<b>{2}</b>\n{3}\n\nТипы: <b>{4}</b>\n\n".format(
+        message_text_data[0], message_text_data[1].split("\n")[0],
+        message_text_data[1].split("\n")[1],
+        "\n".join(message_text_data[1].split("\n")[2:]),
+        message_text_data[2].split(": ")[1]
+    )
     days_keyboard = telebot.types.InlineKeyboardMarkup(True)
-    answer += "<b>{0}</b>\n{1}\n\n".format(
-        chosen_event.split("\n")[0].strip(" {0}".format(emoji["cross_mark"])),
-        "\n".join(chosen_event.split("\n")[1:]))
-    day_title = call_back.message.text.split(")")[0].split("(")[-1]
+    day_title = message_text_data[0].split(" ")[-1][1:-1]
     if day_title == "Понедельник" or day_title == "Вторник" or \
                     day_title == "Четверг":
         day_title += "и"
@@ -1328,15 +1371,66 @@ def select_lesson_handler(call_back):
 
 
 @bot.callback_query_handler(func=lambda call_back:
+                            "Укажи типы занятия, которые скрывать:" in
+                            call_back.message.text)
+def select_types_handler(call_back):
+    message_text_data = call_back.message.text.split("\n\n")
+    answer = "{0}\n\n{1}\n<b>{2}</b>\n{3}\n\n".format(
+        message_text_data[0], message_text_data[1].split("\n")[0],
+        message_text_data[1].split("\n")[1],
+        "\n".join(message_text_data[1].split("\n")[2:]))
+    types = message_text_data[2].split(": ")[1].split("; ")
+    chosen_type = call_back.data.strip("{0} ".format(emoji["heavy_check_mark"]))
+    if chosen_type in types:
+        types.remove(chosen_type)
+        if len(types) == 0:
+            types.append("Любой тип")
+    else:
+        if "Любой тип" in types:
+            types.remove("Любой тип")
+        types.append(chosen_type)
+    answer += "Типы: <b>{0}</b>\n\nУкажи типы занятия, которые " \
+              "скрывать:".format("; ".join(types))
+    types_keyboard = telebot.types.InlineKeyboardMarkup(row_width=3)
+    short_types = [short_type for short_type in subject_short_type.values()]
+    is_special_type = chosen_type not in short_types
+    for i in range(len(short_types)):
+        if short_types[i] in types:
+            short_types[i] = "{0} {1}".format(emoji["heavy_check_mark"],
+                                              short_types[i])
+    types_keyboard.add(
+        *[telebot.types.InlineKeyboardButton(text=name, callback_data=name)
+          for name in short_types])
+    if is_special_type:
+        if chosen_type in types:
+            chosen_type = "{0} {1}".format(emoji["heavy_check_mark"],
+                                           chosen_type)
+        types_keyboard.row(
+            *[telebot.types.InlineKeyboardButton(text=name, callback_data=name)
+              for name in [chosen_type]])
+    types_keyboard.row(
+        *[telebot.types.InlineKeyboardButton(text=name, callback_data=name)
+          for name in ["Отмена", "Далее"]])
+    bot.edit_message_text(text=answer,
+                          chat_id=call_back.message.chat.id,
+                          message_id=call_back.message.message_id,
+                          parse_mode="HTML",
+                          reply_markup=types_keyboard)
+
+
+@bot.callback_query_handler(func=lambda call_back:
                             "Выбери дни для скрытия занятия:" in
                             call_back.message.text)
 def select_time_handler(call_back):
-    answer = call_back.message.text.split("\n\n")[0] + "\n\n"
+    message_text_data = call_back.message.text.split("\n\n")
+    answer = "{0}\n\n{1}\n<b>{2}</b>\n{3}\n\nТипы: <b>{4}</b>\n\n".format(
+        message_text_data[0], message_text_data[1].split("\n")[0],
+        message_text_data[1].split("\n")[1],
+        "\n".join(message_text_data[1].split("\n")[2:]),
+        message_text_data[2].split(": ")[1]
+    )
     times_keyboard = telebot.types.InlineKeyboardMarkup(True)
-    event_data = call_back.message.text.split("\n\n")[1].split("\n")
-    lesson_time = call_back.message.text.split("\n\n")[0][2:]
-    answer += "{0}\n<b>{1}</b>\n{2}\n\n".format(event_data[0], event_data[1],
-                                                "\n".join(event_data[2:]))
+    lesson_time = message_text_data[0].split(" ")[1]
     times_keyboard.row(
         *[telebot.types.InlineKeyboardButton(text=name, callback_data=name)
           for name in [lesson_time]])
@@ -1356,14 +1450,16 @@ def select_time_handler(call_back):
                             "Выбери время, в которе скрывать:" in
                             call_back.message.text)
 def select_place_educator_handler(call_back):
-    answer = call_back.message.text.split("\n\n")[0] + "\n\n"
-    event_data = call_back.message.text.split("\n\n")[1].split("\n")
-    answer += "{0}\n<b>{1}</b>\n{2}\n\n".format(event_data[0], event_data[1],
-                                                "\n".join(event_data[2:]))
-    answer += "День: <b>{0}</b>\n\nВремя: <b>{1}</b>\n\nВыбери, у каких " \
-              "преподавателей скрывать занятие:".format(
-                        call_back.message.text.split("\n\n")[2].split(": ")[1],
-                        call_back.data)
+    message_text_data = call_back.message.text.split("\n\n")
+    answer = "{0}\n\n{1}\n<b>{2}</b>\n{3}\n\nТипы: <b>{4}</b>\n\n" \
+             "Дни: <b>{5}</b>\n\nВремя: <b>{6}</b>\n\n" \
+             "Выбери, у каких преподавателей скрывать занятие:".format(
+                      message_text_data[0], message_text_data[1].split("\n")[0],
+                      message_text_data[1].split("\n")[1],
+                      "\n".join(message_text_data[1].split("\n")[2:]),
+                      message_text_data[2].split(": ")[1],
+                      message_text_data[3].split(": ")[1],
+                      call_back.data)
     place_educator_keyboard = telebot.types.InlineKeyboardMarkup(True)
     place_educator_keyboard.row(
         *[telebot.types.InlineKeyboardButton(text=name, callback_data=name) for
@@ -1384,21 +1480,24 @@ def select_place_educator_handler(call_back):
                             "Выбери, у каких преподавателей скрывать занятие:"
                             in call_back.message.text)
 def confirm_hide_lesson_handler(call_back):
-    data = call_back.message.text.split("\n\n")[1:]
-    hide_event_data = data[0].split("\n")[1].split(" - ")
-    hide_educators = ""
-    for place_edu in data[0].split("\n")[2:]:
-        pos = place_edu.find("(")
-        if pos != -1:
-            hide_educators += place_edu[pos + 1:-1] + "; "
-    hide_educators = hide_educators.strip("; ")
+    message_text_data = call_back.message.text.split("\n\n")
+    hide_event_name = message_text_data[1].split("\n")[1]
 
-    hide_day = data[1].split(": ")[1]
-    hide_time = data[2].split(": ")[1]
-    if hide_event_data[0] in subject_short_type_revert.keys():
-        hide_event_data[0] = subject_short_type_revert[hide_event_data[0]]
+    hide_event_types = message_text_data[2].split(": ")[1]
+    if hide_event_types == "Любой тип":
+        hide_event_types = "all"
     else:
-        hide_event_data[0] = hide_event_data[0].lower()
+        chosen_types = hide_event_types.split("; ")
+        hide_event_types = ""
+        for short_type in chosen_types:
+            if short_type in subject_short_type_revert.keys():
+                hide_event_types += subject_short_type_revert[short_type]
+            else:
+                hide_event_types += short_type.lower()
+            hide_event_types += "; "
+    hide_event_types = hide_event_types.strip("; ")
+
+    hide_day = message_text_data[3].split(": ")[1]
     if hide_day == "Все дни":
         hide_day = "all"
     else:
@@ -1407,15 +1506,23 @@ def confirm_hide_lesson_handler(call_back):
             hide_day = hide_day[:-1]
         else:
             hide_day = "{0}а".format(hide_day[:-1])
+
+    hide_time = message_text_data[4].split(": ")[1]
     if hide_time == "Любое время":
         hide_time = "all"
+
+    hide_educators = ""
+    for place_edu in message_text_data[1].split("\n")[2:]:
+        pos = place_edu.find("(")
+        if pos != -1:
+            hide_educators += place_edu[pos + 1:-1] + "; "
+    hide_educators = hide_educators.strip("; ")
     if call_back.data == "Любые" or hide_educators == "":
         hide_educators = "all"
 
-    func.insert_skip(hide_event_data, hide_day, hide_time, hide_educators,
-                     call_back.message.chat.id)
-    answer = "<b>Занятие скрыто:</b>\n{0}, {1}".format(hide_event_data[1],
-                                                       hide_event_data[0])
+    func.insert_skip(hide_event_name, hide_event_types, hide_day, hide_time,
+                     hide_educators, call_back.message.chat.id)
+    answer = "<b>Занятие скрыто:</b>\n{0}".format(hide_event_name)
     bot.edit_message_text(text=answer,
                           chat_id=call_back.message.chat.id,
                           message_id=call_back.message.message_id,

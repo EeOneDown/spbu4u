@@ -8,14 +8,14 @@ import requests
 from telebot.apihelper import ApiException
 
 
-def insert_skip(hide_event_data, hide_day, hide_time, hide_place_edu, user_id):
+def insert_skip(hide_event_data, hide_day, hide_time, hide_educators, user_id):
     sql_con = sqlite3.connect("Bot.db")
     cursor = sql_con.cursor()
     try:
-        cursor.execute("""INSERT INTO lessons (name, type, day, time, place_educator) 
+        cursor.execute("""INSERT INTO lessons (name, types, day, time, educators) 
                               VALUES (?, ?, ?, ?, ?)""",
                        (hide_event_data[1], hide_event_data[0],
-                        hide_day, hide_time, hide_place_edu))
+                        hide_day, hide_time, hide_educators))
         sql_con.commit()
     except sqlite3.IntegrityError:
         sql_con.rollback()
@@ -23,12 +23,12 @@ def insert_skip(hide_event_data, hide_day, hide_time, hide_place_edu, user_id):
         cursor.execute("""SELECT id 
                           FROM lessons 
                           WHERE name = ? 
-                            AND type = ? 
+                            AND types = ? 
                             AND day = ? 
                             AND time = ?
-                            AND place_educator = ?""",
+                            AND educators = ?""",
                        (hide_event_data[1], hide_event_data[0],
-                        hide_day, hide_time, hide_place_edu))
+                        hide_day, hide_time, hide_educators))
         lesson_id = cursor.fetchone()[0]
     try:
         cursor.execute("""INSERT INTO skips VALUES (?, ?)""",
@@ -47,10 +47,10 @@ def get_hide_lessons_data(user_id, db_path="Bot.db"):
     cursor.execute("""SELECT
                         s.lesson_id,
                         l.name,
-                        l.type,
+                        l.types,
                         l.day,
                         l.time,
-                        l.place_educator
+                        l.educators
                       FROM skips AS s
                         JOIN lessons AS l
                           ON l.id = s.lesson_id
@@ -150,18 +150,10 @@ def get_json_day_data(user_id, day_date, json_week_data=None, next_week=False):
 
 
 def is_event_in_skips(event, skips, week_day_string):
-    event_place_educator = ""
-    for location in event["EventLocations"]:
-        if location["IsEmpty"]:
-            continue
-        event_place_educator += location["DisplayName"]
-        if location["HasEducators"]:
-            event_place_educator += " ("
-            educators = [educator["Item2"].split(", ")[0] for educator in
-                         location["EducatorIds"]]
-            event_place_educator += "; ".join(educators) + ")"
-        event_place_educator += "\n"
-    event_place_educator = event_place_educator.strip("\n")
+    event_educators = ""
+    for educator in event["EducatorIds"]:
+        event_educators += educator["Item2"] + "; "
+    event_educators = event_educators.strip("; ")
 
     for skip_lesson in skips:
         if skip_lesson[1] == ", ".join(event["Subject"].split(", ")[:-1]) and \
@@ -170,7 +162,7 @@ def is_event_in_skips(event, skips, week_day_string):
                 skip_lesson[3] == "all") and \
            (skip_lesson[4] == event["TimeIntervalString"] or
                 skip_lesson[4] == "all") and \
-           (skip_lesson[5] == event_place_educator or
+           (skip_lesson[5] == event_educators or
                 skip_lesson[5] == "all"):
             return True
     return False

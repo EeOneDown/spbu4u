@@ -4,7 +4,8 @@ from math import ceil
 
 import requests
 
-from constants import emoji, yandex_key
+from bots_constants import yandex_key
+from constants import emoji
 
 
 def get_yandex_timetable_data(from_station, to_station, date, limit=3):

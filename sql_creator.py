@@ -1,4 +1,5 @@
 import sqlite3
+from os import access, F_OK
 
 
 def create_sql(db_name):
@@ -6,7 +7,7 @@ def create_sql(db_name):
     cursor = sql_con.cursor()
 
     # user choice
-    cursor.execute("""CREATE TABLE user_choice
+    cursor.execute("""CREATE TABLE IF NOT EXISTS user_choice
                         (
                             user_id INT PRIMARY KEY,
                             divisions_json TEXT,
@@ -24,7 +25,7 @@ def create_sql(db_name):
     sql_con.commit()
 
     # group data
-    cursor.execute("""CREATE TABLE groups_data
+    cursor.execute("""CREATE TABLE IF NOT EXISTS groups_data
                         (
                             id INT PRIMARY KEY NOT NULL,
                             json_week_data TEXT,
@@ -33,7 +34,7 @@ def create_sql(db_name):
     sql_con.commit()
 
     # user data
-    cursor.execute("""CREATE TABLE user_data
+    cursor.execute("""CREATE TABLE IF NOT EXISTS user_data
                         (
                             id INT PRIMARY KEY NOT NULL,
                             group_id INT NOT NULL,
@@ -48,20 +49,20 @@ def create_sql(db_name):
     sql_con.commit()
 
     # lessons
-    cursor.execute("""CREATE TABLE lessons 
+    cursor.execute("""CREATE TABLE IF NOT EXISTS lessons 
                         (
                             id INTEGER PRIMARY KEY AUTOINCREMENT, 
                             name TEXT NOT NULL, 
-                            type TEXT NOT NULL, 
+                            types TEXT NOT NULL, 
                             day TEXT NOT NULL DEFAULT 'all', 
                             time TEXT NOT NULL DEFAULT 'all',
-                            place_educator TEXT DEFAULT 'all' NOT NULL, 
-                            UNIQUE (name, type, day, time, place_educator)
+                            educators TEXT NOT NULL DEFAULT 'all', 
+                            UNIQUE (name, types, day, time, educators)
                         )""")
     sql_con.commit()
 
     # skips
-    cursor.execute("""CREATE TABLE skips
+    cursor.execute("""CREATE TABLE IF NOT EXISTS skips
                         (
                             lesson_id INT NOT NULL,
                             user_id INT NOT NULL,
@@ -75,7 +76,7 @@ def create_sql(db_name):
     sql_con.commit()
 
     # user groups
-    cursor.execute("""CREATE TABLE user_groups
+    cursor.execute("""CREATE TABLE IF NOT EXISTS user_groups
                         (
                             group_id INT NOT NULL,
                             user_id INT NOT NULL,
@@ -94,77 +95,100 @@ def create_sql(db_name):
 
 def copy_from_db(from_db_name, to_db_name):
     # FROM DB
+    if not access(from_db_name, F_OK):
+        return
     sql_con = sqlite3.connect(from_db_name)
     cursor = sql_con.cursor()
 
-    # user choice
-    cursor.execute("""SELECT * FROM user_choice""")
-    user_choices = cursor.fetchall()
+    try:
+        # user choice
+        cursor.execute("""SELECT * FROM user_choice""")
+        user_choices = cursor.fetchall()
 
-    # group data
-    cursor.execute("""SELECT id FROM groups_data""")
-    groups_data = cursor.fetchall()
+        # group data
+        cursor.execute("""SELECT id FROM groups_data""")
+        groups_data = cursor.fetchall()
 
-    # user data
-    cursor.execute("""SELECT 
-                        id, group_id, 
-                        full_place, 
-                        sending, rate, 
-                        home_station_code,
-                        is_univer 
-                      FROM user_data""")
-    users_data = cursor.fetchall()
+        # user data
+        cursor.execute("""SELECT 
+                            id, group_id, 
+                            full_place, 
+                            sending, rate, 
+                            home_station_code,
+                            is_univer 
+                          FROM user_data""")
+        users_data = cursor.fetchall()
 
-    # lessons
-    cursor.execute("""SELECT * FROM lessons""")
-    lessons = cursor.fetchall()
+        # lessons
+        cursor.execute("""SELECT * FROM lessons""")
+        lessons = cursor.fetchall()
 
-    # skips
-    cursor.execute("""SELECT * FROM skips""")
-    skips = cursor.fetchall()
+        # skips
+        cursor.execute("""SELECT * FROM skips""")
+        skips = cursor.fetchall()
 
-    # user groups
-    cursor.execute("""SELECT * FROM user_groups""")
-    users_groups = cursor.fetchall()
-
-    cursor.close()
-    sql_con.close()
+        # user groups
+        cursor.execute("""SELECT * FROM user_groups""")
+        users_groups = cursor.fetchall()
+    except sqlite3.OperationalError:
+        return
+    finally:
+        cursor.close()
+        sql_con.close()
 
     # TO DB
     sql_con = sqlite3.connect(to_db_name)
     cursor = sql_con.cursor()
 
     # user choice
-    cursor.executemany("""INSERT INTO user_choice
-                          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
-                       user_choices)
-    sql_con.commit()
+    try:
+        cursor.executemany("""INSERT INTO user_choice
+                              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                           user_choices)
+        sql_con.commit()
+    except sqlite3.IntegrityError:
+        sql_con.rollback()
 
     # group data
-    cursor.executemany("""INSERT INTO groups_data (id)
-                          VALUES (?)""", groups_data)
-    sql_con.commit()
+    try:
+        cursor.executemany("""INSERT INTO groups_data (id)
+                              VALUES (?)""", groups_data)
+        sql_con.commit()
+    except sqlite3.IntegrityError:
+        sql_con.rollback()
 
     # user data
-    cursor.executemany("""INSERT INTO user_data
-                          (id, group_id, full_place, sending, rate, 
-                          home_station_code, is_univer)
-                          VALUES (?, ?, ?, ?, ?, ?, ?)""", users_data)
-    sql_con.commit()
+    try:
+        cursor.executemany("""INSERT INTO user_data
+                              (id, group_id, full_place, sending, rate, 
+                              home_station_code, is_univer)
+                              VALUES (?, ?, ?, ?, ?, ?, ?)""", users_data)
+        sql_con.commit()
+    except sqlite3.IntegrityError:
+        sql_con.rollback()
 
     # lessons
-    cursor.executemany("""INSERT INTO lessons 
-                          VALUES (?, ?, ?, ?, ?, 'all')""", lessons)
-    sql_con.commit()
+    try:
+        cursor.executemany("""INSERT INTO lessons 
+                              VALUES (?, ?, ?, ?, ?, 'all')""", lessons)
+        sql_con.commit()
+    except sqlite3.IntegrityError:
+        sql_con.rollback()
 
     # skips
-    cursor.executemany("""INSERT INTO skips VALUES (?, ?)""", skips)
-    sql_con.commit()
+    try:
+        cursor.executemany("""INSERT INTO skips VALUES (?, ?)""", skips)
+        sql_con.commit()
+    except sqlite3.IntegrityError:
+        sql_con.rollback()
 
     # user groups
-    cursor.executemany("""INSERT INTO user_groups 
-                          VALUES (?, ?)""", users_groups)
-    sql_con.commit()
+    try:
+        cursor.executemany("""INSERT INTO user_groups 
+                              VALUES (?, ?)""", users_groups)
+        sql_con.commit()
+    except sqlite3.IntegrityError:
+        sql_con.rollback()
 
     cursor.close()
     sql_con.close()

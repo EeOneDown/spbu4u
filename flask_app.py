@@ -12,7 +12,8 @@ from flask_sslify import SSLify
 
 import functions as func
 import registration_functions as reg_func
-from constants import release_token, emoji, briefly_info_answer, my_id, \
+from bots_constants import release_token, bot_name
+from constants import emoji, briefly_info_answer, my_id, \
     full_info_answer, webhook_url_base, webhook_url_path, week_day_number, \
     all_stations, all_stations_const, week_day_titles, subject_short_type_revert
 from sql_updater import schedule_update
@@ -547,7 +548,7 @@ def return_hided_lesson(message):
 
 
 @bot.message_handler(func=lambda mess: mess.reply_to_message is not None and
-                     mess.reply_to_message.from_user.username == "Spbu4UBot" and
+                     mess.reply_to_message.from_user.username == bot_name and
                      mess.reply_to_message.text == "Напиши мне что-нибудь:",
                      content_types=["text"])
 def users_callback_handler(message):
@@ -614,7 +615,7 @@ def educator_schedule_handler(message):
 
 
 @bot.message_handler(func=lambda mess: mess.reply_to_message is not None and
-                     mess.reply_to_message.from_user.username == "Spbu4UBot" and
+                     mess.reply_to_message.from_user.username == bot_name and
                      "Введи Фамилию преподавателя:" in
                      mess.reply_to_message.text,
                      content_types=["text"])
@@ -1401,7 +1402,13 @@ def select_place_educator_handler(call_back):
 def confirm_hide_lesson_handler(call_back):
     data = call_back.message.text.split("\n\n")[1:]
     hide_event_data = data[0].split("\n")[1].split(" - ")
-    hide_place_edu = "\n".join(data[0].split("\n")[2:])
+    hide_educators = ""
+    for place_edu in data[0].split("\n")[2:]:
+        pos = place_edu.find("(")
+        if pos != -1:
+            hide_educators += place_edu[pos:-1] + "; "
+    hide_educators = hide_educators.strip("; ")
+
     hide_day = data[1].split(": ")[1]
     hide_time = data[2].split(": ")[1]
     if hide_event_data[0] in subject_short_type_revert.keys():
@@ -1416,10 +1423,10 @@ def confirm_hide_lesson_handler(call_back):
             hide_day = "{0}а".format(hide_day[:-1])
     if hide_time == "Любое время":
         hide_time = "all"
-    if call_back.data == "Любые":
-        hide_place_edu = "all"
+    if call_back.data == "Любые" or hide_educators == "":
+        hide_educators = "all"
 
-    func.insert_skip(hide_event_data, hide_day, hide_time, hide_place_edu,
+    func.insert_skip(hide_event_data, hide_day, hide_time, hide_educators,
                      call_back.message.chat.id)
     answer = "<b>Занятие скрыто:</b>\n{0}, {1}".format(hide_event_data[1],
                                                        hide_event_data[0])

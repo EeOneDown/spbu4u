@@ -2,11 +2,7 @@
 import hmac
 from hashlib import sha256
 
-
-test_token = ""
-release_token = ""
-yandex_key = ""
-secret_key = ""
+from bots_constants import secret_key, test_token, user_name
 
 sha_string = hmac.new(bytearray(secret_key, "utf-8"),
                       bytearray(test_token, "utf-8"),
@@ -15,7 +11,7 @@ sha_string = hmac.new(bytearray(secret_key, "utf-8"),
 my_id = 200466757
 ks_id = 71591548
 
-webhook_host = "eeonedown.pythonanywhere.com"
+webhook_host = "{0}.pythonanywhere.com".format(user_name)
 webhook_port = 443
 webhook_url_base = "https://{0}:{1}".format(webhook_host, webhook_port)
 webhook_url_path = "/{0}/".format(sha_string)

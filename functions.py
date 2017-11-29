@@ -13,7 +13,8 @@ def insert_skip(hide_event_name, hide_event_types, hide_day, hide_time,
     sql_con = sqlite3.connect("Bot.db")
     cursor = sql_con.cursor()
     try:
-        cursor.execute("""INSERT INTO lessons (name, types, day, time, educators) 
+        cursor.execute("""INSERT INTO lessons 
+                          (name, types, day, time, educators) 
                               VALUES (?, ?, ?, ?, ?)""",
                        (hide_event_name, hide_event_types,
                         hide_day, hide_time, hide_educators))
@@ -42,20 +43,26 @@ def insert_skip(hide_event_name, hide_event_types, hide_day, hide_time,
         sql_con.close()
 
 
-def get_hide_lessons_data(user_id, db_path="Bot.db"):
+def get_hide_lessons_data(user_id, db_path="Bot.db", week_day=None):
     sql_con = sqlite3.connect(db_path)
     cursor = sql_con.cursor()
-    cursor.execute("""SELECT
-                        s.lesson_id,
-                        l.name,
-                        l.types,
-                        l.day,
-                        l.time,
-                        l.educators
-                      FROM skips AS s
-                        JOIN lessons AS l
-                          ON l.id = s.lesson_id
-                      WHERE user_id = ?""", (user_id,))
+    sql_req = """
+SELECT
+  s.lesson_id,
+  l.name,
+  l.types,
+  l.day,
+  l.time,
+  l.educators
+FROM skips AS s
+  JOIN lessons AS l
+    ON l.id = s.lesson_id
+WHERE user_id = ?"""
+    req_param = (user_id,)
+    if week_day:
+        sql_req += "\n  AND (day = 'all' OR day = ?)"
+        req_param += (week_day, )
+    cursor.execute(sql_req, req_param)
     data = cursor.fetchall()
     cursor.close()
     sql_con.close()
@@ -154,18 +161,20 @@ def is_event_in_skips(event, skips, week_day_string):
     event_educators = ""
     for educator in event["EducatorIds"]:
         event_educators += educator["Item2"].split(", ")[0] + "; "
-    event_educators = event_educators.strip("; ")
+    event_educators = set(event_educators.strip("; ").split("; "))
 
     for skip_lesson in skips:
+        skip_educators = set(skip_lesson[5].split("; "))
+        stripped_type = " ".join(event["Subject"].split(", ")[-1].split()[:2])
         if skip_lesson[1] == ", ".join(event["Subject"].split(", ")[:-1]) and \
-                (event["Subject"].split(", ")[-1] in skip_lesson[2].split("; ")
-                 or skip_lesson[2] == "all") and \
-                (skip_lesson[3] == week_day_string or
-                 skip_lesson[3] == "all") and \
-                (skip_lesson[4] == event["TimeIntervalString"] or
-                 skip_lesson[4] == "all") and \
-                (skip_lesson[5] == event_educators or
-                 skip_lesson[5] == "all"):
+                (skip_lesson[2] == "all" or
+                 stripped_type in skip_lesson[2].split("; ")) and \
+                (skip_lesson[3] == "all" or
+                 skip_lesson[3] == week_day_string) and \
+                (skip_lesson[4] == "all" or
+                 skip_lesson[4] == event["TimeIntervalString"]) and \
+                (skip_lesson[5] == "all" or
+                 event_educators.issubset(skip_educators)):
             return True
     return False
 
@@ -182,7 +191,8 @@ def create_schedule_answer(day_info, full_place, user_id=None, personal=True,
     day_study_events = day_info["DayStudyEvents"]
 
     if personal:
-        skips = get_hide_lessons_data(user_id, db_path)
+        skips = get_hide_lessons_data(user_id, db_path,
+                                      day_info["DayString"].split(", ")[0])
     else:
         skips = []
 
@@ -201,8 +211,9 @@ def create_schedule_answer(day_info, full_place, user_id=None, personal=True,
             answer += " " + emoji["warning"]
         answer += "\n<b>"
         subject_type = event["Subject"].split(", ")[-1]
-        if subject_type in subject_short_type.keys():
-            answer += subject_short_type[subject_type] + " - "
+        stripped_subject_type = " ".join(subject_type.split()[:2])
+        if stripped_subject_type in subject_short_type.keys():
+            answer += subject_short_type[stripped_subject_type] + " - "
         else:
             answer += subject_type.upper() + " - "
         answer += ", ".join(event["Subject"].split(", ")[:-1]) + "</b>\n"
@@ -240,8 +251,9 @@ def create_master_schedule_answer(day_info):
             "; ".join(event["Dates"]))
         answer += "<b>"
         subject_type = event["Subject"].split(", ")[-1]
-        if subject_type in subject_short_type.keys():
-            answer += subject_short_type[subject_type] + " - "
+        stripped_subject_type = " ".join(subject_type.split()[:2])
+        if stripped_subject_type in subject_short_type.keys():
+            answer += subject_short_type[stripped_subject_type] + " - "
         else:
             answer += subject_type.upper() + " - "
         answer += ", ".join(
@@ -648,12 +660,14 @@ def get_blocks(user_id, day_date):
     for num, event in enumerate(day_study_events):
         answer = "\n<b>{ibn}. "
         subject_type = event["Subject"].split(", ")[-1]
-        if subject_type in subject_short_type.keys():
-            answer += subject_short_type[subject_type] + " - "
+        stripped_subject_type = " ".join(subject_type.split()[:2])
+        if stripped_subject_type in subject_short_type.keys():
+            answer += subject_short_type[stripped_subject_type] + " - "
         else:
             answer += subject_type.upper() + " - "
         answer += ", ".join(event["Subject"].split(", ")[:-1]) + "</b>"
-        if is_event_in_skips(event, get_hide_lessons_data(user_id),
+        if is_event_in_skips(event, get_hide_lessons_data(
+                user_id, week_day=json_day["DayString"].split(", ")[0]),
                              json_day["DayString"].split(", ")[0]):
             answer += " {0}".format(emoji["cross_mark"])
         answer += "\n"

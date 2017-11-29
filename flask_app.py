@@ -36,7 +36,8 @@ server_timedelta = timedelta(hours=3)
 
 
 @bot.message_handler(commands=["start"])
-@bot.message_handler(func=lambda mess: mess.text == "Сменить группу",
+@bot.message_handler(func=lambda mess:
+                     mess.text.capitalize() == "Сменить группу",
                      content_types=["text"])
 def start_handler(message):
     answer = ""
@@ -115,7 +116,7 @@ def start_handler(message):
     reg_func.set_next_step(message.chat.id, "select_division")
 
 
-@bot.message_handler(func=lambda mess: mess.text == "Проблема",
+@bot.message_handler(func=lambda mess: mess.text.capitalize() == "Проблема",
                      content_types=["text"])
 def problem_text_handler(message):
     bot.send_chat_action(message.chat.id, "typing")
@@ -130,7 +131,7 @@ def problem_text_handler(message):
 
 
 @bot.message_handler(commands=["exit"])
-@bot.message_handler(func=lambda mess: mess.text == "Завершить",
+@bot.message_handler(func=lambda mess: mess.text.capitalize() == "Завершить",
                      content_types=["text"])
 def exit_handler(message):
     bot.send_chat_action(message.chat.id, "typing")
@@ -142,7 +143,7 @@ def exit_handler(message):
 
 @bot.message_handler(func=lambda mess:
                      reg_func.get_step(mess.chat.id) == "select_division" and
-                     mess.text != "/home" and mess.text != "Назад",
+                     mess.text != "/home" and mess.text.capitalize() != "Назад",
                      content_types=["text"])
 def select_division_handler(message):
     bot.send_chat_action(message.chat.id, "typing")
@@ -152,7 +153,7 @@ def select_division_handler(message):
 
 @bot.message_handler(func=lambda mess:
                      reg_func.get_step(mess.chat.id) == "select_study_level" and
-                     mess.text != "/home" and mess.text != "Назад",
+                     mess.text != "/home" and mess.text.capitalize() != "Назад",
                      content_types=["text"])
 def select_study_level_handler(message):
     bot.send_chat_action(message.chat.id, "typing")
@@ -162,7 +163,7 @@ def select_study_level_handler(message):
 
 @bot.message_handler(func=lambda mess: reg_func.get_step(
     mess.chat.id) == "select_study_program_combination" and
-                     mess.text != "/home" and mess.text != "Назад",
+                     mess.text != "/home" and mess.text.capitalize() != "Назад",
                      content_types=["text"])
 def select_study_program_combination_handler(message):
     bot.send_chat_action(message.chat.id, "typing")
@@ -172,7 +173,8 @@ def select_study_program_combination_handler(message):
 
 @bot.message_handler(func=lambda mess:
                      reg_func.get_step(mess.chat.id) == "select_admission_year"
-                     and mess.text != "/home" and mess.text != "Назад",
+                     and mess.text != "/home" and
+                     mess.text.capitalize() != "Назад",
                      content_types=["text"])
 def select_admission_year_handler(message):
     bot.send_chat_action(message.chat.id, "typing")
@@ -182,7 +184,8 @@ def select_admission_year_handler(message):
 
 @bot.message_handler(func=lambda mess:
                      reg_func.get_step(mess.chat.id) == "select_student_group"
-                     and mess.text != "/home" and mess.text != "Назад",
+                     and mess.text != "/home" and
+                     mess.text.capitalize() != "Назад",
                      content_types=["text"])
 def select_student_group_handler(message):
     bot.send_chat_action(message.chat.id, "typing")
@@ -192,7 +195,7 @@ def select_student_group_handler(message):
 
 @bot.message_handler(func=lambda mess:
                      reg_func.get_step(mess.chat.id) == "confirm_choice" and
-                     mess.text != "/home" and mess.text != "Назад",
+                     mess.text != "/home" and mess.text.capitalize() != "Назад",
                      content_types=["text"])
 def confirm_choice_handler(message):
     bot.send_chat_action(message.chat.id, "typing")
@@ -228,7 +231,7 @@ def help_handler(message):
 
 
 @bot.message_handler(commands=["home"])
-@bot.message_handler(func=lambda mess: mess.text == "Назад" or
+@bot.message_handler(func=lambda mess: mess.text.capitalize() == "Назад" or
                      mess.text == emoji["back"], content_types=["text"])
 def home_handler(message):
     bot.send_chat_action(message.chat.id, "typing")
@@ -250,7 +253,7 @@ def settings_handler(message):
     bot.send_message(message.chat.id, answer, reply_markup=settings_keyboard)
 
 
-@bot.message_handler(func=lambda mess: mess.text == "Расписание",
+@bot.message_handler(func=lambda mess: mess.text.capitalize() == "Расписание",
                      content_types=["text"])
 def schedule_handler(message):
     bot.send_chat_action(message.chat.id, "typing")
@@ -263,7 +266,7 @@ def schedule_handler(message):
     bot.send_message(message.chat.id, answer, reply_markup=schedule_keyboard)
 
 
-@bot.message_handler(func=lambda mess: mess.text == "Сегодня")
+@bot.message_handler(func=lambda mess: mess.text.capitalize() == "Сегодня")
 def today_schedule_handler(message):
     bot.send_chat_action(message.chat.id, "typing")
     today_moscow_datetime = datetime.today() + server_timedelta
@@ -274,7 +277,8 @@ def today_schedule_handler(message):
     func.send_long_message(bot, answer, message.chat.id)
 
 
-@bot.message_handler(func=lambda mess: mess.text == "Завтра")
+@bot.message_handler(func=lambda mess: mess.text.capitalize() == "Завтра",
+                     content_types=["text"])
 def tomorrow_schedule_handler(message):
     bot.send_chat_action(message.chat.id, "typing")
     tomorrow_moscow_datetime = datetime.today() + server_timedelta + \
@@ -286,7 +290,8 @@ def tomorrow_schedule_handler(message):
     func.send_long_message(bot, answer, message.chat.id)
 
 
-@bot.message_handler(func=lambda mess: mess.text == "Неделя")
+@bot.message_handler(func=lambda mess: mess.text.capitalize() == "Неделя",
+                     content_types=["text"])
 def calendar_handler(message):
     bot.send_chat_action(message.chat.id, "typing")
     answer = "Выбери день:"
@@ -300,7 +305,8 @@ def calendar_handler(message):
     bot.send_message(message.chat.id, answer, reply_markup=week_day_calendar)
 
 
-@bot.message_handler(func=lambda mess: mess.text == emoji["alarm_clock"])
+@bot.message_handler(func=lambda mess: mess.text == emoji["alarm_clock"],
+                     content_types=["text"])
 def sending_handler(message):
     bot.send_chat_action(message.chat.id, "typing")
     answer = "Здесь ты можешь <b>подписаться</b> на рассылку расписания на " + \
@@ -321,7 +327,7 @@ def sending_handler(message):
                      reply_markup=sending_keyboard)
 
 
-@bot.message_handler(func=lambda mess: mess.text == "СЕССИЯ",
+@bot.message_handler(func=lambda mess: mess.text.capitalize() == "СЕССИЯ",
                      content_types=["text"])
 def attestation_handler(message):
     if message.chat.id != my_id:
@@ -341,7 +347,8 @@ def attestation_handler(message):
     bot.send_message(message.chat.id, answer, reply_markup=inline_keyboard)
 
 
-@bot.message_handler(func=lambda mess: mess.text == emoji["star"])
+@bot.message_handler(func=lambda mess: mess.text == emoji["star"],
+                     content_types=["text"])
 def rate_handler(message):
     bot.send_chat_action(message.chat.id, "typing")
     answer = "Оцените качество сервиса:"
@@ -359,7 +366,8 @@ def rate_handler(message):
                      reply_markup=rate_keyboard)
 
 
-@bot.message_handler(func=lambda mess: mess.text == emoji["suburban"])
+@bot.message_handler(func=lambda mess: mess.text == emoji["suburban"],
+                     content_types=["text"])
 def suburban_handler(message):
     bot.send_chat_action(message.chat.id, "typing")
     suburban_keyboard = telebot.types.ReplyKeyboardMarkup(True, False)
@@ -375,7 +383,8 @@ def suburban_handler(message):
                      disable_web_page_preview=True)
 
 
-@bot.message_handler(func=lambda mess: mess.text == "В Универ")
+@bot.message_handler(func=lambda mess: mess.text.title() == "В Универ",
+                     content_types=["text"])
 def to_university_handler(message):
     bot.send_chat_action(message.chat.id, "typing")
 
@@ -388,17 +397,20 @@ def to_university_handler(message):
     server_datetime = datetime.today() + server_timedelta
     data = get_yandex_timetable_data(from_station, to_station, server_datetime)
     answer = data["answer"]
+
     update_keyboard = telebot.types.InlineKeyboardMarkup(True)
-    if data["is_tomorrow"]:
-        bot.send_message(message.chat.id, emoji["warning"] +
-                         " На сегодня нет электричек")
-        update_keyboard.row(*[telebot.types.InlineKeyboardButton(
-            text=name, callback_data=name)
-            for name in ["Все на завтра"]])
-    else:
-        update_keyboard.row(*[telebot.types.InlineKeyboardButton(
-            text=name, callback_data=name)
-            for name in ["Оставшиеся", "Обновить"]])
+    if data["is_OK"]:
+        if data["is_tomorrow"]:
+            bot.send_message(message.chat.id, emoji["warning"] +
+                             " На сегодня нет электричек")
+            update_keyboard.row(*[telebot.types.InlineKeyboardButton(
+                text=name, callback_data=name)
+                for name in ["Все на завтра"]])
+        else:
+            update_keyboard.row(*[telebot.types.InlineKeyboardButton(
+                text=name, callback_data=name)
+                for name in ["Оставшиеся", "Обновить"]])
+
     bot.send_message(message.chat.id,
                      answer,
                      reply_markup=update_keyboard,
@@ -406,7 +418,8 @@ def to_university_handler(message):
                      disable_web_page_preview=True)
 
 
-@bot.message_handler(func=lambda mess: mess.text == "Домой")
+@bot.message_handler(func=lambda mess: mess.text.title() == "Домой",
+                     content_types=["text"])
 def from_university_handler(message):
     bot.send_chat_action(message.chat.id, "typing")
 
@@ -421,15 +434,17 @@ def from_university_handler(message):
     answer = data["answer"]
 
     update_keyboard = telebot.types.InlineKeyboardMarkup(True)
-    if data["is_tomorrow"]:
-        bot.send_message(message.chat.id, emoji["warning"] +
-                         " На сегодня нет электричек")
-        update_keyboard.row(*[telebot.types.InlineKeyboardButton(
-            text=name, callback_data=name) for name in ["Все на завтра"]])
-    else:
-        update_keyboard.row(*[telebot.types.InlineKeyboardButton(
-            text=name, callback_data=name)
-            for name in ["Оставшиеся", "Обновить"]])
+    if data["is_OK"]:
+        if data["is_tomorrow"]:
+            bot.send_message(message.chat.id, emoji["warning"] +
+                             " На сегодня нет электричек")
+            update_keyboard.row(*[telebot.types.InlineKeyboardButton(
+                text=name, callback_data=name) for name in ["Все на завтра"]])
+        else:
+            update_keyboard.row(*[telebot.types.InlineKeyboardButton(
+                text=name, callback_data=name)
+                for name in ["Оставшиеся", "Обновить"]])
+
     bot.send_message(message.chat.id,
                      answer,
                      reply_markup=update_keyboard,
@@ -437,7 +452,8 @@ def from_university_handler(message):
                      disable_web_page_preview=True)
 
 
-@bot.message_handler(func=lambda mess: mess.text == "Маршрут")
+@bot.message_handler(func=lambda mess: mess.text.title() == "Маршрут",
+                     content_types=["text"])
 def own_trail_handler(message):
     answer = "Выбери начальную станцию:"
     start_station_keyboard = telebot.types.InlineKeyboardMarkup(True)
@@ -448,7 +464,8 @@ def own_trail_handler(message):
                      reply_markup=start_station_keyboard)
 
 
-@bot.message_handler(func=lambda mess: mess.text == "Персонализация")
+@bot.message_handler(func=lambda mess: mess.text.title() == "Персонализация",
+                     content_types=["text"])
 def personalisation_handler(message):
     answer = "Здесь ты можешь настроить <b>домашнюю</b> и " \
              "<b>Университетскую</b> станции для команд <i>Домой</i> и " \
@@ -462,7 +479,8 @@ def personalisation_handler(message):
                      reply_markup=inline_keyboard, parse_mode="HTML")
 
 
-@bot.message_handler(func=lambda mess: mess.text == emoji["editor"])
+@bot.message_handler(func=lambda mess: mess.text == emoji["editor"],
+                     content_types=["text"])
 def schedule_editor_handler(message):
     bot.send_chat_action(message.chat.id, "typing")
     answer = "Редактор расписания"
@@ -475,7 +493,7 @@ def schedule_editor_handler(message):
                      parse_mode='HTML')
 
 
-@bot.message_handler(func=lambda mess: mess.text == "Адрес",
+@bot.message_handler(func=lambda mess: mess.text.title() == "Адрес",
                      content_types=["text"])
 def place_handler(message):
     bot.send_chat_action(message.chat.id, "typing")
@@ -497,7 +515,9 @@ def place_handler(message):
                      reply_markup=place_keyboard)
 
 
-@bot.message_handler(func=lambda mess: mess.text == "Скрыть занятие")
+@bot.message_handler(func=lambda mess:
+                     mess.text.capitalize() == "Скрыть занятие",
+                     content_types=["text"])
 def hide_lesson_handler(message):
     bot.send_chat_action(message.chat.id, "typing")
     answer = "Выбери день, когда есть это занятие:"
@@ -514,7 +534,8 @@ def hide_lesson_handler(message):
     bot.send_message(message.chat.id, answer, reply_markup=days_keyboard)
 
 
-@bot.message_handler(func=lambda mess: mess.text == "Вернуть")
+@bot.message_handler(func=lambda mess: mess.text.title() == "Вернуть",
+                     content_types=["text"])
 def return_hided_lesson(message):
     data = func.get_hide_lessons_data(message.chat.id)
     ids_keyboard = telebot.types.InlineKeyboardMarkup(True)
@@ -684,7 +705,7 @@ def other_text_handler(message):
     bot.send_chat_action(message.chat.id, "typing")
     answer = "Не понимаю"
     if len(message.text) <= 16:
-        day = func.text_to_date(message.text)
+        day = func.text_to_date(message.text.lower())
         if day:
             json_week = func.get_json_week_data(message.chat.id, for_day=day)
             json_day = func.get_json_day_data(message.chat.id, day_date=day,
@@ -865,15 +886,16 @@ def update_yandex_handler(call_back):
     answer = data["answer"]
 
     update_keyboard = telebot.types.InlineKeyboardMarkup(True)
-    if data["is_tomorrow"]:
-        inline_answer = emoji["warning"] + " На сегодня нет электричек"
-        bot.answer_callback_query(call_back.id, inline_answer, cache_time=2)
-        update_keyboard.row(*[telebot.types.InlineKeyboardButton(
-            text=name, callback_data=name) for name in ["Все на завтра"]])
-    else:
-        update_keyboard.row(*[telebot.types.InlineKeyboardButton(
-            text=name, callback_data=name)
-            for name in ["Оставшиеся", "Обновить"]])
+    if data["is_OK"]:
+        if data["is_tomorrow"]:
+            inline_answer = emoji["warning"] + " На сегодня нет электричек"
+            bot.answer_callback_query(call_back.id, inline_answer, cache_time=2)
+            update_keyboard.row(*[telebot.types.InlineKeyboardButton(
+                text=name, callback_data=name) for name in ["Все на завтра"]])
+        else:
+            update_keyboard.row(*[telebot.types.InlineKeyboardButton(
+                text=name, callback_data=name)
+                for name in ["Оставшиеся", "Обновить"]])
 
     try:
         bot.edit_message_text(text=answer,
@@ -902,15 +924,16 @@ def more_suburbans_handler(call_back):
     answer = data["answer"]
 
     update_keyboard = telebot.types.InlineKeyboardMarkup(True)
-    if data["is_tomorrow"]:
-        inline_answer = emoji["warning"] + " На сегодня нет электричек"
-        bot.answer_callback_query(call_back.id, inline_answer, cache_time=2)
-        update_keyboard.row(*[telebot.types.InlineKeyboardButton(
-            text=name, callback_data=name) for name in ["Все на завтра"]])
-    else:
-        update_keyboard.row(*[telebot.types.InlineKeyboardButton(
-            text=name, callback_data=name)
-            for name in ["Ближайшие", "Обновить"]])
+    if data["is_OK"]:
+        if data["is_tomorrow"]:
+            inline_answer = emoji["warning"] + " На сегодня нет электричек"
+            bot.answer_callback_query(call_back.id, inline_answer, cache_time=2)
+            update_keyboard.row(*[telebot.types.InlineKeyboardButton(
+                text=name, callback_data=name) for name in ["Все на завтра"]])
+        else:
+            update_keyboard.row(*[telebot.types.InlineKeyboardButton(
+                text=name, callback_data=name)
+                for name in ["Ближайшие", "Обновить"]])
 
     try:
         bot.edit_message_text(text=answer,
@@ -935,15 +958,16 @@ def less_suburbans_handler(call_back):
     answer = data["answer"]
 
     update_keyboard = telebot.types.InlineKeyboardMarkup(True)
-    if data["is_tomorrow"]:
-        inline_answer = emoji["warning"] + " На сегодня нет электричек"
-        bot.answer_callback_query(call_back.id, inline_answer, cache_time=2)
-        update_keyboard.row(*[telebot.types.InlineKeyboardButton(
-            text=name, callback_data=name) for name in ["Все на завтра"]])
-    else:
-        update_keyboard.row(*[telebot.types.InlineKeyboardButton(
-            text=name, callback_data=name)
-            for name in ["Оставшиеся", "Обновить"]])
+    if data["is_OK"]:
+        if data["is_tomorrow"]:
+            inline_answer = emoji["warning"] + " На сегодня нет электричек"
+            bot.answer_callback_query(call_back.id, inline_answer, cache_time=2)
+            update_keyboard.row(*[telebot.types.InlineKeyboardButton(
+                text=name, callback_data=name) for name in ["Все на завтра"]])
+        else:
+            update_keyboard.row(*[telebot.types.InlineKeyboardButton(
+                text=name, callback_data=name)
+                for name in ["Оставшиеся", "Обновить"]])
 
     try:
         bot.edit_message_text(text=answer,
@@ -972,8 +996,9 @@ def all_tomorrow_suburbans_handler(call_back):
     answer = data["answer"]
 
     update_keyboard = telebot.types.InlineKeyboardMarkup(True)
-    update_keyboard.row(*[telebot.types.InlineKeyboardButton(
-        text=name, callback_data=name) for name in ["Самые ранние"]])
+    if data["is_OK"]:
+        update_keyboard.row(*[telebot.types.InlineKeyboardButton(
+            text=name, callback_data=name) for name in ["Самые ранние"]])
 
     try:
         bot.edit_message_text(text=answer,
@@ -1000,9 +1025,12 @@ def early_tomorrow_suburbans_handler(call_back):
     data = get_yandex_timetable_data(from_station, to_station, server_datetime,
                                      limit=5)
     answer = data["answer"]
+
     update_keyboard = telebot.types.InlineKeyboardMarkup(True)
-    update_keyboard.row(*[telebot.types.InlineKeyboardButton(
-        text=name, callback_data=name) for name in ["Все на завтра"]])
+    if data["is_OK"]:
+        update_keyboard.row(*[telebot.types.InlineKeyboardButton(
+            text=name, callback_data=name) for name in ["Все на завтра"]])
+
     try:
         bot.edit_message_text(text=answer,
                               chat_id=call_back.message.chat.id,
@@ -1086,16 +1114,19 @@ def build_trail_handler(call_back):
     answer = data["answer"]
 
     update_keyboard = telebot.types.InlineKeyboardMarkup(True)
-    if call_back.data == "Завтра" or data["is_tomorrow"]:
-        if data["is_tomorrow"]:
-            inline_answer = emoji["warning"] + " На сегодня нет электричек"
-            bot.answer_callback_query(call_back.id, inline_answer, cache_time=2)
-        update_keyboard.row(*[telebot.types.InlineKeyboardButton(
-            text=name, callback_data=name) for name in ["Все на завтра"]])
-    else:
-        update_keyboard.row(*[telebot.types.InlineKeyboardButton(
-            text=name, callback_data=name)
-            for name in ["Оставшиеся", "Обновить"]])
+    if data["is_OK"]:
+        if call_back.data == "Завтра" or data["is_tomorrow"]:
+            if data["is_tomorrow"]:
+                inline_answer = emoji["warning"] + " На сегодня нет электричек"
+                bot.answer_callback_query(call_back.id, inline_answer,
+                                          cache_time=2)
+            update_keyboard.row(*[telebot.types.InlineKeyboardButton(
+                text=name, callback_data=name) for name in ["Все на завтра"]])
+        else:
+            update_keyboard.row(*[telebot.types.InlineKeyboardButton(
+                text=name, callback_data=name)
+                for name in ["Оставшиеся", "Обновить"]])
+
     bot.edit_message_text(text=answer,
                           chat_id=call_back.message.chat.id,
                           message_id=call_back.message.message_id,
@@ -1328,7 +1359,7 @@ def lesson_selected_handler(call_back):
         event_type = "{0} {1}".format(emoji["heavy_check_mark"], event_type)
         types_keyboard.row(
             *[telebot.types.InlineKeyboardButton(text=name, callback_data=name)
-              for name in [event_type]])
+              for name in [event_type[:32]]])
     types_keyboard.row(
         *[telebot.types.InlineKeyboardButton(text=name, callback_data=name)
           for name in ["Отмена", "Далее"]])
@@ -1407,7 +1438,7 @@ def select_types_handler(call_back):
                                            chosen_type)
         types_keyboard.row(
             *[telebot.types.InlineKeyboardButton(text=name, callback_data=name)
-              for name in [chosen_type]])
+              for name in [chosen_type[:32]]])
     types_keyboard.row(
         *[telebot.types.InlineKeyboardButton(text=name, callback_data=name)
           for name in ["Отмена", "Далее"]])

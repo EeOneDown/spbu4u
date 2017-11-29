@@ -19,7 +19,13 @@ def get_yandex_timetable_data(from_station, to_station, date, limit=3):
           "&date={3}" \
           "&transport_types=suburban".format(from_station, to_station,
                                              yandex_key, date)
-    data = requests.get(url).json()
+    req = requests.get(url)
+    code, data = req.status_code, req.json()
+
+    if code != 200:
+        return {"answer": "Ошибка в обращении к серверу Яндекса. "
+                          "Попробуйте повторить позже.",
+                "is_tomorrow": False, "is_OK": False}
 
     from_title = data["search"]["from"]["title"]
     to_title = data["search"]["to"]["title"]
@@ -69,4 +75,4 @@ def get_yandex_timetable_data(from_station, to_station, date, limit=3):
         answer += get_yandex_timetable_data(from_station, to_station, date,
                                             limit=5)["answer"]
         is_tomorrow = True
-    return {"answer": answer, "is_tomorrow": is_tomorrow}
+    return {"answer": answer, "is_tomorrow": is_tomorrow, "is_OK": True}

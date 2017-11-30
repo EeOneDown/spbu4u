@@ -88,7 +88,23 @@ def create_sql(db_name):
                               FOREIGN KEY (group_id) REFERENCES groups_data (id)
                         )""")
     sql_con.commit()
-    
+
+    # user educators
+    cursor.execute("""CREATE TABLE IF NOT EXISTS user_educators
+                            (
+                                user_id INT NOT NULL,
+                                lesson_id INT NOT NULL,
+                                CONSTRAINT user_educators_user_id_lesson_id_pk 
+                                  PRIMARY KEY  (user_id, lesson_id),
+                                CONSTRAINT user_educators_user_data_id_fk 
+                                  FOREIGN KEY (user_id) 
+                                    REFERENCES user_data (id),
+                                CONSTRAINT user_educators_lessons_id_fk 
+                                  FOREIGN KEY (lesson_id) 
+                                    REFERENCES lessons (id)
+                            )""")
+    sql_con.commit()
+
     cursor.close()
     sql_con.close()
 

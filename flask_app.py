@@ -485,8 +485,8 @@ def schedule_editor_handler(message):
     bot.send_chat_action(message.chat.id, "typing")
     answer = "Редактор расписания"
     schedule_editor_keyboard = telebot.types.ReplyKeyboardMarkup(True, False)
-    schedule_editor_keyboard.row("Скрыть занятие")
-    schedule_editor_keyboard.row("Назад", "Адрес", "Вернуть")
+    schedule_editor_keyboard.row("Скрыть занятие", "Преподаватель")
+    schedule_editor_keyboard.row("Назад", "Вернуть", "Адрес")
     bot.send_message(message.chat.id,
                      answer,
                      reply_markup=schedule_editor_keyboard,
@@ -513,6 +513,26 @@ def place_handler(message):
               for name in ["Полностью"]])
     bot.send_message(message.chat.id, answer, parse_mode="HTML",
                      reply_markup=place_keyboard)
+
+
+@bot.message_handler(func=lambda mess:
+                     mess.text.capitalize() == "Преподаватель",
+                     content_types=["text"])
+def choose_educator_handler(message):
+    bot.send_chat_action(message.chat.id, "typing")
+    answer = "Выбери день, в котором есть занятие с большим колличеством" \
+             "преподавателей:"
+    json_week_data = func.get_json_week_data(my_id)
+    days = json_week_data["Days"]
+    days_keyboard = telebot.types.InlineKeyboardMarkup(True)
+    for day in days:
+        days_keyboard.row(
+            *[telebot.types.InlineKeyboardButton(text=name, callback_data=name)
+              for name in [day["DayString"].split(", ")[0].capitalize()]])
+    days_keyboard.row(
+        *[telebot.types.InlineKeyboardButton(text=name, callback_data=name)
+          for name in ["Отмена"]])
+    bot.send_message(message.chat.id, answer, reply_markup=days_keyboard)
 
 
 @bot.message_handler(func=lambda mess:
@@ -549,8 +569,8 @@ def return_hided_lesson(message):
                           lesson[5])
             ids_keyboard.row(
                 *[telebot.types.InlineKeyboardButton(text=name,
-                                                     callback_data=name)
-                  for name in ["{0} - {1}".format(lesson[0], lesson[1])[:32]]]
+                                                     callback_data=name[:32])
+                  for name in ["{0} - {1}".format(lesson[0], lesson[1])]]
             )
         ids_keyboard.row(
             *[telebot.types.InlineKeyboardButton(text=name, callback_data=name)
@@ -1223,8 +1243,95 @@ def full_place_off_handler(call_back):
 
 
 @bot.callback_query_handler(func=lambda call_back:
-                            call_back.data in week_day_titles.keys())
-def select_day_handler(call_back):
+                            call_back.data == "Отмена")
+def cancel_handler(call_back):
+    answer = "Отмена"
+    bot.edit_message_text(text=answer, chat_id=call_back.message.chat.id,
+                          message_id=call_back.message.message_id)
+
+
+@bot.callback_query_handler(func=lambda call_back:
+                            "Выбери день, в котором есть занятие с большим " in
+                            call_back.message.text)
+def select_day_choose_educator_handler(call_back):
+    iso_day_date = list((datetime.today() + server_timedelta).isocalendar())
+    if iso_day_date[2] == 7:
+        iso_day_date[1] += 1
+    iso_day_date[2] = week_day_number[week_day_titles[call_back.data]]
+    day_date = func.date_from_iso(iso_day_date)
+
+    answer_data = func.get_lessons_with_educators(call_back.message.chat.id,
+                                                  day_date)
+    answer = answer_data["answer"]
+    inline_keyboard = telebot.types.InlineKeyboardMarkup()
+    if not answer_data["is_empty"]:
+        for event in answer_data["answer"].split("\n\n"):
+            button_text = "{0}".format(event.split("\n")[0][3:-4])
+            inline_keyboard.row(
+                *[telebot.types.InlineKeyboardButton(text=name,
+                                                     callback_data=name[:32])
+                  for name in [button_text]]
+            )
+        inline_keyboard.row(
+            telebot.types.InlineKeyboardButton(text="Отмена",
+                                               callback_data="Отмена"))
+        answer += "\n\nВыбери необходиое занятие:"
+    bot.edit_message_text(text=answer,
+                          chat_id=call_back.message.chat.id,
+                          message_id=call_back.message.message_id,
+                          parse_mode="HTML",
+                          reply_markup=inline_keyboard)
+
+
+@bot.callback_query_handler(func=lambda call_back: "Выбери необходиое занятие:"
+                                                   in call_back.message.text)
+def select_educator_handler(call_back):
+    message_text_data = call_back.message.text.split("\n\n")[:-1]
+    chosen_event_number = int(call_back.data.split(". ")[0]) - 1
+    chosen_event = ". ".join(
+        message_text_data[chosen_event_number].split(". ")[1:])
+    chosen_event_data = chosen_event.split("\n")
+    inline_keyboard = telebot.types.InlineKeyboardMarkup(row_width=1)
+    inline_keyboard.add(
+        *[telebot.types.InlineKeyboardButton(text=name,
+                                             callback_data=name[:32])
+          for name in [place_edu.split("(")[1][:-1]
+                       for place_edu in chosen_event_data[1:]]]
+    )
+    inline_keyboard.row(
+        telebot.types.InlineKeyboardButton(text="Отмена",
+                                           callback_data="Отмена"))
+    answer = "Выбранное занятие:\n<b>{0}</b>\n\nВыбери преподавателя, " \
+             "которого оставить:".format(chosen_event_data[0])
+    bot.edit_message_text(text=answer,
+                          chat_id=call_back.message.chat.id,
+                          message_id=call_back.message.message_id,
+                          parse_mode="HTML",
+                          reply_markup=inline_keyboard)
+
+
+@bot.callback_query_handler(func=lambda call_back:
+                            "Выбери преподавателя, которого оставить:" in
+                            call_back.message.text)
+def educator_chosen_handler(call_back):
+    event_name = call_back.message.text.split("\n")[1]
+    chosen_educators = call_back.data
+    func.insert_skip(event_name=event_name, types="all", event_day="all",
+                     event_time="all", educators=chosen_educators,
+                     user_id=call_back.message.chat.id, is_choose_educator=True)
+    answer = "Для занятия: <b>{0}</b> выбран преподаватель: <i>{1}</i>" \
+             "".format(event_name, chosen_educators)
+    print(func.get_chosen_educators(call_back.message.chat.id))
+    bot.edit_message_text(text=answer,
+                          chat_id=call_back.message.chat.id,
+                          message_id=call_back.message.message_id,
+                          parse_mode="HTML")
+
+
+@bot.callback_query_handler(func=lambda call_back:
+                            "Выбери день, когда есть это занятие:" in
+                            call_back.message.text)
+def select_day_hide_lesson_handler(call_back):
     iso_day_date = list((datetime.today() + server_timedelta).isocalendar())
     if iso_day_date[2] == 7:
         iso_day_date[1] += 1
@@ -1250,8 +1357,8 @@ def select_day_handler(call_back):
                                          event_name[1].split(". ")[-1])
         events_keyboard.row(
             *[telebot.types.InlineKeyboardButton(text=name,
-                                                 callback_data=name)
-              for name in [button_text[:32]]])
+                                                 callback_data=name[:32])
+              for name in [button_text]])
     events_keyboard.row(
         *[telebot.types.InlineKeyboardButton(text=emoji[name],
                                              callback_data=name)
@@ -1259,14 +1366,6 @@ def select_day_handler(call_back):
     )
     bot.send_message(chat_id=call_back.message.chat.id, text=answer,
                      reply_markup=events_keyboard, parse_mode="HTML")
-
-
-@bot.callback_query_handler(func=lambda call_back:
-                            call_back.data == "Отмена")
-def cancel_handler(call_back):
-    answer = "Отмена"
-    bot.edit_message_text(text=answer, chat_id=call_back.message.chat.id,
-                          message_id=call_back.message.message_id)
 
 
 @bot.callback_query_handler(func=lambda call_back:
@@ -1283,8 +1382,8 @@ def next_block_handler(call_back):
                                          event_name[1].split(". ")[-1])
         events_keyboard.row(
             *[telebot.types.InlineKeyboardButton(text=name,
-                                                 callback_data=name)
-              for name in [button_text[:32]]])
+                                                 callback_data=name[:32])
+              for name in [button_text]])
     events_keyboard.row(
         *[telebot.types.InlineKeyboardButton(text=emoji[name],
                                              callback_data=name)
@@ -1313,8 +1412,8 @@ def prev_block_handler(call_back):
                                          event_name[1].split(". ")[-1])
         events_keyboard.row(
             *[telebot.types.InlineKeyboardButton(text=name,
-                                                 callback_data=name)
-              for name in [button_text[:32]]])
+                                                 callback_data=name[:32])
+              for name in [button_text]])
     events_keyboard.row(
         *[telebot.types.InlineKeyboardButton(text=emoji[name],
                                              callback_data=name)
@@ -1358,8 +1457,9 @@ def lesson_selected_handler(call_back):
     if is_special_type:
         event_type = "{0} {1}".format(emoji["heavy_check_mark"], event_type)
         types_keyboard.row(
-            *[telebot.types.InlineKeyboardButton(text=name, callback_data=name)
-              for name in [event_type[:32]]])
+            *[telebot.types.InlineKeyboardButton(text=name,
+                                                 callback_data=name[:32])
+              for name in [event_type]])
     types_keyboard.row(
         *[telebot.types.InlineKeyboardButton(text=name, callback_data=name)
           for name in ["Отмена", "Далее"]])
@@ -1437,8 +1537,9 @@ def select_types_handler(call_back):
             chosen_type = "{0} {1}".format(emoji["heavy_check_mark"],
                                            chosen_type)
         types_keyboard.row(
-            *[telebot.types.InlineKeyboardButton(text=name, callback_data=name)
-              for name in [chosen_type[:32]]])
+            *[telebot.types.InlineKeyboardButton(text=name,
+                                                 callback_data=name[:32])
+              for name in [chosen_type]])
     types_keyboard.row(
         *[telebot.types.InlineKeyboardButton(text=name, callback_data=name)
           for name in ["Отмена", "Далее"]])

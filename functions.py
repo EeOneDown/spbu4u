@@ -8,16 +8,15 @@ import requests
 from telebot.apihelper import ApiException
 
 
-def insert_skip(hide_event_name, hide_event_types, hide_day, hide_time,
-                hide_educators, user_id):
+def insert_skip(event_name, types, event_day, event_time,
+                educators, user_id, is_choose_educator=False):
     sql_con = sqlite3.connect("Bot.db")
     cursor = sql_con.cursor()
     try:
         cursor.execute("""INSERT INTO lessons 
                           (name, types, day, time, educators) 
                               VALUES (?, ?, ?, ?, ?)""",
-                       (hide_event_name, hide_event_types,
-                        hide_day, hide_time, hide_educators))
+                       (event_name, types, event_day, event_time, educators))
         sql_con.commit()
     except sqlite3.IntegrityError:
         sql_con.rollback()
@@ -29,12 +28,15 @@ def insert_skip(hide_event_name, hide_event_types, hide_day, hide_time,
                             AND day = ? 
                             AND time = ?
                             AND educators = ?""",
-                       (hide_event_name, hide_event_types,
-                        hide_day, hide_time, hide_educators))
+                       (event_name, types, event_day, event_time, educators))
         lesson_id = cursor.fetchone()[0]
     try:
-        cursor.execute("""INSERT INTO skips VALUES (?, ?)""",
-                       (lesson_id, user_id))
+        if is_choose_educator:
+            cursor.execute("""INSERT INTO user_educators VALUES (?, ?)""",
+                           (user_id, lesson_id))
+        else:
+            cursor.execute("""INSERT INTO skips VALUES (?, ?)""",
+                           (lesson_id, user_id))
         sql_con.commit()
     except sqlite3.IntegrityError:
         sql_con.rollback()
@@ -66,6 +68,23 @@ WHERE user_id = ?"""
     data = cursor.fetchall()
     cursor.close()
     sql_con.close()
+    return data
+
+
+def get_chosen_educators(user_id, dp_path="Bot.db"):
+    sql_con = sqlite3.connect(dp_path)
+    cursor = sql_con.cursor()
+    data = {}
+    sql_req = """
+SELECT
+  lessons.name,
+  lessons.educators
+FROM user_educators
+  JOIN lessons
+    ON user_educators.lesson_id = lessons.id
+WHERE user_educators.user_id = ?"""
+    for row in cursor.execute(sql_req, (user_id,)):
+        data[row[0]] = row[1]
     return data
 
 
@@ -194,16 +213,17 @@ def create_schedule_answer(day_info, full_place, user_id=None, personal=True,
     if personal:
         skips = get_hide_lessons_data(user_id, db_path,
                                       day_info["DayString"].split(", ")[0])
+        chosen_educators = get_chosen_educators(user_id)
     else:
         skips = []
+        chosen_educators = {}
 
     for event in day_study_events:
         if event["IsCancelled"] or \
                 (only_exams and "пересдача" in event["Subject"]) or \
-                (only_exams and "комиссия" in event["Subject"]):
-            continue
-        if is_event_in_skips(event, skips,
-                             day_info["DayString"].split(", ")[0]):
+                (only_exams and "комиссия" in event["Subject"]) or \
+                is_event_in_skips(event, skips,
+                                  day_info["DayString"].split(", ")[0]):
             continue
         if event["IsAssigned"]:
             answer += emoji["new"] + " "
@@ -217,25 +237,54 @@ def create_schedule_answer(day_info, full_place, user_id=None, personal=True,
             answer += subject_short_type[stripped_subject_type] + " - "
         else:
             answer += subject_type.upper() + " - "
-        answer += ", ".join(event["Subject"].split(", ")[:-1]) + "</b>\n"
-        for location in event["EventLocations"]:
-            if location["IsEmpty"]:
-                continue
-            if full_place:
-                location_name = location["DisplayName"].strip(", ")
-            else:
-                location_name = location["DisplayName"].split(", ")[-1]
-            answer += location_name
-            if location["HasEducators"]:
-                educators = [educator["Item2"].split(", ")[0] for educator in
-                             location["EducatorIds"] if educator["Item1"] != -1]
-                if len(educators):
-                    answer += " <i>({0})</i>".format("; ".join(educators))
-            if event["LocationsWereChanged"] or \
-                    event["EducatorsWereReassigned"]:
-                answer += " " + emoji["warning"]
+        # so shit... need refactoring
+        subject_name = ", ".join(event["Subject"].split(", ")[:-1])
+        answer += subject_name + "</b>\n"
+        all_educators = [edu["Item2"].split(", ")[0] for edu in
+                         event["EducatorIds"]]
+        if subject_name in chosen_educators.keys() and \
+                chosen_educators[subject_name] in all_educators:
+            for location in event["EventLocations"]:
+                if chosen_educators[subject_name] in [
+                        educator["Item2"].split(", ")[0] for educator in
+                        location["EducatorIds"] if educator["Item1"] != -1]:
+                    if full_place:
+                        location_name = location["DisplayName"].strip(", ")
+                    else:
+                        location_name = location["DisplayName"].split(", ")[-1]
+                    answer += location_name
+                    loc_educators = [educator["Item2"].split(", ")[0]
+                                     for educator in location["EducatorIds"]
+                                     if educator["Item1"] != -1]
+                    if len(loc_educators):
+                        answer += " <i>({0})</i>".format(
+                            "; ".join(loc_educators))
+                    if event["LocationsWereChanged"] or \
+                            event["EducatorsWereReassigned"]:
+                        answer += " " + emoji["warning"]
+                    answer += "\n\n"
+
+        else:
+            for location in event["EventLocations"]:
+                if location["IsEmpty"]:
+                    continue
+                if full_place:
+                    location_name = location["DisplayName"].strip(", ")
+                else:
+                    location_name = location["DisplayName"].split(", ")[-1]
+                answer += location_name
+                if location["HasEducators"]:
+                    loc_educators = [educator["Item2"].split(", ")[0]
+                                     for educator in location["EducatorIds"]
+                                     if educator["Item1"] != -1]
+                    if len(loc_educators):
+                        answer += " <i>({0})</i>".format(
+                            "; ".join(loc_educators))
+                if event["LocationsWereChanged"] or \
+                        event["EducatorsWereReassigned"]:
+                    answer += " " + emoji["warning"]
+                answer += "\n"
             answer += "\n"
-        answer += "\n"
 
     if len(answer.strip().split("\n\n")) == 1:
         return emoji["sleep"] + " Выходной"
@@ -657,8 +706,10 @@ def get_blocks(user_id, day_date):
 
     day_study_events = json_day["DayStudyEvents"]
     block_answers = []
-    in_block_num = 0
+    item_block_num = 0
     for num, event in enumerate(day_study_events):
+        if event["IsCancelled"]:
+            continue
         answer = "\n<b>{ibn}. "
         subject_type = event["Subject"].split(", ")[-1]
         stripped_subject_type = " ".join(subject_type.split()[:2])
@@ -686,14 +737,13 @@ def get_blocks(user_id, day_date):
         # TODO change if to HasTheSameTimeAsPreviousItem
         if num != 0 and event["TimeIntervalString"] == \
                 day_study_events[num - 1]["TimeIntervalString"]:
-
-            in_block_num += 1
-            block_answers[-1] += answer.format(ibn=in_block_num + 1)
+            item_block_num += 1
+            block_answers[-1] += answer.format(ibn=item_block_num + 1)
         else:
-            in_block_num = 0 if num != 0 else in_block_num
+            item_block_num = 0 if num != 0 else item_block_num
             answer = "{0} {1}\n".format(emoji["clock"],
                                         event["TimeIntervalString"]) + answer
-            block_answers.append(answer.format(ibn=in_block_num + 1))
+            block_answers.append(answer.format(ibn=item_block_num + 1))
     return day_string, [block + "\nВыбери занятие:" for block in block_answers]
 
 
@@ -720,3 +770,32 @@ def get_current_block(message_text, user_id, is_prev=False):
         (block_index % len(blocks) + 1), len(blocks), day_string, block)
     events = [event.split("\n")[0] for event in block.split("\n\n")[1:-1]]
     return answer, events
+
+
+def get_lessons_with_educators(user_id, day_date):
+    json_day = get_json_day_data(user_id, day_date)
+    answer = ""
+    day_study_events = json_day["DayStudyEvents"]
+    count = 0
+    for event in day_study_events:
+        event_text = ""
+        if event["IsCancelled"] or len([loc for loc in event["EventLocations"]
+                                        if loc["HasEducators"]]) < 2:
+            continue
+        event_text += "{0}</b>" \
+                      "\n".format(", ".join(event["Subject"].split(", ")[:-1]))
+        for location in event["EventLocations"]:
+            event_text += location["DisplayName"].strip(", ")
+            educators = [educator["Item2"].split(", ")[0] for educator in
+                         location["EducatorIds"] if educator["Item1"] != -1]
+            if len(educators):
+                event_text += " <i>({0})</i>".format("; ".join(educators))
+            event_text += "\n"
+        if event_text not in answer:
+            count += 1
+            answer += "<b>{0}. {1}\n".format(count, event_text)
+    if answer == "":
+        data = {"is_empty": True, "answer": "Подходящих занятий нет"}
+    else:
+        data = {"is_empty": False, "answer": answer.strip("\n\n")}
+    return data

@@ -479,6 +479,8 @@ def personalisation_handler(message):
                      reply_markup=inline_keyboard, parse_mode="HTML")
 
 
+@bot.message_handler(func=lambda mess: mess.text.title() == "Редактор",
+                     content_types=["text"])
 @bot.message_handler(func=lambda mess: mess.text == emoji["editor"],
                      content_types=["text"])
 def schedule_editor_handler(message):
@@ -520,7 +522,7 @@ def place_handler(message):
                      content_types=["text"])
 def choose_educator_handler(message):
     bot.send_chat_action(message.chat.id, "typing")
-    answer = "Выбери день, в котором есть занятие с большим колличеством" \
+    answer = "Выбери день, в котором есть занятие с большим колличеством " \
              "преподавателей:"
     json_week_data = func.get_json_week_data(my_id)
     days = json_week_data["Days"]
@@ -556,36 +558,13 @@ def hide_lesson_handler(message):
 
 @bot.message_handler(func=lambda mess: mess.text.title() == "Вернуть",
                      content_types=["text"])
-def return_hided_lesson(message):
-    data = func.get_hide_lessons_data(message.chat.id)
-    ids_keyboard = telebot.types.InlineKeyboardMarkup(True)
-    if len(data):
-        answer = "Вот список скрытых тобой занятий:\n\n"
-        for lesson in data:
-            answer += "<b>id: {0}</b>\n<b>Название</b>: {1}\n<b>Типы</b>: {2}" \
-                      "\n<b>Дни</b>: {3}\n<b>Время</b>: {4}\n" \
-                      "<b>Преподаватели</b>: {5}\n\n".format(
-                          lesson[0], lesson[1], lesson[2], lesson[3], lesson[4],
-                          lesson[5])
-            ids_keyboard.row(
-                *[telebot.types.InlineKeyboardButton(text=name,
-                                                     callback_data=name[:32])
-                  for name in ["{0} - {1}".format(lesson[0], lesson[1])]]
-            )
-        ids_keyboard.row(
-            *[telebot.types.InlineKeyboardButton(text=name, callback_data=name)
-              for name in ["Отмена", "Вернуть всё"]]
-        )
-        answer += "Выбери то, которое хочешь вернуть:"
-    else:
-        answer = "Скрытых занятий нет"
-    if len(answer) >= 3000:
-        answers = answer.split("\n\n")
-        for answer in answers[:-1]:
-            bot.send_message(message.chat.id, answer, parse_mode="HTML")
-        answer = answers[-1]
-    bot.send_message(message.chat.id, answer,
-                     reply_markup=ids_keyboard, parse_mode="HTML")
+def chose_to_return(message):
+    answer = "Выбери, что ты хочешь вернуть:"
+    inline_keyboard = telebot.types.InlineKeyboardMarkup(True)
+    inline_keyboard.row(
+        *[telebot.types.InlineKeyboardButton(text=name, callback_data=name)
+          for name in ["Занятие", "Преподаватель"]])
+    bot.send_message(message.chat.id, answer, reply_markup=inline_keyboard)
 
 
 @bot.message_handler(func=lambda mess: mess.reply_to_message is not None and
@@ -1321,7 +1300,6 @@ def educator_chosen_handler(call_back):
                      user_id=call_back.message.chat.id, is_choose_educator=True)
     answer = "Для занятия: <b>{0}</b> выбран преподаватель: <i>{1}</i>" \
              "".format(event_name, chosen_educators)
-    print(func.get_chosen_educators(call_back.message.chat.id))
     bot.edit_message_text(text=answer,
                           chat_id=call_back.message.chat.id,
                           message_id=call_back.message.message_id,
@@ -1662,6 +1640,45 @@ def confirm_hide_lesson_handler(call_back):
 
 
 @bot.callback_query_handler(func=lambda call_back:
+                            call_back.data == "Занятие")
+def return_lesson(call_back):
+    data = func.get_hide_lessons_data(call_back.message.chat.id)
+    ids_keyboard = telebot.types.InlineKeyboardMarkup(True)
+    if len(data):
+        answer = "Вот список скрытых тобой занятий:\n\n"
+        for lesson in data:
+            answer += "<b>id: {0}</b>\n<b>Название</b>: {1}\n<b>Типы</b>: {2}" \
+                      "\n<b>Дни</b>: {3}\n<b>Время</b>: {4}\n" \
+                      "<b>Преподаватели</b>: {5}\n\n".format(
+                                    lesson[0], lesson[1], lesson[2], lesson[3],
+                                    lesson[4], lesson[5])
+            ids_keyboard.row(
+                *[telebot.types.InlineKeyboardButton(text=name,
+                                                     callback_data=name[:32])
+                  for name in ["{0} - {1}".format(lesson[0], lesson[1])]]
+            )
+        ids_keyboard.row(
+            *[telebot.types.InlineKeyboardButton(text=name, callback_data=name)
+              for name in ["Отмена", "Вернуть всё"]]
+        )
+        answer += "Выбери то, которое хочешь вернуть:"
+    else:
+        answer = "Скрытых занятий нет"
+    if len(answer) >= 3000:
+        answers = answer.split("\n\n")
+        for answer in answers[:-1]:
+            bot.send_message(call_back.message.chat.id, answer,
+                             parse_mode="HTML")
+        answer = answers[-1]
+        bot.send_message(call_back.message.chat.id, answer,
+                         reply_markup=ids_keyboard, parse_mode="HTML")
+    else:
+        bot.edit_message_text(text=answer, chat_id=call_back.message.chat.id,
+                              message_id=call_back.message.message_id,
+                              parse_mode="HTML", reply_markup=ids_keyboard)
+
+
+@bot.callback_query_handler(func=lambda call_back:
                             call_back.data == "Вернуть всё")
 def return_all(call_back):
     sql_con = sqlite3.connect("Bot.db")
@@ -1700,6 +1717,88 @@ def return_lesson_handler(call_back):
     sql_con.close()
     answer = "<b>Занятие возвращено:</b>\n{0}, {1}".format(lesson_title,
                                                            lesson_type)
+    bot.edit_message_text(text=answer, chat_id=call_back.message.chat.id,
+                          message_id=call_back.message.message_id,
+                          parse_mode="HTML")
+
+
+@bot.callback_query_handler(func=lambda call_back:
+                            call_back.data == "Преподаватель")
+def return_educator(call_back):
+    data = func.get_hide_lessons_data(call_back.message.chat.id,
+                                      is_educator=True)
+    ids_keyboard = telebot.types.InlineKeyboardMarkup(True)
+    if len(data):
+        answer = "Вот список занятий с выбранными преподавателями:\n\n"
+        for lesson in data:
+            answer += "<b>id: {0}</b>\n<b>Название</b>: {1}\n" \
+                      "<b>Преподаватели</b>: {2}\n\n".format(
+                                    lesson[0], lesson[1], lesson[5])
+            ids_keyboard.row(
+                *[telebot.types.InlineKeyboardButton(text=name,
+                                                     callback_data=name[:32])
+                  for name in ["{0} - {1}".format(lesson[0], lesson[1])]]
+            )
+        ids_keyboard.row(
+            *[telebot.types.InlineKeyboardButton(text=name, callback_data=name)
+              for name in ["Отмена", "Вернуть всех"]]
+        )
+        answer += "Выбери связь, которую хочешь убрать:"
+    else:
+        answer = "Скрытых преподавателей нет"
+    if len(answer) >= 3000:
+        answers = answer.split("\n\n")
+        for answer in answers[:-1]:
+            bot.send_message(call_back.message.chat.id, answer,
+                             parse_mode="HTML")
+        answer = answers[-1]
+        bot.send_message(call_back.message.chat.id, answer,
+                         reply_markup=ids_keyboard, parse_mode="HTML")
+    else:
+        bot.edit_message_text(text=answer, chat_id=call_back.message.chat.id,
+                              message_id=call_back.message.message_id,
+                              parse_mode="HTML", reply_markup=ids_keyboard)
+
+
+@bot.callback_query_handler(func=lambda call_back:
+                            call_back.data == "Вернуть всех")
+def return_all(call_back):
+    sql_con = sqlite3.connect("Bot.db")
+    cursor = sql_con.cursor()
+    cursor.execute("""DELETE FROM user_educators 
+                      WHERE user_id = ?""", (call_back.message.chat.id, ))
+    sql_con.commit()
+    cursor.close()
+    sql_con.close()
+
+    answer = "Все преподаватели возвращены"
+    bot.edit_message_text(text=answer, chat_id=call_back.message.chat.id,
+                          message_id=call_back.message.message_id)
+
+
+@bot.callback_query_handler(func=lambda call_back:
+                            "Выбери связь, которую хочешь убрать:" in
+                            call_back.message.text)
+def return_lesson_handler(call_back):
+    lesson_id = call_back.data.split(" - ")[0]
+    events = call_back.message.text.split("\n\n")[1:-1]
+    lesson_title = educator = ""
+    for event in events:
+        if event.split("\n")[0].split(": ")[1] == lesson_id:
+            lesson_title = event.split("\n")[1].split(": ")[1]
+            educator = event.split("\n")[2].split(": ")[1]
+            break
+    sql_con = sqlite3.connect("Bot.db")
+    cursor = sql_con.cursor()
+    cursor.execute("""DELETE FROM user_educators 
+                      WHERE user_id = ?
+                        AND lesson_id = ?""",
+                   (call_back.message.chat.id, lesson_id))
+    sql_con.commit()
+    cursor.close()
+    sql_con.close()
+    answer = "Связь <b>\n{0}</b> - <i>{1}</i> убрана".format(
+        lesson_title, educator)
     bot.edit_message_text(text=answer, chat_id=call_back.message.chat.id,
                           message_id=call_back.message.message_id,
                           parse_mode="HTML")

@@ -528,6 +528,10 @@ def choose_educator_handler(message):
     days = json_week_data["Days"]
     days_keyboard = telebot.types.InlineKeyboardMarkup(True)
     for day in days:
+        data = datetime.strptime(day["Day"], "%Y-%m-%dT%H:%M:%S").date()
+        answer_data = func.get_lessons_with_educators(message.chat.id, data)
+        if answer_data["is_empty"]:
+            continue
         days_keyboard.row(
             *[telebot.types.InlineKeyboardButton(text=name, callback_data=name)
               for name in [day["DayString"].split(", ")[0].capitalize()]])
@@ -1241,11 +1245,17 @@ def select_day_choose_educator_handler(call_back):
 
     answer_data = func.get_lessons_with_educators(call_back.message.chat.id,
                                                   day_date)
-    answer = answer_data["answer"]
+    day_string = answer_data["date"]
+    bot.edit_message_text(chat_id=call_back.message.chat.id,
+                          text="{0} {1}".format(emoji["calendar"], day_string),
+                          message_id=call_back.message.message_id)
+    answer = "Вот список подходящих занятий:\n\n"
+    answer += answer_data["answer"]
     inline_keyboard = telebot.types.InlineKeyboardMarkup()
     if not answer_data["is_empty"]:
         for event in answer_data["answer"].split("\n\n"):
-            button_text = "{0}".format(event.split("\n")[0][3:-4])
+            button_text = "{0}".format(event.split("\n")[0].strip(" {0}".format(
+                emoji["cross_mark"]))[3:-4])
             inline_keyboard.row(
                 *[telebot.types.InlineKeyboardButton(text=name,
                                                      callback_data=name[:32])
@@ -1255,17 +1265,14 @@ def select_day_choose_educator_handler(call_back):
             telebot.types.InlineKeyboardButton(text="Отмена",
                                                callback_data="Отмена"))
         answer += "\n\nВыбери необходиое занятие:"
-    bot.edit_message_text(text=answer,
-                          chat_id=call_back.message.chat.id,
-                          message_id=call_back.message.message_id,
-                          parse_mode="HTML",
-                          reply_markup=inline_keyboard)
+    bot.send_message(text=answer, chat_id=call_back.message.chat.id,
+                     parse_mode="HTML", reply_markup=inline_keyboard)
 
 
 @bot.callback_query_handler(func=lambda call_back: "Выбери необходиое занятие:"
                                                    in call_back.message.text)
 def select_educator_handler(call_back):
-    message_text_data = call_back.message.text.split("\n\n")[:-1]
+    message_text_data = call_back.message.text.split("\n\n")[1:-1]
     chosen_event_number = int(call_back.data.split(". ")[0]) - 1
     chosen_event = ". ".join(
         message_text_data[chosen_event_number].split(". ")[1:])
@@ -1274,14 +1281,16 @@ def select_educator_handler(call_back):
     inline_keyboard.add(
         *[telebot.types.InlineKeyboardButton(text=name,
                                              callback_data=name[:32])
-          for name in [place_edu.split("(")[1][:-1]
+          for name in [place_edu.strip(" {0}".format(
+                                emoji["heavy_check_mark"])).split("(")[1][:-1]
                        for place_edu in chosen_event_data[1:]]]
     )
     inline_keyboard.row(
         telebot.types.InlineKeyboardButton(text="Отмена",
                                            callback_data="Отмена"))
     answer = "Выбранное занятие:\n<b>{0}</b>\n\nВыбери преподавателя, " \
-             "которого оставить:".format(chosen_event_data[0])
+             "которого оставить:".format(
+                chosen_event_data[0].strip(" {0}".format(emoji["cross_mark"])))
     bot.edit_message_text(text=answer,
                           chat_id=call_back.message.chat.id,
                           message_id=call_back.message.message_id,
@@ -1298,7 +1307,7 @@ def educator_chosen_handler(call_back):
     func.insert_skip(event_name=event_name, types="all", event_day="all",
                      event_time="all", educators=chosen_educators,
                      user_id=call_back.message.chat.id, is_choose_educator=True)
-    answer = "Для занятия: <b>{0}</b> выбран преподаватель: <i>{1}</i>" \
+    answer = "<b>Добавлена связь</b> занятия и преподавателя: {0} - {1}" \
              "".format(event_name, chosen_educators)
     bot.edit_message_text(text=answer,
                           chat_id=call_back.message.chat.id,
@@ -1650,8 +1659,12 @@ def return_lesson(call_back):
             answer += "<b>id: {0}</b>\n<b>Название</b>: {1}\n<b>Типы</b>: {2}" \
                       "\n<b>Дни</b>: {3}\n<b>Время</b>: {4}\n" \
                       "<b>Преподаватели</b>: {5}\n\n".format(
-                                    lesson[0], lesson[1], lesson[2], lesson[3],
-                                    lesson[4], lesson[5])
+                        lesson[0],
+                        lesson[1] if lesson[1] != "all" else "Любые",
+                        lesson[2] if lesson[2] != "all" else "Любые",
+                        lesson[3] if lesson[3] != "all" else "Любые",
+                        lesson[4] if lesson[4] != "all" else "Любое",
+                        lesson[5] if lesson[5] != "all" else "Любые")
             ids_keyboard.row(
                 *[telebot.types.InlineKeyboardButton(text=name,
                                                      callback_data=name[:32])
@@ -1732,7 +1745,7 @@ def return_educator(call_back):
         answer = "Вот список занятий с выбранными преподавателями:\n\n"
         for lesson in data:
             answer += "<b>id: {0}</b>\n<b>Название</b>: {1}\n" \
-                      "<b>Преподаватели</b>: {2}\n\n".format(
+                      "<b>Преподаватель</b>: {2}\n\n".format(
                                     lesson[0], lesson[1], lesson[5])
             ids_keyboard.row(
                 *[telebot.types.InlineKeyboardButton(text=name,
@@ -1797,7 +1810,7 @@ def return_lesson_handler(call_back):
     sql_con.commit()
     cursor.close()
     sql_con.close()
-    answer = "Связь <b>\n{0}</b> - <i>{1}</i> убрана".format(
+    answer = "<b>Связь убрана</b>\n{0} - {1}".format(
         lesson_title, educator)
     bot.edit_message_text(text=answer, chat_id=call_back.message.chat.id,
                           message_id=call_back.message.message_id,

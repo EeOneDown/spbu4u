@@ -771,6 +771,8 @@ def get_current_block(message_text, user_id, is_prev=False):
 
 
 def get_lessons_with_educators(user_id, day_date):
+    from constants import emoji
+
     json_day = get_json_day_data(user_id, day_date)
     answer = ""
     day_study_events = json_day["DayStudyEvents"]
@@ -780,20 +782,38 @@ def get_lessons_with_educators(user_id, day_date):
         if event["IsCancelled"] or len([loc for loc in event["EventLocations"]
                                         if loc["HasEducators"]]) < 2:
             continue
-        event_text += "{0}</b>" \
-                      "\n".format(", ".join(event["Subject"].split(", ")[:-1]))
+        subject_name = ", ".join(event["Subject"].split(", ")[:-1])
+        event_text += "{0}</b>".format(subject_name)
+        if is_event_in_skips(event, get_hide_lessons_data(
+                user_id, week_day=json_day["DayString"].split(", ")[0]),
+                             json_day["DayString"].split(", ")[0]):
+            event_text += " {0}".format(emoji["cross_mark"])
+        event_text += "\n"
+
+        chosen_educators = get_chosen_educators(user_id)
+        have_chosen_educator = False
+        if subject_name in chosen_educators.keys() and \
+                any(ch_edu in [edu["Item2"].split(", ")[0] for edu in
+                               event["EducatorIds"]] for ch_edu in
+                    chosen_educators[subject_name]):
+            have_chosen_educator = True
         for location in event["EventLocations"]:
             event_text += location["DisplayName"].strip(", ")
-            educators = [educator["Item2"].split(", ")[0] for educator in
-                         location["EducatorIds"] if educator["Item1"] != -1]
+            educators = {educator["Item2"].split(", ")[0] for educator in
+                         location["EducatorIds"] if educator["Item1"] != -1}
             if len(educators):
                 event_text += " <i>({0})</i>".format("; ".join(educators))
+            if have_chosen_educator and educators.issubset(chosen_educators[
+                                                               subject_name]):
+                event_text += " {0}".format(emoji["heavy_check_mark"])
             event_text += "\n"
         if event_text not in answer:
             count += 1
             answer += "<b>{0}. {1}\n".format(count, event_text)
     if answer == "":
-        data = {"is_empty": True, "answer": "Подходящих занятий нет"}
+        data = {"is_empty": True, "answer": "Подходящих занятий нет",
+                "date": json_day["DayString"].capitalize()}
     else:
-        data = {"is_empty": False, "answer": answer.strip("\n\n")}
+        data = {"is_empty": False, "answer": answer.strip("\n\n"),
+                "date": json_day["DayString"].capitalize()}
     return data

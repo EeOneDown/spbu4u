@@ -1725,7 +1725,7 @@ def return_lesson(call_back):
             ids_keyboard.row(*[telebot.types.InlineKeyboardButton(
                                                          text=name,
                                                          callback_data=name)
-                               for name in ["Веруть всё"]])
+                               for name in ["Вернуть всё"]])
             bot.send_message(call_back.message.chat.id, answer,
                              reply_markup=ids_keyboard, parse_mode="HTML")
     else:

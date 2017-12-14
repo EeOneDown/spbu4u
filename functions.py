@@ -561,17 +561,17 @@ def change_univer_station(user_id, univer):
     sql_con.close()
 
 
-def send_long_message(bot, text, user_id):
+def send_long_message(bot, text, user_id, split="\n\n"):
     try:
         bot.send_message(user_id, text, parse_mode="HTML")
     except ApiException as ApiExcept:
         json_err = json.loads(ApiExcept.result.text)
         if json_err["description"] == "Bad Request: message is too long":
-            event_count = len(text.split("\n\n"))
-            first_part = "\n\n".join(text.split("\n\n")[:event_count // 2])
-            second_part = "\n\n".join(text.split("\n\n")[event_count // 2:])
-            send_long_message(bot, first_part, user_id)
-            send_long_message(bot, second_part, user_id)
+            event_count = len(text.split(split))
+            first_part = split.join(text.split(split)[:event_count // 2])
+            second_part = split.join(text.split(split)[event_count // 2:])
+            send_long_message(bot, first_part, user_id, split)
+            send_long_message(bot, second_part, user_id, split)
 
 
 def get_user_rate(user_id):
@@ -655,7 +655,8 @@ def add_new_user(user_id, group_id, week_data=None):
         sql_con.close()
 
 
-def get_semester_dates(today):
+def get_semester_dates():
+    today = datetime.today()
     if today.month in range(2, 8):
         start_year = today.year
         end_year = today.year
@@ -672,17 +673,12 @@ def get_semester_dates(today):
 
 
 def get_json_attestation(user_id):
-    sql_con = sqlite3.connect("Bot.db")
-    cursor = sql_con.cursor()
-    cursor.execute("""SELECT groups_data.interim_attestation
-                      FROM user_data
-                        JOIN groups_data
-                          ON user_data.group_id = groups_data.id
-                      WHERE user_data.id = ?""", (user_id,))
-    data = cursor.fetchone()[0]
-    cursor.close()
-    sql_con.close()
-    return json.loads(data)
+    url = "http://testtable1.ad.pu.ru/api/v1/groups/{0}/" \
+          "events/{1}/{2}?timetable=Attestation"
+    sem_dates = get_semester_dates()
+    req = requests.get(url.format(get_current_group(user_id)["id"],
+                                  sem_dates[0], sem_dates[1])).json()
+    return req
 
 
 def get_available_months(user_id):
@@ -817,3 +813,17 @@ def get_lessons_with_educators(user_id, day_date):
         data = {"is_empty": False, "answer": answer.strip("\n\n"),
                 "date": json_day["DayString"].capitalize()}
     return data
+
+
+def create_session_answer(json_attestation, month, user_id, is_full_place,
+                          personal, only_exams):
+    answer = ""
+    for day_data in json_attestation["Days"]:
+        event_date = datetime.strptime(day_data["Day"], "%Y-%m-%dT%H:%M:%S")
+        if month == str(event_date.month):
+            cur_answer = create_schedule_answer(
+                day_data, is_full_place, user_id=user_id, personal=personal,
+                only_exams=only_exams)
+            if "Выходной" not in cur_answer:
+                answer += cur_answer + "\n"
+    return answer

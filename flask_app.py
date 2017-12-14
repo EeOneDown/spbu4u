@@ -327,7 +327,7 @@ def sending_handler(message):
                      reply_markup=sending_keyboard)
 
 
-@bot.message_handler(func=lambda mess: mess.text.capitalize() == "СЕССИЯ",
+@bot.message_handler(func=lambda mess: mess.text.capitalize() == "Сессия",
                      content_types=["text"])
 def attestation_handler(message):
     if message.chat.id != my_id:
@@ -702,6 +702,16 @@ def write_educator_name_handler(message):
                          reply_markup=educators_keyboard, parse_mode="HTML")
 
 
+@bot.message_handler(func=lambda mess: mess.text.title() == "Сейчас",
+                     content_types=["text"])
+@bot.message_handler(func=lambda mess:
+                     mess.text.capitalize().rstrip("?") == "Что сейчас",
+                     content_types=["text"])
+def now_lesson_handler(message):
+    answer = "Наверно, какая-то пара #пасхалочка"
+    func.send_long_message(bot, answer, message.chat.id)
+
+
 @bot.message_handler(func=lambda mess: True, content_types=["text"])
 def other_text_handler(message):
     # logger.info(message)
@@ -796,6 +806,7 @@ def all_week_schedule_handler(call_back):
         json_week = func.get_json_week_data(user_id, next_week=True)
     inline_answer = json_week["WeekDisplayText"]
     bot.answer_callback_query(call_back.id, inline_answer, cache_time=1)
+    is_smth_send = False
     if len(json_week["Days"]):
         for day in json_week["Days"]:
             full_place = func.is_full_place(call_back.message.chat.id)
@@ -803,7 +814,7 @@ def all_week_schedule_handler(call_back):
                                                  call_back.message.chat.id)
             if "Выходной" in answer:
                 continue
-            if json_week["Days"].index(day) == 0:
+            if json_week["Days"].index(day) == 0 or not is_smth_send:
                 try:
                     bot.edit_message_text(text=answer,
                                           chat_id=user_id,
@@ -813,7 +824,8 @@ def all_week_schedule_handler(call_back):
                     func.send_long_message(bot, answer, user_id)
             else:
                 func.send_long_message(bot, answer, user_id)
-    else:
+            is_smth_send = True
+    if not is_smth_send or not len(json_week["Days"]):
         answer = "{0} Выходная неделя".format(emoji["sleep"])
         bot.edit_message_text(text=answer,
                               chat_id=user_id,
@@ -1652,7 +1664,7 @@ def confirm_hide_lesson_handler(call_back):
                             call_back.data == "Занятие")
 def return_lesson(call_back):
     data = func.get_hide_lessons_data(call_back.message.chat.id)
-    ids_keyboard = telebot.types.InlineKeyboardMarkup(True)
+    ids_keyboard = telebot.types.InlineKeyboardMarkup(row_width=5)
     if len(data):
         answer = "Вот список скрытых тобой занятий:\n\n"
         for lesson in data:
@@ -1683,8 +1695,39 @@ def return_lesson(call_back):
             bot.send_message(call_back.message.chat.id, answer,
                              parse_mode="HTML")
         answer = answers[-1]
-        bot.send_message(call_back.message.chat.id, answer,
-                         reply_markup=ids_keyboard, parse_mode="HTML")
+        ids = [lesson[0] for lesson in data]
+
+        if len(ids) < 31:
+            ids_keyboard = telebot.types.InlineKeyboardMarkup(row_width=5)
+            ids_keyboard.add(
+                *[telebot.types.InlineKeyboardButton(text=name,
+                                                     callback_data=name)
+                  for name in ids]
+            )
+            bot.send_message(call_back.message.chat.id, answer,
+                             reply_markup=ids_keyboard, parse_mode="HTML")
+        else:
+            from math import ceil
+
+            inline_answer = "Их слишком много..."
+            bot.answer_callback_query(call_back.id, inline_answer, cache_time=1)
+            for i in range(ceil(len(ids) / 30)):
+                ids_keyboard = telebot.types.InlineKeyboardMarkup(row_width=5)
+                ids_keyboard.add(
+                    *[telebot.types.InlineKeyboardButton(text=name,
+                                                         callback_data=name)
+                      for name in ids[:30]]
+                )
+                bot.send_message(call_back.message.chat.id, answer,
+                                 reply_markup=ids_keyboard, parse_mode="HTML")
+                ids = ids[30:]
+            ids_keyboard = telebot.types.InlineKeyboardMarkup(row_width=5)
+            ids_keyboard.row(*[telebot.types.InlineKeyboardButton(
+                                                         text=name,
+                                                         callback_data=name)
+                               for name in ["Веруть всё"]])
+            bot.send_message(call_back.message.chat.id, answer,
+                             reply_markup=ids_keyboard, parse_mode="HTML")
     else:
         bot.edit_message_text(text=answer, chat_id=call_back.message.chat.id,
                               message_id=call_back.message.message_id,
@@ -2004,19 +2047,26 @@ def select_months_att_handler(call_back):
     json_attestation = func.get_json_attestation(call_back.message.chat.id)
     answer = ""
     is_full_place = func.is_full_place(call_back.message.chat.id)
-    for day_data in json_attestation["Days"]:
-        data = datetime.strptime(day_data["Day"], "%Y-%m-%dT%H:%M:%S")
-        if call_back.data == str(data.month):
-            answer += func.create_schedule_answer(day_data, is_full_place,
-                                                  personal=False,
-                                                  only_exams=False)
+    personal = True
+    only_exams = True
+    while answer == "":
+        answer += func.create_session_answer(json_attestation, call_back.data,
+                                             call_back.message.chat.id,
+                                             is_full_place, personal,
+                                             only_exams)
+        only_exams = not only_exams
+        if personal and only_exams:
+            personal = False
+
+        if not personal and only_exams:
+            answer = "<i>Нет событий</i>"
     try:
         bot.edit_message_text(text=answer,
                               chat_id=call_back.message.chat.id,
                               message_id=call_back.message.message_id,
                               parse_mode="HTML")
     except telebot.apihelper.ApiException:
-        func.send_long_message(bot, answer, call_back.message.chat.id)
+        func.send_long_message(bot, answer, call_back.message.chat.id, "\n\n\n")
 
 
 @app.route("/reset_webhook", methods=["GET", "HEAD"])

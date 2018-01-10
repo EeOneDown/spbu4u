@@ -2000,6 +2000,9 @@ def select_master_id_handler(call_back):
 @bot.callback_query_handler(func=lambda call_back:
                             "Выбери месяц:" in call_back.message.text)
 def select_months_att_handler(call_back):
+    bot_msg = bot.edit_message_text(text="Загрузка..",
+                                    chat_id=call_back.message.chat.id,
+                                    message_id=call_back.message.message_id)
     json_attestation = func.get_json_attestation(call_back.message.chat.id)
     answer = ""
     is_full_place = func.is_full_place(call_back.message.chat.id)
@@ -2019,7 +2022,7 @@ def select_months_att_handler(call_back):
     try:
         bot.edit_message_text(text=answer,
                               chat_id=call_back.message.chat.id,
-                              message_id=call_back.message.message_id,
+                              message_id=bot_msg.message_id,
                               parse_mode="HTML")
     except telebot.apihelper.ApiException:
         func.send_long_message(bot, answer, call_back.message.chat.id, "\n\n\n")

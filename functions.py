@@ -673,7 +673,7 @@ def get_semester_dates():
 
 
 def get_json_attestation(user_id):
-    url = "http://testtable1.ad.pu.ru/api/v1/groups/{0}/" \
+    url = "http://timetable.spbu.ru/api/v1/groups/{0}/" \
           "events/{1}/{2}?timetable=Attestation"
     sem_dates = get_semester_dates()
     req = requests.get(url.format(get_current_group(user_id)["id"],
@@ -825,5 +825,5 @@ def create_session_answer(json_attestation, month, user_id, is_full_place,
                 day_data, is_full_place, user_id=user_id, personal=personal,
                 only_exams=only_exams)
             if "Выходной" not in cur_answer:
-                answer += cur_answer + "\n"
+                answer += cur_answer.replace("\n\n", "\n") + "\n"
     return answer

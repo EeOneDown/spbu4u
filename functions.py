@@ -562,9 +562,9 @@ def change_univer_station(user_id, univer):
     sql_con.close()
 
 
-def send_long_message(bot, text, user_id, split="\n\n"):
+def send_long_message(bot, text, user_id, split="\n\n", markup=None):
     try:
-        bot.send_message(user_id, text, parse_mode="HTML")
+        bot.send_message(user_id, text, parse_mode="HTML", reply_markup=markup)
     except ApiException as ApiExcept:
         json_err = json.loads(ApiExcept.result.text)
         if json_err["description"] == "Bad Request: message is too long":
@@ -572,7 +572,7 @@ def send_long_message(bot, text, user_id, split="\n\n"):
             first_part = split.join(text.split(split)[:event_count // 2])
             second_part = split.join(text.split(split)[event_count // 2:])
             send_long_message(bot, first_part, user_id, split)
-            send_long_message(bot, second_part, user_id, split)
+            send_long_message(bot, second_part, user_id, split, markup)
 
 
 def get_user_rate(user_id):

@@ -27,14 +27,41 @@ sslify = SSLify(app)
 logger = telebot.logger
 telebot.logger.setLevel(logging.INFO)
 
+############
+# KEYBOARDS
+############
 main_keyboard = telebot.types.ReplyKeyboardMarkup(True)
 main_keyboard.row("Расписание")
 main_keyboard.row(emoji["info"], emoji["star"], emoji["settings"],
                   emoji["suburban"], emoji["editor"])
 
+schedule_keyboard = telebot.types.ReplyKeyboardMarkup(True)
+schedule_keyboard.row("Сегодня", "Завтра", "Неделя")
+schedule_keyboard.row(emoji["back"], emoji["bust_in_silhouette"],
+                      emoji["arrows_counterclockwise"],
+                      emoji["alarm_clock"])
+
+settings_keyboard = telebot.types.ReplyKeyboardMarkup(True)
+settings_keyboard.row("Сменить группу", "Завершить")
+settings_keyboard.row("Назад", "Проблема")
+
+suburban_keyboard = telebot.types.ReplyKeyboardMarkup(True, False)
+suburban_keyboard.row("Домой", "В Универ", "Маршрут")
+suburban_keyboard.row("Назад", "Персонализация")
+
+schedule_editor_keyboard = telebot.types.ReplyKeyboardMarkup(True, False)
+schedule_editor_keyboard.row("Скрыть занятие", "Преподаватель")
+schedule_editor_keyboard.row("Назад", "Вернуть", "Адрес")
+
+############
+# TIME ZONE
+############
 server_timedelta = timedelta(hours=3)
 
 
+############
+# HANDLERS
+############
 @bot.message_handler(commands=["start"])
 @bot.message_handler(func=lambda mess:
                      mess.text.capitalize() == "Сменить группу",
@@ -217,8 +244,8 @@ def not_exist_user_handler(message):
                      content_types=["text"])
 def help_handler(message):
     bot.send_chat_action(message.chat.id, "typing")
-    inline_full_info_keyboard = telebot.types.InlineKeyboardMarkup()
     ''' delete this?
+    inline_full_info_keyboard = telebot.types.InlineKeyboardMarkup()
     inline_full_info_keyboard.row(
         *[telebot.types.InlineKeyboardButton(text=name, callback_data=name) for
           name in ["Полное ИНФО"]])
@@ -226,7 +253,7 @@ def help_handler(message):
     answer = briefly_info_answer
     bot.send_message(message.chat.id, answer,
                      parse_mode="HTML",
-                     reply_markup=inline_full_info_keyboard,
+                     reply_markup=main_keyboard,
                      disable_web_page_preview=True)
 
 
@@ -246,9 +273,6 @@ def home_handler(message):
 def settings_handler(message):
     bot.send_chat_action(message.chat.id, "typing")
     func.delete_user(message.chat.id, only_choice=True)
-    settings_keyboard = telebot.types.ReplyKeyboardMarkup(True)
-    settings_keyboard.row("Сменить группу", "Завершить")
-    settings_keyboard.row("Назад", "Проблема")
     answer = "Настройки"
     bot.send_message(message.chat.id, answer, reply_markup=settings_keyboard)
 
@@ -258,11 +282,6 @@ def settings_handler(message):
 def schedule_handler(message):
     bot.send_chat_action(message.chat.id, "typing")
     answer = "Меню расписания"
-    schedule_keyboard = telebot.types.ReplyKeyboardMarkup(True)
-    schedule_keyboard.row("Сегодня", "Завтра", "Неделя")
-    schedule_keyboard.row(emoji["back"], emoji["bust_in_silhouette"],
-                          emoji["arrows_counterclockwise"],
-                          emoji["alarm_clock"])
     bot.send_message(message.chat.id, answer, reply_markup=schedule_keyboard)
 
 
@@ -274,7 +293,8 @@ def today_schedule_handler(message):
     json_day = func.get_json_day_data(message.chat.id, today_moscow_date)
     full_place = func.is_full_place(message.chat.id)
     answer = func.create_schedule_answer(json_day, full_place, message.chat.id)
-    func.send_long_message(bot, answer, message.chat.id)
+    func.send_long_message(bot, answer, message.chat.id,
+                           markup=schedule_keyboard)
 
 
 @bot.message_handler(func=lambda mess: mess.text.capitalize() == "Завтра",
@@ -287,7 +307,8 @@ def tomorrow_schedule_handler(message):
     json_day = func.get_json_day_data(message.chat.id, tomorrow_moscow_date)
     full_place = func.is_full_place(message.chat.id)
     answer = func.create_schedule_answer(json_day, full_place, message.chat.id)
-    func.send_long_message(bot, answer, message.chat.id)
+    func.send_long_message(bot, answer, message.chat.id,
+                           markup=schedule_keyboard)
 
 
 @bot.message_handler(func=lambda mess: mess.text.capitalize() == "Неделя",
@@ -370,9 +391,6 @@ def rate_handler(message):
                      content_types=["text"])
 def suburban_handler(message):
     bot.send_chat_action(message.chat.id, "typing")
-    suburban_keyboard = telebot.types.ReplyKeyboardMarkup(True, False)
-    suburban_keyboard.row("Домой", "В Универ", "Маршрут")
-    suburban_keyboard.row("Назад", "Персонализация")
     answer = "Меню расписания электричек\n\n" \
              "Данные предоставлены сервисом " \
              "<a href = 'http://rasp.yandex.ru/'>Яндекс.Расписания</a>"
@@ -486,9 +504,6 @@ def personalisation_handler(message):
 def schedule_editor_handler(message):
     bot.send_chat_action(message.chat.id, "typing")
     answer = "Редактор расписания"
-    schedule_editor_keyboard = telebot.types.ReplyKeyboardMarkup(True, False)
-    schedule_editor_keyboard.row("Скрыть занятие", "Преподаватель")
-    schedule_editor_keyboard.row("Назад", "Вернуть", "Адрес")
     bot.send_message(message.chat.id,
                      answer,
                      reply_markup=schedule_editor_keyboard,
@@ -648,11 +663,6 @@ def write_educator_name_handler(message):
     name = message.text.strip(". ")
     if not func.is_correct_educator_name(name):
         answer = "Недопустимые символы"
-        schedule_keyboard = telebot.types.ReplyKeyboardMarkup(True)
-        schedule_keyboard.row("Сегодня", "Завтра", "Неделя")
-        schedule_keyboard.row(emoji["back"], emoji["bust_in_silhouette"],
-                              emoji["arrows_counterclockwise"],
-                              emoji["alarm_clock"])
         bot.send_message(message.chat.id, answer,
                          reply_markup=schedule_keyboard)
         return
@@ -664,11 +674,6 @@ def write_educator_name_handler(message):
     if request_code != 200 or educators_data["Educators"] is None or len(
             educators_data["Educators"]) == 0:
         answer = "Никого не найдено"
-        schedule_keyboard = telebot.types.ReplyKeyboardMarkup(True)
-        schedule_keyboard.row("Сегодня", "Завтра", "Неделя")
-        schedule_keyboard.row(emoji["back"], emoji["bust_in_silhouette"],
-                              emoji["arrows_counterclockwise"],
-                              emoji["alarm_clock"])
         bot.send_message(message.chat.id, answer,
                          reply_markup=schedule_keyboard)
     elif len(educators_data["Educators"]) > 200:
@@ -680,11 +685,6 @@ def write_educator_name_handler(message):
         bot.send_message(message.chat.id, answer, reply_markup=markup,
                          parse_mode="HTML")
     else:
-        schedule_keyboard = telebot.types.ReplyKeyboardMarkup(True)
-        schedule_keyboard.row("Сегодня", "Завтра", "Неделя")
-        schedule_keyboard.row(emoji["back"], emoji["bust_in_silhouette"],
-                              emoji["arrows_counterclockwise"],
-                              emoji["alarm_clock"])
         bot.send_message(message.chat.id, "Готово!",
                          reply_markup=schedule_keyboard)
 
@@ -730,11 +730,9 @@ def other_text_handler(message):
     func.send_long_message(bot, answer, message.chat.id)
 
 
-"""
-        Callback query handlers
-"""
-
-
+############
+# CALLBACK
+############
 @bot.callback_query_handler(func=lambda call_back:
                             call_back.data == "Полное ИНФО")
 def show_full_info(call_back):
@@ -815,15 +813,13 @@ def all_week_schedule_handler(call_back):
             if "Выходной" in answer:
                 continue
             if json_week["Days"].index(day) == 0 or not is_smth_send:
-                try:
-                    bot.edit_message_text(text=answer,
-                                          chat_id=user_id,
-                                          message_id=bot_msg.message_id,
-                                          parse_mode="HTML")
-                except telebot.apihelper.ApiException:
-                    func.send_long_message(bot, answer, user_id)
+                bot.delete_message(call_back.message.chat.id,
+                                   bot_msg.message_id)
+                func.send_long_message(bot, answer, user_id,
+                                       markup=schedule_keyboard)
             else:
-                func.send_long_message(bot, answer, user_id)
+                func.send_long_message(bot, answer, user_id,
+                                       markup=schedule_keyboard)
             is_smth_send = True
     if not is_smth_send or not len(json_week["Days"]):
         answer = "{0} Выходная неделя".format(emoji["sleep"])
@@ -855,36 +851,32 @@ def week_day_schedule_handler(call_back):
     full_place = func.is_full_place(call_back.message.chat.id)
     answer = func.create_schedule_answer(json_day, full_place,
                                          call_back.message.chat.id)
-    try:
-        bot.edit_message_text(text=answer,
-                              chat_id=call_back.message.chat.id,
-                              message_id=bot_msg.message_id,
-                              parse_mode="HTML")
-    except telebot.apihelper.ApiException:
-        func.send_long_message(bot, answer, call_back.message.chat.id)
+    bot.delete_message(call_back.message.chat.id, bot_msg.message_id)
+    func.send_long_message(bot, answer, call_back.message.chat.id,
+                           markup=schedule_keyboard)
 
 
 @bot.callback_query_handler(func=lambda call_back:
                             call_back.data == "Подписаться")
 def sending_on_handler(call_back):
+    bot_msg = call_back.message
     func.set_sending(call_back.message.chat.id, True)
     answer = "{0} Рассылка <b>активирована</b>\nЖди рассылку в 21:00" \
              "".format(emoji["mailbox_on"])
-    bot.edit_message_text(text=answer,
-                          chat_id=call_back.message.chat.id,
-                          message_id=call_back.message.message_id,
-                          parse_mode="HTML")
+    bot.delete_message(call_back.message.chat.id, bot_msg.message_id)
+    func.send_long_message(bot, answer, call_back.message.chat.id,
+                           markup=schedule_keyboard)
 
 
 @bot.callback_query_handler(func=lambda call_back:
                             call_back.data == "Отписаться")
 def sending_off_handler(call_back):
+    bot_msg = call_back.message
     func.set_sending(call_back.message.chat.id, False)
     answer = "{0} Рассылка <b>отключена</b>".format(emoji["mailbox_off"])
-    bot.edit_message_text(text=answer,
-                          chat_id=call_back.message.chat.id,
-                          message_id=call_back.message.message_id,
-                          parse_mode="HTML")
+    bot.delete_message(call_back.message.chat.id, bot_msg.message_id)
+    func.send_long_message(bot, answer, call_back.message.chat.id,
+                           markup=schedule_keyboard)
 
 
 @bot.callback_query_handler(func=lambda call_back:
@@ -1172,10 +1164,9 @@ def home_station_handler(call_back):
 def change_home_station_handler(call_back):
     answer = "Домашняя станция изменена на <b>{0}</b>".format(call_back.data)
     func.change_home_station(call_back.message.chat.id, call_back.data)
-    bot.edit_message_text(text=answer,
-                          chat_id=call_back.message.chat.id,
-                          message_id=call_back.message.message_id,
-                          parse_mode="HTML")
+    bot.delete_message(call_back.message.chat.id, call_back.message.message_id)
+    bot.send_message(text=answer, chat_id=call_back.message.chat.id,
+                     parse_mode="HTML", reply_markup=suburban_keyboard)
 
 
 @bot.callback_query_handler(func=lambda call_back:
@@ -1209,10 +1200,10 @@ def change_univer_station_handler(call_back):
         is_univer = 1
         station = "Университетская (Университет)"
     func.change_univer_station(call_back.message.chat.id, is_univer)
-    bot.edit_message_text(text=answer.format(station),
-                          chat_id=call_back.message.chat.id,
-                          message_id=call_back.message.message_id,
-                          parse_mode="HTML")
+    bot.delete_message(call_back.message.chat.id, call_back.message.message_id)
+    bot.send_message(text=answer.format(station),
+                     chat_id=call_back.message.chat.id,
+                     parse_mode="HTML", reply_markup=suburban_keyboard)
 
 
 @bot.callback_query_handler(func=lambda call_back:
@@ -1220,10 +1211,9 @@ def change_univer_station_handler(call_back):
 def full_place_on_handler(call_back):
     func.set_full_place(call_back.message.chat.id, True)
     answer = "Теперь адрес отображается <b>полностью</b>"
-    bot.edit_message_text(text=answer,
-                          chat_id=call_back.message.chat.id,
-                          message_id=call_back.message.message_id,
-                          parse_mode="HTML")
+    bot.delete_message(call_back.message.chat.id, call_back.message.message_id)
+    bot.send_message(text=answer, chat_id=call_back.message.chat.id,
+                     parse_mode="HTML", reply_markup=schedule_editor_keyboard)
 
 
 @bot.callback_query_handler(func=lambda call_back:
@@ -1231,10 +1221,9 @@ def full_place_on_handler(call_back):
 def full_place_off_handler(call_back):
     func.set_full_place(call_back.message.chat.id, False)
     answer = "Теперь отображается <b>только аудитория</b>"
-    bot.edit_message_text(text=answer,
-                          chat_id=call_back.message.chat.id,
-                          message_id=call_back.message.message_id,
-                          parse_mode="HTML")
+    bot.delete_message(call_back.message.chat.id, call_back.message.message_id)
+    bot.send_message(text=answer, chat_id=call_back.message.chat.id,
+                     parse_mode="HTML", reply_markup=schedule_editor_keyboard)
 
 
 @bot.callback_query_handler(func=lambda call_back:
@@ -1654,10 +1643,9 @@ def confirm_hide_lesson_handler(call_back):
     func.insert_skip(hide_event_name, hide_event_types, hide_day, hide_time,
                      hide_educators, call_back.message.chat.id)
     answer = "<b>Занятие скрыто:</b>\n{0}".format(hide_event_name)
-    bot.edit_message_text(text=answer,
-                          chat_id=call_back.message.chat.id,
-                          message_id=call_back.message.message_id,
-                          parse_mode="HTML")
+    bot.delete_message(call_back.message.chat.id, call_back.message.message_id)
+    bot.send_message(text=answer, chat_id=call_back.message.chat.id,
+                     parse_mode="HTML", reply_markup=schedule_editor_keyboard)
 
 
 @bot.callback_query_handler(func=lambda call_back:
@@ -1746,8 +1734,9 @@ def return_all(call_back):
     sql_con.close()
 
     answer = "Все занятия возвращены"
-    bot.edit_message_text(text=answer, chat_id=call_back.message.chat.id,
-                          message_id=call_back.message.message_id)
+    bot.delete_message(call_back.message.chat.id, call_back.message.message_id)
+    bot.send_message(text=answer, chat_id=call_back.message.chat.id,
+                     parse_mode="HTML", reply_markup=schedule_editor_keyboard)
 
 
 @bot.callback_query_handler(func=lambda call_back:
@@ -1773,9 +1762,9 @@ def return_lesson_handler(call_back):
     sql_con.close()
     answer = "<b>Занятие возвращено:</b>\n{0}, {1}".format(lesson_title,
                                                            lesson_type)
-    bot.edit_message_text(text=answer, chat_id=call_back.message.chat.id,
-                          message_id=call_back.message.message_id,
-                          parse_mode="HTML")
+    bot.delete_message(call_back.message.chat.id, call_back.message.message_id)
+    bot.send_message(text=answer, chat_id=call_back.message.chat.id,
+                     parse_mode="HTML", reply_markup=schedule_editor_keyboard)
 
 
 @bot.callback_query_handler(func=lambda call_back:
@@ -1828,8 +1817,9 @@ def return_all(call_back):
     sql_con.close()
 
     answer = "Все преподаватели возвращены"
-    bot.edit_message_text(text=answer, chat_id=call_back.message.chat.id,
-                          message_id=call_back.message.message_id)
+    bot.delete_message(call_back.message.chat.id, call_back.message.message_id)
+    bot.send_message(text=answer, chat_id=call_back.message.chat.id,
+                     parse_mode="HTML", reply_markup=schedule_editor_keyboard)
 
 
 @bot.callback_query_handler(func=lambda call_back:
@@ -1855,9 +1845,9 @@ def return_lesson_handler(call_back):
     sql_con.close()
     answer = "<b>Связь убрана</b>\n{0} - {1}".format(
         lesson_title, educator)
-    bot.edit_message_text(text=answer, chat_id=call_back.message.chat.id,
-                          message_id=call_back.message.message_id,
-                          parse_mode="HTML")
+    bot.delete_message(call_back.message.chat.id, call_back.message.message_id)
+    bot.send_message(text=answer, chat_id=call_back.message.chat.id,
+                     parse_mode="HTML", reply_markup=schedule_editor_keyboard)
 
 
 @bot.callback_query_handler(func=lambda call_back:
@@ -1878,7 +1868,7 @@ def statistics_handler(call_back):
                                     admin_data["count_of_users"],
                                     admin_data["count_of_groups"],
                                     admin_data["count_of_sending"])
-        bot.send_message(my_id, admin_answer)
+        bot.send_message(my_id, admin_answer, main_keyboard)
     try:
         bot.edit_message_text(text=answer,
                               chat_id=call_back.message.chat.id,
@@ -1911,10 +1901,9 @@ def save_current_group_handler(call_back):
     group_data = func.get_current_group(user_id)
     func.save_group(group_data["id"], user_id)
     answer = "Группа <b>{0}</b> сохранена".format(group_data["title"])
-    bot.edit_message_text(text=answer,
-                          chat_id=user_id,
-                          message_id=call_back.message.message_id,
-                          parse_mode="HTML")
+    bot.delete_message(call_back.message.chat.id, call_back.message.message_id)
+    bot.send_message(text=answer, chat_id=call_back.message.chat.id,
+                     parse_mode="HTML", reply_markup=schedule_keyboard)
 
 
 @bot.callback_query_handler(func=lambda call_back:
@@ -1924,10 +1913,9 @@ def delete_current_group_handler(call_back):
     group_data = func.get_current_group(user_id)
     func.delete_group(group_data["id"], user_id)
     answer = "Группа <b>{0}</b> удалена".format(group_data["title"])
-    bot.edit_message_text(text=answer,
-                          chat_id=user_id,
-                          message_id=call_back.message.message_id,
-                          parse_mode="HTML")
+    bot.delete_message(call_back.message.chat.id, call_back.message.message_id)
+    bot.send_message(text=answer, chat_id=call_back.message.chat.id,
+                     parse_mode="HTML", reply_markup=schedule_keyboard)
 
 
 @bot.callback_query_handler(func=lambda call_back:
@@ -1962,10 +1950,10 @@ def change_template_group_handler(call_back):
     sql_con.commit()
     cursor.close()
     sql_con.close()
-    bot.edit_message_text(text=answer.format(chosen_group_title),
-                          chat_id=call_back.message.chat.id,
-                          message_id=call_back.message.message_id,
-                          parse_mode="HTML")
+    bot.delete_message(call_back.message.chat.id, call_back.message.message_id)
+    bot.send_message(text=answer.format(chosen_group_title),
+                     chat_id=call_back.message.chat.id,
+                     parse_mode="HTML", reply_markup=schedule_keyboard)
 
 
 @bot.callback_query_handler(func=lambda call_back: "Найденные преподаватели:"
@@ -1981,10 +1969,10 @@ def select_master_id_handler(call_back):
                            educator_schedule["DateRangeDisplayText"])
     if not educator_schedule["HasEvents"]:
         answer += "\n\n<i>Нет событий</i>"
-        bot.edit_message_text(text=answer,
-                              chat_id=call_back.message.chat.id,
-                              message_id=call_back.message.message_id,
-                              parse_mode="HTML")
+        bot.delete_message(call_back.message.chat.id,
+                           call_back.message.message_id)
+        bot.send_message(text=answer, chat_id=call_back.message.chat.id,
+                         parse_mode="HTML", reply_markup=schedule_keyboard)
     else:
         bot.edit_message_text(text=answer,
                               chat_id=call_back.message.chat.id,
@@ -1994,7 +1982,8 @@ def select_master_id_handler(call_back):
                 if day["DayStudyEventsCount"]]
         for day in days:
             answer = func.create_master_schedule_answer(day)
-            func.send_long_message(bot, answer, call_back.message.chat.id)
+            func.send_long_message(bot, answer, call_back.message.chat.id,
+                                   markup=schedule_keyboard)
 
 
 @bot.callback_query_handler(func=lambda call_back:
@@ -2025,7 +2014,7 @@ def select_months_att_handler(call_back):
                               message_id=bot_msg.message_id,
                               parse_mode="HTML")
     except telebot.apihelper.ApiException:
-        func.send_long_message(bot, answer, call_back.message.chat.id, "\n\n\n")
+        func.send_long_message(bot, answer, call_back.message.chat.id, "\n\n")
 
 
 @bot.callback_query_handler(func=lambda call_back:
@@ -2072,6 +2061,9 @@ def set_rate_handler(call_back):
         pass
 
 
+############
+# ROUTES
+############
 @app.route("/reset_webhook", methods=["GET", "HEAD"])
 def reset_webhook():
     bot.remove_webhook()

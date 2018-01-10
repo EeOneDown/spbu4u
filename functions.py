@@ -237,6 +237,8 @@ def create_schedule_answer(day_info, full_place, user_id=None, personal=True,
     for event in day_study_events:
         if event["IsCancelled"] or \
                 (only_exams and "пересдача" in event["Subject"]) or \
+                (only_exams and "показ работ" in event["Subject"]) or \
+                (only_exams and "консультация" in event["Subject"]) or \
                 (only_exams and "комиссия" in event["Subject"]) or \
                 is_event_in_skips(event, skips,
                                   day_info["DayString"].split(", ")[0]):

@@ -237,7 +237,6 @@ def create_schedule_answer(day_info, full_place, user_id=None, personal=True,
     for event in day_study_events:
         if event["IsCancelled"] or \
                 (only_exams and "пересдача" in event["Subject"]) or \
-                (only_exams and "показ работ" in event["Subject"]) or \
                 (only_exams and "консультация" in event["Subject"]) or \
                 (only_exams and "комиссия" in event["Subject"]) or \
                 is_event_in_skips(event, skips,
@@ -817,14 +816,14 @@ def get_lessons_with_educators(user_id, day_date):
     return data
 
 
-def create_session_answer(json_attestation, month, user_id, is_full_place,
+def create_session_answer(json_attestation, month, user_id, full_place,
                           personal, only_exams):
     answer = ""
     for day_data in json_attestation["Days"]:
         event_date = datetime.strptime(day_data["Day"], "%Y-%m-%dT%H:%M:%S")
         if month == str(event_date.month):
             cur_answer = create_schedule_answer(
-                day_data, is_full_place, user_id=user_id, personal=personal,
+                day_data, full_place, user_id=user_id, personal=personal,
                 only_exams=only_exams)
             if "Выходной" not in cur_answer:
                 answer += cur_answer.replace("\n\n", "\n") + "\n"

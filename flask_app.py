@@ -3,7 +3,7 @@ import json
 import logging
 import sqlite3
 from datetime import datetime, timedelta, time as dt_time
-from time import time
+from time import time, localtime
 
 import flask
 import requests
@@ -31,7 +31,10 @@ telebot.logger.setLevel(logging.INFO)
 ############
 main_keyboard = telebot.types.ReplyKeyboardMarkup(resize_keyboard=True,
                                                   one_time_keyboard=False)
-main_keyboard.row("Расписание")
+if localtime().tm_mon in [12, 1, 5, 6]:
+    main_keyboard.row("Сессия", "Расписание")
+else:
+    main_keyboard.row("Расписание")
 main_keyboard.row(emoji["info"], emoji["star"], emoji["settings"],
                   emoji["suburban"], emoji["editor"])
 
@@ -54,7 +57,8 @@ suburban_keyboard.row("Назад", "Персонализация")
 
 schedule_editor_keyboard = telebot.types.ReplyKeyboardMarkup(
     resize_keyboard=True, one_time_keyboard=False)
-schedule_editor_keyboard.row("Скрыть занятие", "Преподаватель")
+schedule_editor_keyboard.row("Скрыть занятие")
+# schedule_editor_keyboard.row("Скрыть занятие", "Преподаватель")
 schedule_editor_keyboard.row("Назад", "Вернуть", "Адрес")
 
 server_timedelta = timedelta(hours=3)

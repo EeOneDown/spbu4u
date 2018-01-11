@@ -1170,9 +1170,9 @@ def change_home_station_handler(call_back):
     if call_back.data == current_another_station:
         func.change_station(call_back.message.chat.id, current_station,
                             is_home=not is_home)
+        inline_answer = "{0} Изменены обе станции!".format(emoji["warning"])
         bot.answer_callback_query(callback_query_id=call_back.id,
-                                  text="Изменены обе станции", show_alert=True,
-                                  cache_time=2)
+                                  text=inline_answer, show_alert=True)
     bot.edit_message_text(text=answer,
                           chat_id=call_back.message.chat.id,
                           message_id=call_back.message.message_id,

@@ -17,26 +17,26 @@ webhook_url_base = "https://{0}:{1}".format(webhook_host, webhook_port)
 webhook_url_path = "/{0}/".format(sha_string)
 
 
-emoji = {"info": u"\U00002139", "star": u"\U00002B50",
-         "settings": u"\U00002699", "suburban": u"\U0001F689",
-         "editor": u"\U0001F4DD", "alarm_clock": u"\U000023F0",
-         "calendar": u"\U0001F4C5", "sleep": u"\U0001F634",
-         "clock": u"\U0001F552", "cross_mark": u"\U0000274C",
-         "check_mark": u"\U00002705", "mailbox_off": u"\U0001F4EA",
-         "mailbox_on": u"\U0001F4EB", "door": u"\U0001F6AA",
-         "school": u"\U0001F3EB", "disappointed": u"\U0001F61E",
-         "cold_sweat": u"\U0001F613", "halo": u"\U0001F607",
-         "smile": u"\U0001F604", "bullet": u"\U00002022",
-         "horns": u"\U0001F608", "orange_diamond": u"\U0001F538",
-         "blue_diamond": u"\U0001F539", "runner": u"\U0001F3C3",
-         "arrow_up": u"\U00002B06", "warning": u"\U000026A0",
-         "arrows_counterclockwise": u"\U0001F504",
-         "bust_in_silhouette": u"\U0001F464", "back": u"\U0001F519",
-         "mag_right": u"\U0001F50E", "arrow_backward": u"\U000025C0",
-         "arrow_forward": u"\U000025B6", "star2": u"\U00002728",
-         "new": u"\U0001F195", "prev_block": u"\U00002B05",
-         "next_block": u"\U000027A1", "Отмена": "Отмена",
-         "heavy_check_mark": u"\U00002705"}
+emoji = {"info": "\U00002139", "star": "\U00002B50",
+         "settings": "\U00002699", "suburban": "\U0001F689",
+         "editor": "\U0001F4DD", "alarm_clock": "\U000023F0",
+         "calendar": "\U0001F4C5", "sleep": "\U0001F634",
+         "clock": "\U0001F552", "cross_mark": "\U0000274C",
+         "check_mark": "\U00002705", "mailbox_off": "\U0001F4EA",
+         "mailbox_on": "\U0001F4EB", "door": "\U0001F6AA",
+         "school": "\U0001F3EB", "disappointed": "\U0001F61E",
+         "cold_sweat": "\U0001F613", "halo": "\U0001F607",
+         "smile": "\U0001F604", "bullet": "\U00002022",
+         "horns": "\U0001F608", "orange_diamond": "\U0001F538",
+         "blue_diamond": "\U0001F539", "runner": "\U0001F3C3",
+         "arrow_up": "\U00002B06", "warning": "\U000026A0",
+         "arrows_counterclockwise": "\U0001F504",
+         "bust_in_silhouette": "\U0001F464", "back": "\U0001F519",
+         "mag_right": "\U0001F50E", "arrow_backward": "\U000025C0",
+         "arrow_forward": "\U000025B6", "star2": "\U00002728",
+         "new": "\U0001F195", "prev_block": "\U00002B05",
+         "next_block": "\U000027A1", "Отмена": "Отмена",
+         "heavy_check_mark": "\U00002705"}
 
 week_day_number = {"Пн": 1, "Вт": 2, "Ср": 3, "Чт": 4, "Пт": 5, "Сб": 6}
 week_day_titles = {"Понедельник": "Пн", "Вторник": "Вт", "Среда": "Ср",
@@ -72,11 +72,11 @@ all_stations_const = ["Санкт-Петербург", "Броневая", "Ле
                       "Старый Петергоф", "Университетская (Университет)",
                       "Ораниенбаум-1", "Лебяжье", "Калище"]
 
-months = {"января": 1, "фераля": 2, "марта": 3, "апреля": 4, "мая": 5,
+months = {"января": 1, "февраля": 2, "марта": 3, "апреля": 4, "мая": 5,
           "июня": 6, "июля": 7, "августа": 8, "сентября": 9, "октября": 10,
           "ноября": 11, "декабря": 12}
 
-months_date = {1: "Январь", 2: "Фераль", 3: "Март", 4: "Апрель", 5: "Май",
+months_date = {1: "Январь", 2: "Февраль", 3: "Март", 4: "Апрель", 5: "Май",
                6: "Июнь", 7: "Июль", 8: "Август", 9: "Сентябрь", 10: "Октябрь",
                11: "Ноябрь", 12: "Декабрь"}
 

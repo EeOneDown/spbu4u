@@ -36,7 +36,8 @@ emoji = {"info": "\U00002139", "star": "\U00002B50",
          "arrow_forward": "\U000025B6", "star2": "\U00002728",
          "new": "\U0001F195", "prev_block": "\U00002B05",
          "next_block": "\U000027A1", "Отмена": "Отмена",
-         "heavy_check_mark": "\U00002705"}
+         "heavy_check_mark": "\U00002705",
+         "train": "\U0001F683", "express": "\U0001F684"}
 
 week_day_number = {"Пн": 1, "Вт": 2, "Ср": 3, "Чт": 4, "Пт": 5, "Сб": 6}
 week_day_titles = {"Понедельник": "Пн", "Вторник": "Вт", "Среда": "Ср",

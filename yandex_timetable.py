@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 from datetime import datetime, timedelta, time
-from math import ceil
 
 import requests
+from math import ceil
 
 from bots_constants import yandex_key
 from constants import emoji
@@ -59,7 +59,11 @@ def get_yandex_timetable_data(from_station, to_station, date, limit=3):
         else:
             segment_answer = emoji["runner"] + segment_answer
         segment_answer += "{0} мин\n".format(total_minutes)
-        segment_answer += "Отправление в <b>{0}</b> ({1})\n\n".format(
+        if segment["thread"]["express_type"] is not None:
+            segment_answer += emoji["express"]
+        else:
+            segment_answer += emoji["train"]
+        segment_answer += " Отправление в <b>{0}</b> ({1})\n\n".format(
             departure_datetime.time().strftime("%H:%M"),
             arrival_datetime.time().strftime("%H:%M"))
 

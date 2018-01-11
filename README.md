@@ -15,7 +15,7 @@
 - [x] all week schedule
 - [x] next week schedule
 - [x] educators schedule
-- [ ] interim/final attestation schedule
+- [x] interim/final attestation schedule
 - [ ] physical training schedule
 - [x] groups templates
 - [x] sending
@@ -34,7 +34,7 @@
 - [x] end work (exit)
 - [x] change group
 * __Info__
-- [ ] full info
+- [ ] full info (removed)
 - [x] briefly info
 * __Rate__
 - [x] rate bot

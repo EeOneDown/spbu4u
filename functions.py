@@ -511,40 +511,36 @@ def get_statistics_for_admin():
     return data
 
 
-def get_fom_station_code(user_id):
+def get_station_code(user_id, is_home):
     sql_con = sqlite3.connect("Bot.db")
     cursor = sql_con.cursor()
-    cursor.execute("""SELECT home_station_code
-                      FROM user_data
-                      WHERE id = ?""", (user_id,))
-    from_station = cursor.fetchone()[0]
+    if is_home:
+        cursor.execute("""SELECT home_station_code
+                          FROM user_data
+                          WHERE id = ?""", (user_id,))
+    else:
+        cursor.execute("""SELECT univer_station_code
+                          FROM user_data
+                          WHERE id = ?""", (user_id,))
+    station_code = cursor.fetchone()[0]
     cursor.close()
     sql_con.close()
-    return from_station
+    return station_code
 
 
-def is_univer(user_id):
+def change_station(user_id, station_code, is_home):
     sql_con = sqlite3.connect("Bot.db")
     cursor = sql_con.cursor()
-    cursor.execute("""SELECT is_univer
-                      FROM user_data
-                      WHERE id = ?""", (user_id,))
-    univer = cursor.fetchone()[0]
-    cursor.close()
-    sql_con.close()
-    return univer
-
-
-def change_home_station(user_id, station_title):
-    from constants import all_stations
-
-    home_station_code = all_stations[station_title]
-    sql_con = sqlite3.connect("Bot.db")
-    cursor = sql_con.cursor()
-    cursor.execute("""UPDATE user_data
-                      SET home_station_code = ?
-                      WHERE id = ?""",
-                   (home_station_code, user_id))
+    if is_home:
+        cursor.execute("""UPDATE user_data
+                          SET home_station_code = ?
+                          WHERE id = ?""",
+                       (station_code, user_id))
+    else:
+        cursor.execute("""UPDATE user_data
+                          SET univer_station_code = ?
+                          WHERE id = ?""",
+                       (station_code, user_id))
     sql_con.commit()
     cursor.close()
     sql_con.close()
@@ -828,3 +824,7 @@ def create_session_answer(json_attestation, month, user_id, full_place,
             if "Выходной" not in cur_answer:
                 answer += cur_answer.replace("\n\n", "\n") + "\n"
     return answer
+
+
+def get_key_by_value(dct, val):
+    return [it[0] for it in dct.items() if it[1] == val][0]

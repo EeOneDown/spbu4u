@@ -54,7 +54,9 @@ def select_division(message):
     aliases = [division["Alias"] for division in divisions]
     if message.text in division_names:
         answer += "Выбери ступень:"
-        study_programs_keyboard = telebot.types.ReplyKeyboardMarkup(True, False)
+        study_programs_keyboard = telebot.types.ReplyKeyboardMarkup(
+            resize_keyboard=True, one_time_keyboard=True
+        )
         index = division_names.index(message.text)
         alias = aliases[index]
         url = "https://timetable.spbu.ru/api/v1/study/divisions/{0}/" \
@@ -107,7 +109,8 @@ def select_study_level(message):
     if message.text in study_level_names:
         answer += "Укажи программу:"
         study_program_combinations_keyboard = telebot.types.ReplyKeyboardMarkup(
-            True, False)
+            resize_keyboard=True, one_time_keyboard=True
+        )
         index = study_level_names.index(message.text)
         study_program_combinations = study_programs[index][
             "StudyProgramCombinations"]
@@ -165,8 +168,9 @@ def select_study_program_combination(message):
             study_program_combination["Name"])
     if message.text in study_program_combination_names:
         answer += "Укажи год поступления:"
-        admission_years_keyboard = telebot.types.ReplyKeyboardMarkup(True,
-                                                                     False)
+        admission_years_keyboard = telebot.types.ReplyKeyboardMarkup(
+            resize_keyboard=True, one_time_keyboard=True
+        )
         index = study_program_combination_names.index(message.text)
         admission_years = study_program_combinations[index]["AdmissionYears"]
         for admission_year in admission_years:
@@ -249,7 +253,9 @@ def select_admission_year(message):
         student_group_names = []
         for student_group in student_groups["Groups"]:
             student_group_names.append(student_group["StudentGroupName"])
-        student_groups_keyboard = telebot.types.ReplyKeyboardMarkup(True, False)
+        student_groups_keyboard = telebot.types.ReplyKeyboardMarkup(
+            resize_keyboard=True, one_time_keyboard=True
+        )
         for student_group_name in student_group_names:
             student_groups_keyboard.row(student_group_name)
         student_groups_keyboard.row("Другой год")
@@ -329,7 +335,9 @@ def select_student_group(message):
 
         text = ">> " + "\n>> ".join(data)
         answer += "Подтверди выбор:\n" + "<b>" + text + "</b>"
-        choice_keyboard = telebot.types.ReplyKeyboardMarkup(True, False)
+        choice_keyboard = telebot.types.ReplyKeyboardMarkup(
+            resize_keyboard=True, one_time_keyboard=True
+        )
         buttons = ["Все верно", "Другая группа", "Другой год",
                    "Другая программа", "Другая ступень", "Другое направление"]
         for button in buttons:

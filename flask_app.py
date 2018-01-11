@@ -15,8 +15,7 @@ import registration_functions as reg_func
 from bots_constants import release_token, bot_name
 from constants import emoji, briefly_info_answer, my_id, \
     full_info_answer, webhook_url_base, webhook_url_path, week_day_number, \
-    all_stations, all_stations_const, week_day_titles, subject_short_type, \
-    subject_short_type_revert
+    all_stations, week_day_titles, subject_short_type
 from sql_updater import schedule_update
 from yandex_timetable import get_yandex_timetable_data
 
@@ -27,14 +26,43 @@ sslify = SSLify(app)
 logger = telebot.logger
 telebot.logger.setLevel(logging.INFO)
 
-main_keyboard = telebot.types.ReplyKeyboardMarkup(True)
+############
+# KEYBOARDS
+############
+main_keyboard = telebot.types.ReplyKeyboardMarkup(resize_keyboard=True,
+                                                  one_time_keyboard=False)
 main_keyboard.row("Расписание")
 main_keyboard.row(emoji["info"], emoji["star"], emoji["settings"],
                   emoji["suburban"], emoji["editor"])
 
+schedule_keyboard = telebot.types.ReplyKeyboardMarkup(resize_keyboard=True,
+                                                      one_time_keyboard=False)
+schedule_keyboard.row("Сегодня", "Завтра", "Неделя")
+schedule_keyboard.row(emoji["back"], emoji["bust_in_silhouette"],
+                      emoji["arrows_counterclockwise"],
+                      emoji["alarm_clock"])
+
+settings_keyboard = telebot.types.ReplyKeyboardMarkup(resize_keyboard=True,
+                                                      one_time_keyboard=False)
+settings_keyboard.row("Сменить группу", "Завершить")
+settings_keyboard.row("Назад", "Проблема")
+
+suburban_keyboard = telebot.types.ReplyKeyboardMarkup(resize_keyboard=True,
+                                                      one_time_keyboard=False)
+suburban_keyboard.row("Домой", "В Универ", "Маршрут")
+suburban_keyboard.row("Назад", "Персонализация")
+
+schedule_editor_keyboard = telebot.types.ReplyKeyboardMarkup(
+    resize_keyboard=True, one_time_keyboard=False)
+schedule_editor_keyboard.row("Скрыть занятие", "Преподаватель")
+schedule_editor_keyboard.row("Назад", "Вернуть", "Адрес")
+
 server_timedelta = timedelta(hours=3)
 
 
+############
+# HANDLERS
+############
 @bot.message_handler(commands=["start"])
 @bot.message_handler(func=lambda mess:
                      mess.text.capitalize() == "Сменить группу",
@@ -246,9 +274,6 @@ def home_handler(message):
 def settings_handler(message):
     bot.send_chat_action(message.chat.id, "typing")
     func.delete_user(message.chat.id, only_choice=True)
-    settings_keyboard = telebot.types.ReplyKeyboardMarkup(True)
-    settings_keyboard.row("Сменить группу", "Завершить")
-    settings_keyboard.row("Назад", "Проблема")
     answer = "Настройки"
     bot.send_message(message.chat.id, answer, reply_markup=settings_keyboard)
 
@@ -258,11 +283,6 @@ def settings_handler(message):
 def schedule_handler(message):
     bot.send_chat_action(message.chat.id, "typing")
     answer = "Меню расписания"
-    schedule_keyboard = telebot.types.ReplyKeyboardMarkup(True)
-    schedule_keyboard.row("Сегодня", "Завтра", "Неделя")
-    schedule_keyboard.row(emoji["back"], emoji["bust_in_silhouette"],
-                          emoji["arrows_counterclockwise"],
-                          emoji["alarm_clock"])
     bot.send_message(message.chat.id, answer, reply_markup=schedule_keyboard)
 
 
@@ -370,9 +390,7 @@ def rate_handler(message):
                      content_types=["text"])
 def suburban_handler(message):
     bot.send_chat_action(message.chat.id, "typing")
-    suburban_keyboard = telebot.types.ReplyKeyboardMarkup(True, False)
-    suburban_keyboard.row("Домой", "В Универ", "Маршрут")
-    suburban_keyboard.row("Назад", "Персонализация")
+
     answer = "Меню расписания электричек\n\n" \
              "Данные предоставлены сервисом " \
              "<a href = 'http://rasp.yandex.ru/'>Яндекс.Расписания</a>"
@@ -385,14 +403,17 @@ def suburban_handler(message):
 
 @bot.message_handler(func=lambda mess: mess.text.title() == "В Универ",
                      content_types=["text"])
+@bot.message_handler(func=lambda mess: mess.text.title() == "Домой",
+                     content_types=["text"])
 def to_university_handler(message):
     bot.send_chat_action(message.chat.id, "typing")
 
-    from_station = func.get_fom_station_code(message.chat.id)
-    if func.is_univer(message.chat.id):
-        to_station = all_stations["Университетская (Университет)"]
+    if message.text.title() == "В Универ":
+        from_station = func.get_station_code(message.chat.id, is_home=True)
+        to_station = func.get_station_code(message.chat.id, is_home=False)
     else:
-        to_station = all_stations["Старый Петергоф"]
+        from_station = func.get_station_code(message.chat.id, is_home=False)
+        to_station = func.get_station_code(message.chat.id, is_home=True)
 
     server_datetime = datetime.today() + server_timedelta
     data = get_yandex_timetable_data(from_station, to_station, server_datetime)
@@ -418,46 +439,13 @@ def to_university_handler(message):
                      disable_web_page_preview=True)
 
 
-@bot.message_handler(func=lambda mess: mess.text.title() == "Домой",
-                     content_types=["text"])
-def from_university_handler(message):
-    bot.send_chat_action(message.chat.id, "typing")
-
-    to_station = func.get_fom_station_code(message.chat.id)
-    if func.is_univer(message.chat.id):
-        from_station = all_stations["Университетская (Университет)"]
-    else:
-        from_station = all_stations["Старый Петергоф"]
-
-    server_datetime = datetime.today() + server_timedelta
-    data = get_yandex_timetable_data(from_station, to_station, server_datetime)
-    answer = data["answer"]
-
-    update_keyboard = telebot.types.InlineKeyboardMarkup(True)
-    if data["is_OK"]:
-        if data["is_tomorrow"]:
-            bot.send_message(message.chat.id, emoji["warning"] +
-                             " На сегодня нет электричек")
-            update_keyboard.row(*[telebot.types.InlineKeyboardButton(
-                text=name, callback_data=name) for name in ["Все на завтра"]])
-        else:
-            update_keyboard.row(*[telebot.types.InlineKeyboardButton(
-                text=name, callback_data=name)
-                for name in ["Оставшиеся", "Обновить"]])
-
-    bot.send_message(message.chat.id,
-                     answer,
-                     reply_markup=update_keyboard,
-                     parse_mode='HTML',
-                     disable_web_page_preview=True)
-
-
 @bot.message_handler(func=lambda mess: mess.text.title() == "Маршрут",
                      content_types=["text"])
 def own_trail_handler(message):
     answer = "Выбери начальную станцию:"
     start_station_keyboard = telebot.types.InlineKeyboardMarkup(True)
-    for station_title in all_stations_const:
+    # all_stations.keys() = all_stations_const
+    for station_title in all_stations.keys():
         start_station_keyboard.row(*[telebot.types.InlineKeyboardButton(
             text=name, callback_data=name) for name in [station_title]])
     bot.send_message(message.chat.id, answer,
@@ -486,9 +474,6 @@ def personalisation_handler(message):
 def schedule_editor_handler(message):
     bot.send_chat_action(message.chat.id, "typing")
     answer = "Редактор расписания"
-    schedule_editor_keyboard = telebot.types.ReplyKeyboardMarkup(True, False)
-    schedule_editor_keyboard.row("Скрыть занятие", "Преподаватель")
-    schedule_editor_keyboard.row("Назад", "Вернуть", "Адрес")
     bot.send_message(message.chat.id,
                      answer,
                      reply_markup=schedule_editor_keyboard,
@@ -648,11 +633,6 @@ def write_educator_name_handler(message):
     name = message.text.strip(". ")
     if not func.is_correct_educator_name(name):
         answer = "Недопустимые символы"
-        schedule_keyboard = telebot.types.ReplyKeyboardMarkup(True)
-        schedule_keyboard.row("Сегодня", "Завтра", "Неделя")
-        schedule_keyboard.row(emoji["back"], emoji["bust_in_silhouette"],
-                              emoji["arrows_counterclockwise"],
-                              emoji["alarm_clock"])
         bot.send_message(message.chat.id, answer,
                          reply_markup=schedule_keyboard)
         return
@@ -664,11 +644,6 @@ def write_educator_name_handler(message):
     if request_code != 200 or educators_data["Educators"] is None or len(
             educators_data["Educators"]) == 0:
         answer = "Никого не найдено"
-        schedule_keyboard = telebot.types.ReplyKeyboardMarkup(True)
-        schedule_keyboard.row("Сегодня", "Завтра", "Неделя")
-        schedule_keyboard.row(emoji["back"], emoji["bust_in_silhouette"],
-                              emoji["arrows_counterclockwise"],
-                              emoji["alarm_clock"])
         bot.send_message(message.chat.id, answer,
                          reply_markup=schedule_keyboard)
     elif len(educators_data["Educators"]) > 200:
@@ -680,11 +655,6 @@ def write_educator_name_handler(message):
         bot.send_message(message.chat.id, answer, reply_markup=markup,
                          parse_mode="HTML")
     else:
-        schedule_keyboard = telebot.types.ReplyKeyboardMarkup(True)
-        schedule_keyboard.row("Сегодня", "Завтра", "Неделя")
-        schedule_keyboard.row(emoji["back"], emoji["bust_in_silhouette"],
-                              emoji["arrows_counterclockwise"],
-                              emoji["alarm_clock"])
         bot.send_message(message.chat.id, "Готово!",
                          reply_markup=schedule_keyboard)
 
@@ -730,11 +700,9 @@ def other_text_handler(message):
     func.send_long_message(bot, answer, message.chat.id)
 
 
-"""
-        Callback query handlers
-"""
-
-
+############
+# CALLBACK
+############
 @bot.callback_query_handler(func=lambda call_back:
                             call_back.data == "Полное ИНФО")
 def show_full_info(call_back):
@@ -904,7 +872,8 @@ def update_yandex_handler(call_back):
     if data["is_OK"]:
         if data["is_tomorrow"]:
             inline_answer = emoji["warning"] + " На сегодня нет электричек"
-            bot.answer_callback_query(call_back.id, inline_answer, cache_time=2)
+            bot.answer_callback_query(call_back.id, inline_answer,
+                                      show_alert=True)
             update_keyboard.row(*[telebot.types.InlineKeyboardButton(
                 text=name, callback_data=name) for name in ["Все на завтра"]])
         else:
@@ -942,7 +911,8 @@ def more_suburbans_handler(call_back):
     if data["is_OK"]:
         if data["is_tomorrow"]:
             inline_answer = emoji["warning"] + " На сегодня нет электричек"
-            bot.answer_callback_query(call_back.id, inline_answer, cache_time=2)
+            bot.answer_callback_query(call_back.id, inline_answer,
+                                      show_alert=True)
             update_keyboard.row(*[telebot.types.InlineKeyboardButton(
                 text=name, callback_data=name) for name in ["Все на завтра"]])
         else:
@@ -976,7 +946,8 @@ def less_suburbans_handler(call_back):
     if data["is_OK"]:
         if data["is_tomorrow"]:
             inline_answer = emoji["warning"] + " На сегодня нет электричек"
-            bot.answer_callback_query(call_back.id, inline_answer, cache_time=2)
+            bot.answer_callback_query(call_back.id, inline_answer,
+                                      show_alert=True)
             update_keyboard.row(*[telebot.types.InlineKeyboardButton(
                 text=name, callback_data=name) for name in ["Все на завтра"]])
         else:
@@ -1063,7 +1034,8 @@ def start_station_handler(call_back):
     answer = "Начальная: <b>{0}</b>\nВыбери конечную станцию:".format(
         call_back.data)
     end_station_keyboard = telebot.types.InlineKeyboardMarkup(True)
-    for station_title in all_stations_const:
+    # all_stations.keys() = all_stations_const
+    for station_title in all_stations.keys():
         if station_title == call_back.data:
             continue
         end_station_keyboard.row(*[telebot.types.InlineKeyboardButton(
@@ -1082,7 +1054,8 @@ def start_station_handler(call_back):
 def change_start_station_handler(call_back):
     answer = "Выбери начальную станцию:"
     start_station_keyboard = telebot.types.InlineKeyboardMarkup(True)
-    for station_title in all_stations_const:
+    # all_stations.keys() = all_stations_const
+    for station_title in all_stations.keys():
         start_station_keyboard.row(*[telebot.types.InlineKeyboardButton(
             text=name, callback_data=name) for name in [station_title]])
     bot.edit_message_text(text=answer,
@@ -1134,7 +1107,7 @@ def build_trail_handler(call_back):
             if data["is_tomorrow"]:
                 inline_answer = emoji["warning"] + " На сегодня нет электричек"
                 bot.answer_callback_query(call_back.id, inline_answer,
-                                          cache_time=2)
+                                          show_alert=True)
             update_keyboard.row(*[telebot.types.InlineKeyboardButton(
                 text=name, callback_data=name) for name in ["Все на завтра"]])
         else:
@@ -1151,15 +1124,18 @@ def build_trail_handler(call_back):
 
 @bot.callback_query_handler(func=lambda call_back:
                             call_back.data == "Домашняя")
+@bot.callback_query_handler(func=lambda call_back:
+                            call_back.data == "Университетская")
 def home_station_handler(call_back):
-    answer = "Выбери домашнюю станцию:"
+    if call_back.data == "Домашняя":
+        type_station = "домашнюю"
+    else:
+        type_station = "университетскую"
+    answer = "Выбери {} станцию:".format(type_station)
     stations_keyboard = telebot.types.InlineKeyboardMarkup(True)
-    for station_title in all_stations_const:
-        if station_title in ("Старый Петергоф",
-                             "Университетская (Университет)"):
-            continue
+    for item in all_stations.items():
         stations_keyboard.row(*[telebot.types.InlineKeyboardButton(
-            text=name, callback_data=name) for name in [station_title]])
+            text=item[0], callback_data=all_stations[item[0]])])
     bot.edit_message_text(text=answer,
                           chat_id=call_back.message.chat.id,
                           message_id=call_back.message.message_id,
@@ -1169,47 +1145,31 @@ def home_station_handler(call_back):
 @bot.callback_query_handler(func=lambda call_back:
                             call_back.message.text == "Выбери домашнюю "
                                                       "станцию:")
+@bot.callback_query_handler(func=lambda call_back:
+                            call_back.message.text == "Выбери университетскую "
+                                                      "станцию:")
 def change_home_station_handler(call_back):
-    answer = "Домашняя станция изменена на <b>{0}</b>".format(call_back.data)
-    func.change_home_station(call_back.message.chat.id, call_back.data)
-    bot.edit_message_text(text=answer,
-                          chat_id=call_back.message.chat.id,
-                          message_id=call_back.message.message_id,
-                          parse_mode="HTML")
-
-
-@bot.callback_query_handler(func=lambda call_back:
-                            call_back.data == "Университетская")
-def univer_station_handler(call_back):
-    stations = ("Старый Петергоф", "Университетская (Университет)")
-    answer = "Изменить станцию <i>{0}</i> на <b>{1}</b>?"
-    if func.is_univer(call_back.message.chat.id):
-        answer = answer.format(stations[1], stations[0])
+    if "домашнюю" in call_back.message.text:
+        type_station = "Домашняя"
+        is_home = True
     else:
-        answer = answer.format(stations[0], stations[1])
-    inline_keyboard = telebot.types.InlineKeyboardMarkup(True)
-    inline_keyboard.row(*[telebot.types.InlineKeyboardButton(
-            text=name, callback_data=name) for name in ["Отмена", "Изменить"]])
+        type_station = "Университетская"
+        is_home = False
+    current_station = func.get_station_code(call_back.message.chat.id, is_home)
+    current_another_station = func.get_station_code(call_back.message.chat.id,
+                                                    not is_home)
+    station_title = func.get_key_by_value(all_stations, call_back.data)
+    answer = "{0} станция изменена на <b>{1}</b>".format(
+        type_station, station_title)
+    func.change_station(call_back.message.chat.id,
+                        call_back.data, is_home=is_home)
+    if call_back.data == current_another_station:
+        func.change_station(call_back.message.chat.id, current_station,
+                            is_home=not is_home)
+        bot.answer_callback_query(callback_query_id=call_back.id,
+                                  text="Изменены обе станции", show_alert=True,
+                                  cache_time=2)
     bot.edit_message_text(text=answer,
-                          chat_id=call_back.message.chat.id,
-                          message_id=call_back.message.message_id,
-                          reply_markup=inline_keyboard,
-                          parse_mode="HTML")
-
-
-@bot.callback_query_handler(func=lambda call_back:
-                            call_back.data == "Изменить" and
-                            "Изменить станцию" in call_back.message.text)
-def change_univer_station_handler(call_back):
-    answer = "Используется <b>{0}</b>"
-    if func.is_univer(call_back.message.chat.id):
-        is_univer = 0
-        station = "Старый Петергоф"
-    else:
-        is_univer = 1
-        station = "Университетская (Университет)"
-    func.change_univer_station(call_back.message.chat.id, is_univer)
-    bot.edit_message_text(text=answer.format(station),
                           chat_id=call_back.message.chat.id,
                           message_id=call_back.message.message_id,
                           parse_mode="HTML")
@@ -1621,8 +1581,9 @@ def confirm_hide_lesson_handler(call_back):
         chosen_types = hide_event_types.split("; ")
         hide_event_types = ""
         for short_type in chosen_types:
-            if short_type in subject_short_type_revert.keys():
-                hide_event_types += subject_short_type_revert[short_type]
+            if short_type in subject_short_type.values():
+                hide_event_types += func.get_key_by_value(subject_short_type,
+                                                          short_type)
             else:
                 hide_event_types += short_type.lower()
             hide_event_types += "; "
@@ -2072,6 +2033,9 @@ def set_rate_handler(call_back):
         pass
 
 
+############
+# ROUTES
+############
 @app.route("/reset_webhook", methods=["GET", "HEAD"])
 def reset_webhook():
     bot.remove_webhook()

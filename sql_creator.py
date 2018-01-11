@@ -42,7 +42,8 @@ def create_sql(db_name):
                             sending INT DEFAULT 0 NOT NULL,
                             rate INT DEFAULT 0 NOT NULL, 
                             home_station_code TEXT DEFAULT 'c2' NOT NULL, 
-                            is_univer INT DEFAULT 1 NOT NULL,
+                            univer_station_code TEXT 
+                                              DEFAULT 's9603770' NOT NULL,
                             CONSTRAINT user_data_groups_data_id_fk 
                               FOREIGN KEY (group_id) REFERENCES groups_data (id)
                         )""")
@@ -135,6 +136,13 @@ def copy_from_db(from_db_name, to_db_name):
                           FROM user_data""")
         users_data = cursor.fetchall()
 
+        for i, user in enumerate(users_data):
+            users_data[i] = list(user)
+            if user[6]:
+                users_data[i][6] = "s9603770"
+            else:
+                users_data[i][6] = "s9603547"
+
         # lessons
         cursor.execute("""SELECT * FROM lessons""")
         lessons = cursor.fetchall()
@@ -177,7 +185,7 @@ def copy_from_db(from_db_name, to_db_name):
     try:
         cursor.executemany("""INSERT INTO user_data
                               (id, group_id, full_place, sending, rate, 
-                              home_station_code, is_univer)
+                              home_station_code, univer_station_code)
                               VALUES (?, ?, ?, ?, ?, ?, ?)""", users_data)
         sql_con.commit()
     except sqlite3.IntegrityError:

@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from __future__ import unicode_literals
+
 import json
 import logging
 import sqlite3
@@ -556,7 +558,8 @@ def chose_to_return(message):
     inline_keyboard = telebot.types.InlineKeyboardMarkup(True)
     inline_keyboard.row(
         *[telebot.types.InlineKeyboardButton(text=name, callback_data=name)
-          for name in ["Занятие", "Преподаватель"]])
+          # for name in ["Занятие", "Преподаватель"]])
+          for name in ["Занятие"]])
     bot.send_message(message.chat.id, answer, reply_markup=inline_keyboard)
 
 
@@ -1832,7 +1835,7 @@ def statistics_handler(call_back):
     if data is None:
         answer = "Пока что нет оценок."
     else:
-        rate = emoji["star"] * round(data[0])
+        rate = emoji["star"] * int(round(data[0]))
         answer = "Средняя оценка: {0}\n{1} ({2})".format(
                                             round(data[0], 1), rate, data[1])
     if call_back.message.chat.id == my_id:

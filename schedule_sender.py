@@ -1,5 +1,7 @@
 #!/home/EeOneDown/myvenv/bin/python3.6
 # -*- coding: utf-8 -*-
+from __future__ import unicode_literals
+
 import json
 import sqlite3
 from datetime import datetime, timedelta

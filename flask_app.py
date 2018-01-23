@@ -104,7 +104,8 @@ def start_handler(message):
         group_title = req.json()["StudentGroupDisplayName"][7:]
         func.add_new_user(message.chat.id, group_id, group_title)
         answer = "Готово!\nГруппа <b>{0}</b>".format(group_title)
-        bot.edit_message_text(answer, message.chat.id, bot_msg.message_id)
+        bot.edit_message_text(answer, message.chat.id, bot_msg.message_id,
+                              parse_mode="HTML")
         answer = "Главное меню\n\n" \
                  "{0} - информация о боте\n" \
                  "{1} - оценить бота\n" \

@@ -101,10 +101,10 @@ def start_handler(message):
             start_handler(message)
             return
 
-        week_data = req.json()
-        func.add_new_user(message.chat.id, group_id, week_data)
+        group_title = req.json()["StudentGroupDisplayName"][7:]
+        func.add_new_user(message.chat.id, group_id, group_title)
         answer = "Готово!\n{0}".format(
-            week_data["StudentGroupDisplayName"])
+            group_title[7:])
         bot.edit_message_text(answer, message.chat.id, bot_msg.message_id)
         answer = "Главное меню\n\n" \
                  "{0} - информация о боте\n" \
@@ -1918,11 +1918,10 @@ def change_template_group_handler(call_back):
     chosen_group_id = int(call_back.data)
     sql_con = sqlite3.connect("Bot.db")
     cursor = sql_con.cursor()
-    cursor.execute("""SELECT json_week_data
+    cursor.execute("""SELECT title
                       FROM groups_data
                       WHERE id = ?""", (chosen_group_id, ))
-    data = cursor.fetchone()[0]
-    chosen_group_title = json.loads(data)["StudentGroupDisplayName"][7:]
+    group_title = cursor.fetchone()[0]
     cursor.execute("""UPDATE user_data 
                       SET group_id = ?
                       WHERE id = ?""",
@@ -1930,7 +1929,7 @@ def change_template_group_handler(call_back):
     sql_con.commit()
     cursor.close()
     sql_con.close()
-    bot.edit_message_text(text=answer.format(chosen_group_title),
+    bot.edit_message_text(text=answer.format(group_title),
                           chat_id=call_back.message.chat.id,
                           message_id=call_back.message.message_id,
                           parse_mode="HTML")

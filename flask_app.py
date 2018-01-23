@@ -354,8 +354,6 @@ def sending_handler(message):
 @bot.message_handler(func=lambda mess: mess.text.capitalize() == "Сессия",
                      content_types=["text"])
 def attestation_handler(message):
-    if message.chat.id != my_id:
-        return
     bot.send_chat_action(message.chat.id, "typing")
     month = func.get_available_months(message.chat.id)
     if len(month) == 0:
@@ -514,7 +512,7 @@ def choose_educator_handler(message):
     bot.send_chat_action(message.chat.id, "typing")
     answer = "Выбери день, в котором есть занятие с большим колличеством " \
              "преподавателей:"
-    json_week_data = func.get_json_week_data(my_id)
+    json_week_data = func.get_json_week_data(message.chat.id)
     days = json_week_data["Days"]
     days_keyboard = telebot.types.InlineKeyboardMarkup(True)
     for day in days:
@@ -537,7 +535,7 @@ def choose_educator_handler(message):
 def hide_lesson_handler(message):
     bot.send_chat_action(message.chat.id, "typing")
     answer = "Выбери день, когда есть это занятие:"
-    json_week_data = func.get_json_week_data(my_id)
+    json_week_data = func.get_json_week_data(message.chat.id)
     days = json_week_data["Days"]
     days_keyboard = telebot.types.InlineKeyboardMarkup(True)
     for day in days:
@@ -568,7 +566,7 @@ def chose_to_return(message):
                      content_types=["text"])
 def users_callback_handler(message):
     bot.send_chat_action(message.chat.id, "typing")
-    bot.forward_message(my_id, message.chat.id, message.message_id)
+    bot.forward_message(ids["my"], message.chat.id, message.message_id)
     bot.send_message(message.chat.id, "Записал", reply_markup=main_keyboard,
                      reply_to_message_id=message.message_id)
 
@@ -1658,14 +1656,14 @@ def return_lesson(call_back):
             bot.send_message(call_back.message.chat.id, answer,
                              parse_mode="HTML")
         answer = answers[-1]
-        ids = [lesson[0] for lesson in data]
+        lesson_ids = [lesson[0] for lesson in data]
 
-        if len(ids) < 31:
+        if len(lesson_ids) < 31:
             ids_keyboard = telebot.types.InlineKeyboardMarkup(row_width=5)
             ids_keyboard.add(
                 *[telebot.types.InlineKeyboardButton(text=name,
                                                      callback_data=name)
-                  for name in ids]
+                  for name in lesson_ids]
             )
             bot.send_message(call_back.message.chat.id, answer,
                              reply_markup=ids_keyboard, parse_mode="HTML")
@@ -1673,16 +1671,16 @@ def return_lesson(call_back):
 
             inline_answer = "Их слишком много..."
             bot.answer_callback_query(call_back.id, inline_answer, cache_time=1)
-            for i in range(math.ceil(len(ids) / 30)):
+            for i in range(math.ceil(len(lesson_ids) / 30)):
                 ids_keyboard = telebot.types.InlineKeyboardMarkup(row_width=5)
                 ids_keyboard.add(
                     *[telebot.types.InlineKeyboardButton(text=name,
                                                          callback_data=name)
-                      for name in ids[:30]]
+                      for name in lesson_ids[:30]]
                 )
                 bot.send_message(call_back.message.chat.id, answer,
                                  reply_markup=ids_keyboard, parse_mode="HTML")
-                ids = ids[30:]
+                lesson_ids = lesson_ids[30:]
             ids_keyboard = telebot.types.InlineKeyboardMarkup(row_width=5)
             ids_keyboard.row(*[telebot.types.InlineKeyboardButton(
                                                          text=name,
@@ -1832,7 +1830,7 @@ def statistics_handler(call_back):
         rate = emoji["star"] * int(round(data[0]))
         answer = "Средняя оценка: {0}\n{1} ({2})".format(
                                             round(data[0], 1), rate, data[1])
-    if call_back.message.chat.id == my_id:
+    if call_back.message.chat.id in ids.values():
         admin_data = func.get_statistics_for_admin()
         admin_answer = "\n\nКолличество пользователей: {0}\n" \
                        "Колличество групп: {1}\nКолличество пользователей с " \
@@ -1840,7 +1838,7 @@ def statistics_handler(call_back):
                                     admin_data["count_of_users"],
                                     admin_data["count_of_groups"],
                                     admin_data["count_of_sending"])
-        bot.send_message(my_id, admin_answer)
+        bot.send_message(call_back.message.chat.id, admin_answer)
     try:
         bot.edit_message_text(text=answer,
                               chat_id=call_back.message.chat.id,
@@ -2093,7 +2091,7 @@ def webhook():
                             json_err["description"]))
             else:
                 pass
-            bot.send_message(my_id,
+            bot.send_message(ids["my"],
                              str(err) + "\n\nWas sent: {0}".format(was_sent),
                              disable_notification=True)
         finally:

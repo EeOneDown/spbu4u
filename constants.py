@@ -11,8 +11,10 @@ sha_string = hmac.new(bytearray(secret_key, "utf-8"),
                       bytearray(test_token, "utf-8"),
                       sha256).hexdigest()
 
-my_id = 200466757
-ks_id = 71591548
+ids = {
+    "my": 200466757,
+    "ks": 71591548
+}
 
 webhook_host = "{0}.pythonanywhere.com".format(user_name)
 webhook_port = 443

@@ -1096,7 +1096,7 @@ def end_station_handler(call_back):
                                                    in call_back.message.text)
 def build_trail_handler(call_back):
     bot_msg = bot.edit_message_text(
-        text="\U00002026".format(choice(loading_text["ya_timetable"])),
+        text="{0}\U00002026".format(choice(loading_text["ya_timetable"])),
         chat_id=call_back.message.chat.id,
         message_id=call_back.message.message_id
     )

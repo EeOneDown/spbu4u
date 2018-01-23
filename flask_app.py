@@ -5,6 +5,7 @@ import json
 import logging
 import sqlite3
 from datetime import datetime, timedelta, time as dt_time
+from random import choice
 from time import time, localtime
 
 import flask
@@ -17,7 +18,7 @@ import registration_functions as reg_func
 from bots_constants import release_token, bot_name
 from constants import emoji, briefly_info_answer, my_id, \
     full_info_answer, webhook_url_base, webhook_url_path, week_day_number, \
-    all_stations, week_day_titles, subject_short_type
+    all_stations, week_day_titles, subject_short_type, loading_text
 from sql_updater import schedule_update
 from yandex_timetable import get_yandex_timetable_data
 
@@ -772,13 +773,14 @@ def select_week_day_schedule_handler(call_back):
                             "Расписание на: Неделя" in call_back.message.text)
 def all_week_schedule_handler(call_back):
     user_id = call_back.message.chat.id
-    bot_msg = call_back.message
+    bot_msg = bot.edit_message_text(
+        text="{0}\U00002026".format(choice(loading_text)),
+        chat_id=call_back.message.chat.id,
+        message_id=call_back.message.message_id
+    )
     if call_back.data == "Текущее":
         json_week = func.get_json_week_data(user_id)
     else:
-        bot_msg = bot.edit_message_text(text="Загрузка\U00002026",
-                                        chat_id=user_id,
-                                        message_id=call_back.message.message_id)
         json_week = func.get_json_week_data(user_id, next_week=True)
     inline_answer = json_week["WeekDisplayText"]
     bot.answer_callback_query(call_back.id, inline_answer, cache_time=1)
@@ -812,9 +814,11 @@ def all_week_schedule_handler(call_back):
                             call_back.data == "Текущее" or
                             call_back.data == "Следующее")
 def week_day_schedule_handler(call_back):
-    bot_msg = bot.edit_message_text(text="Загрузка\U00002026",
-                                    chat_id=call_back.message.chat.id,
-                                    message_id=call_back.message.message_id)
+    bot_msg = bot.edit_message_text(
+        text="{0}\U00002026".format(choice(loading_text)),
+        chat_id=call_back.message.chat.id,
+        message_id=call_back.message.message_id
+    )
     is_next_week = False
     iso_day_date = list((datetime.today() + server_timedelta).isocalendar())
     if iso_day_date[2] == 7:
@@ -1967,9 +1971,11 @@ def select_master_id_handler(call_back):
 @bot.callback_query_handler(func=lambda call_back:
                             "Выбери месяц:" in call_back.message.text)
 def select_months_att_handler(call_back):
-    bot_msg = bot.edit_message_text(text="Загрузка..",
-                                    chat_id=call_back.message.chat.id,
-                                    message_id=call_back.message.message_id)
+    bot_msg = bot.edit_message_text(
+        text="{0}\U00002026".format(choice(loading_text)),
+        chat_id=call_back.message.chat.id,
+        message_id=call_back.message.message_id
+    )
     json_attestation = func.get_json_attestation(call_back.message.chat.id)
     answer = ""
     is_full_place = func.is_full_place(call_back.message.chat.id)

@@ -9,6 +9,8 @@ from datetime import datetime, date, timedelta
 import requests
 from telebot.apihelper import ApiException
 
+from constants import urls
+
 
 def insert_skip(event_name, types, event_day, event_time,
                 educators, user_id, is_choose_educator=False):
@@ -51,30 +53,25 @@ def get_hide_lessons_data(user_id, db_path="Bot.db", week_day=None,
                           is_educator=False):
     sql_con = sqlite3.connect(db_path)
     cursor = sql_con.cursor()
-    sql_req = """
-SELECT
-  s.lesson_id,
-  l.name,
-  l.types,
-  l.day,
-  l.time,
-  l.educators
-"""
+    sql_req = """SELECT
+                   s.lesson_id,
+                   l.name,
+                   l.types,
+                   l.day,
+                   l.time,
+                   l.educators
+              """
     if is_educator:
-        sql_req += """
-FROM user_educators AS s
-  JOIN lessons AS l
-    ON l.id = s.lesson_id
-    """
+        sql_req += """FROM user_educators AS s
+                        JOIN lessons AS l
+                          ON l.id = s.lesson_id
+                   """
     else:
-        sql_req += """
-FROM skips AS s
-  JOIN lessons AS l
-    ON l.id = s.lesson_id
-        """
-    sql_req += """
-WHERE user_id = ?
-"""
+        sql_req += """FROM skips AS s
+                        JOIN lessons AS l
+                          ON l.id = s.lesson_id
+                   """
+    sql_req += """WHERE user_id = ?"""
     req_param = (user_id,)
     if week_day:
         sql_req += "  AND (day = 'all' OR day = ?)"
@@ -90,14 +87,13 @@ def get_chosen_educators(user_id, dp_path="Bot.db"):
     sql_con = sqlite3.connect(dp_path)
     cursor = sql_con.cursor()
     data = {}
-    sql_req = """
-SELECT
-  lessons.name,
-  lessons.educators
-FROM user_educators
-  JOIN lessons
-    ON user_educators.lesson_id = lessons.id
-WHERE user_educators.user_id = ?"""
+    sql_req = """SELECT
+                   lessons.name,
+                   lessons.educators
+                 FROM user_educators
+                   JOIN lessons
+                     ON user_educators.lesson_id = lessons.id
+                 WHERE user_educators.user_id = ?"""
     for row in cursor.execute(sql_req, (user_id,)):
         if row[0] in data.keys():
             data[row[0]].add(row[1])
@@ -159,8 +155,7 @@ def get_json_week_data(user_id, next_week=False, for_day=None):
     else:
         monday_date = get_current_monday_date()
 
-    url = "https://timetable.spbu.ru/api/v1/groups/{0}/events/{1}".format(
-        group_id, monday_date)
+    url = urls["events_from"].format(group_id, monday_date)
     json_week_data = requests.get(url).json()
     return json_week_data
 
@@ -533,18 +528,6 @@ def change_station(user_id, station_code, is_home):
     sql_con.close()
 
 
-def change_univer_station(user_id, univer):
-    sql_con = sqlite3.connect("Bot.db")
-    cursor = sql_con.cursor()
-    cursor.execute("""UPDATE user_data
-                      SET is_univer = ?
-                      WHERE id = ?""",
-                   (univer, user_id))
-    sql_con.commit()
-    cursor.close()
-    sql_con.close()
-
-
 def send_long_message(bot, text, user_id, split="\n\n"):
     try:
         bot.send_message(user_id, text, parse_mode="HTML")
@@ -604,8 +587,7 @@ def add_new_user(user_id, group_id, group_title=None):
     sql_con = sqlite3.connect("Bot.db")
     cursor = sql_con.cursor()
     if group_title is None:
-        url = "https://timetable.spbu.ru/api/v1/groups/{0}/events".format(
-            group_id)
+        url = urls["events"].format(group_id)
         group_title = requests.get(url).json()["StudentGroupDisplayName"][7:]
     try:
         cursor.execute("""INSERT INTO groups_data 
@@ -654,13 +636,13 @@ def get_semester_dates():
 
 def get_json_attestation(user_id):
     params = {"timetable": "Attestation"}
-    url = "http://timetable.spbu.ru/api/v1/groups/{0}/" \
-          "events/{1}/{2}"
     sem_dates = get_semester_dates()
-    req = requests.get(
-        url.format(get_current_group(user_id)[0], sem_dates[0], sem_dates[1]),
-        params=params
-    ).json()
+    url = urls["events_from_to"].format(
+        get_current_group(user_id)[0],
+        sem_dates[0],
+        sem_dates[1]
+    )
+    req = requests.get(url, params=params).json()
     return req
 
 

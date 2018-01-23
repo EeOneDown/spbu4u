@@ -9,6 +9,7 @@ from random import choice
 from time import time, localtime
 
 import flask
+import math
 import requests
 import telebot
 from flask_sslify import SSLify
@@ -16,10 +17,7 @@ from flask_sslify import SSLify
 import functions as func
 import registration_functions as reg_func
 from bots_constants import release_token, bot_name
-from constants import emoji, briefly_info_answer, my_id, \
-    full_info_answer, webhook_url_base, webhook_url_path, week_day_number, \
-    all_stations, week_day_titles, subject_short_type, loading_text
-from sql_updater import schedule_update
+from constants import *
 from yandex_timetable import get_yandex_timetable_data
 
 bot = telebot.TeleBot(release_token, threaded=False)
@@ -91,8 +89,7 @@ def start_handler(message):
             start_handler(message)
             return
 
-        url = "https://timetable.spbu.ru/api/v1/groups/{0}/events".format(
-            group_id)
+        url = urls["events"].format(group_id)
         req = requests.get(url)
         if req.status_code != 200:
             answer = "Ошибка в id группы."
@@ -126,7 +123,7 @@ def start_handler(message):
     bot_msg = bot.send_message(message.chat.id, answer)
     bot.send_chat_action(message.chat.id, "typing")
     answer = "Укажи свое направление:"
-    url = "https://timetable.spbu.ru/api/v1/study/divisions"
+    url = urls["divisions"]
     divisions = requests.get(url).json()
     division_names = [division["Name"] for division in divisions]
     divisions_keyboard = telebot.types.ReplyKeyboardMarkup(True, False)
@@ -610,17 +607,6 @@ def group_templates_handler(message):
                      parse_mode="HTML")
 
 
-@bot.message_handler(func=lambda mess: mess.text == "Скул"
-                     and mess.chat.id == my_id,
-                     content_types=["text"])
-def schedule_update_handler(message):
-    bot.send_chat_action(message.chat.id, "typing")
-    tic = time()
-    schedule_update()
-    answer = "Done\nWork time: {0}".format(time() - tic)
-    bot.reply_to(message, answer)
-
-
 @bot.message_handler(func=lambda mess: mess.text == emoji["bust_in_silhouette"],
                      content_types=["text"])
 def educator_schedule_handler(message):
@@ -645,7 +631,7 @@ def write_educator_name_handler(message):
         bot.send_message(message.chat.id, answer,
                          reply_markup=schedule_keyboard)
         return
-    url = "https://timetable.spbu.ru/api/v1/educators/search/{0}".format(name)
+    url = urls["educator_search"].format(name)
     request = requests.get(url)
     request_code = request.status_code
     educators_data = request.json() if request_code == 200 else {}
@@ -1684,11 +1670,10 @@ def return_lesson(call_back):
             bot.send_message(call_back.message.chat.id, answer,
                              reply_markup=ids_keyboard, parse_mode="HTML")
         else:
-            from math import ceil
 
             inline_answer = "Их слишком много..."
             bot.answer_callback_query(call_back.id, inline_answer, cache_time=1)
-            for i in range(ceil(len(ids) / 30)):
+            for i in range(math.ceil(len(ids) / 30)):
                 ids_keyboard = telebot.types.InlineKeyboardMarkup(row_width=5)
                 ids_keyboard.add(
                     *[telebot.types.InlineKeyboardButton(text=name,
@@ -1948,8 +1933,7 @@ def change_template_group_handler(call_back):
                                                    in call_back.message.text)
 def select_master_id_handler(call_back):
     answer = "{0} Расписание преподавателя: <b>{1}</b>\n\n{2} {3}"
-    url = "https://timetable.spbu.ru/api/v1/educators/{0}/events".format(
-        call_back.data)
+    url = urls["educator_events"].format(call_back.data)
     educator_schedule = requests.get(url).json()
     answer = answer.format(emoji["bust_in_silhouette"],
                            educator_schedule["EducatorLongDisplayText"],
@@ -2069,7 +2053,7 @@ def main_page():
 @app.route("/tt_request", methods=["GET"])
 def check_timetable_con():
     group_id = func.get_random_group_id()
-    url = "https://timetable.spbu.ru/api/v1/groups/{0}/events".format(group_id)
+    url = urls["events"].format(group_id)
     code = requests.get(url).status_code
     return "Done", code
 

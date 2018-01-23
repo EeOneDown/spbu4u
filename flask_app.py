@@ -2056,6 +2056,14 @@ def main_page():
     return page, 200
 
 
+@app.route("/tt_request", methods=["GET"])
+def check_timetable_con():
+    group_id = func.get_random_group_id()
+    url = "https://timetable.spbu.ru/api/v1/groups/{0}/events".format(group_id)
+    code = requests.get(url).status_code
+    return "Done", code
+
+
 @app.route(webhook_url_path, methods=["POST"])
 def webhook():
     if flask.request.headers.get("content-type") == "application/json":

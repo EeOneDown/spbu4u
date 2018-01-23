@@ -12,16 +12,11 @@ from constants import emoji
 
 def get_yandex_timetable_data(from_station, to_station, date, limit=3):
     from flask_app import server_timedelta
-    url = "https://api.rasp.yandex.net/v3.0/search/?" \
-          "from={0}" \
-          "&to={1}" \
-          "&format=json" \
-          "&lang=ru_RU" \
-          "&apikey={2}" \
-          "&date={3}" \
-          "&transport_types=suburban".format(from_station, to_station,
-                                             yandex_key, date)
-    req = requests.get(url)
+    params = {"from": from_station, "to": to_station, "apikey": yandex_key,
+              "date": date, "format": "json", "lang": "ru_RU",
+              "transport_types": "suburban"}
+    url = "https://api.rasp.yandex.net/v3.0/search/?"
+    req = requests.get(url, params=params)
     code, data = req.status_code, req.json()
 
     if code != 200:

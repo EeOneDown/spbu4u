@@ -830,3 +830,16 @@ def create_session_answer(json_attestation, month, user_id, full_place,
 
 def get_key_by_value(dct, val):
     return [it[0] for it in dct.items() if it[1] == val][0]
+
+
+def get_random_group_id():
+    sql_con = sqlite3.connect("Bot.db")
+    cursor = sql_con.cursor()
+    cursor.execute("""SELECT group_id
+                      FROM user_data
+                      LIMIT 1""")
+    group_id = cursor.fetchone()[0]
+    sql_con.commit()
+    cursor.close()
+    sql_con.close()
+    return group_id

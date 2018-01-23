@@ -4,7 +4,7 @@ from __future__ import unicode_literals
 import json
 import logging
 import sqlite3
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 
 import requests
 from telebot.apihelper import ApiException
@@ -131,56 +131,37 @@ def date_from_iso(iso):
                              "%Y%W%w").date()
 
 
-def select_all_group_data():
-    sql_con = sqlite3.connect("Bot.db")
-    cursor = sql_con.cursor()
-    cursor.execute("""SELECT json_week_data
-                      FROM groups_data""")
-    data = cursor.fetchall()
-    cursor.close()
-    sql_con.close()
-
-    data = [json.loads(group_data[0]) for group_data in data]
-    return data
+def get_current_monday_date():
+    from flask_app import server_timedelta
+    iso_day_date = list((date.today() + server_timedelta).isocalendar())
+    if iso_day_date[2] == 7:
+        iso_day_date[1] += 1
+    iso_day_date[2] = 1
+    monday_date = date_from_iso(iso_day_date)
+    return monday_date
 
 
 def get_json_week_data(user_id, next_week=False, for_day=None):
     sql_con = sqlite3.connect("Bot.db")
     cursor = sql_con.cursor()
-    if next_week:
-        cursor.execute("""SELECT group_id, json_week_data
-                          FROM groups_data
-                            JOIN user_data
-                              ON groups_data.id = user_data.group_id 
-                          WHERE  user_data.id= ?""", (user_id,))
-        data = cursor.fetchone()
-
-        group_id = data[0]
-        next_week_monday = json.loads(data[1])["NextWeekMonday"]
-        url = "https://timetable.spbu.ru/api/v1/groups/{0}/events/{1}".format(
-            group_id, next_week_monday)
-        json_week_data = requests.get(url).json()
-    elif for_day is not None:
-        cursor.execute("""SELECT group_id
+    cursor.execute("""SELECT group_id
                           FROM user_data 
                           WHERE  id= ?""", (user_id,))
-        data = cursor.fetchone()
-
-        group_id = data[0]
-        url = "https://timetable.spbu.ru/api/v1/groups/{0}/events/{1}".format(
-            group_id, for_day)
-        json_week_data = requests.get(url).json()
-    else:
-        cursor.execute("""SELECT json_week_data
-                          FROM groups_data
-                            JOIN user_data
-                              ON groups_data.id = user_data.group_id 
-                          WHERE  user_data.id= ?""", (user_id,))
-        data = cursor.fetchone()
-
-        json_week_data = json.loads(data[0])
+    group_id = cursor.fetchone()[0]
     cursor.close()
     sql_con.close()
+
+    if for_day:
+        monday_date = for_day
+    elif next_week:
+        monday_date = get_current_monday_date()
+        monday_date += timedelta(days=7)
+    else:
+        monday_date = get_current_monday_date()
+
+    url = "https://timetable.spbu.ru/api/v1/groups/{0}/events/{1}".format(
+        group_id, monday_date)
+    json_week_data = requests.get(url).json()
     return json_week_data
 
 
@@ -437,7 +418,7 @@ def write_log(update, work_time, was_error=False):
 def get_templates(user_id):
     sql_con = sqlite3.connect("Bot.db")
     cursor = sql_con.cursor()
-    cursor.execute("""SELECT gd.id, gd.json_week_data
+    cursor.execute("""SELECT gd.id, gd.title
                       FROM user_groups AS ug
                         JOIN groups_data AS gd
                           ON ug.group_id = gd.id
@@ -447,14 +428,18 @@ def get_templates(user_id):
     sql_con.close()
     groups = {}
     for group in data:
-        groups[json.loads(group[1])["StudentGroupDisplayName"][7:]] = group[0]
+        groups[group[1]] = group[0]
     return groups
 
 
 def get_current_group(user_id):
-    week_data = get_json_week_data(user_id)
-    group_data = {"title": week_data["StudentGroupDisplayName"][7:],
-                  "id": week_data["StudentGroupId"]}
+    sql_con = sqlite3.connect("Bot.db")
+    cursor = sql_con.cursor()
+    cursor.execute("""SELECT groups_data.id, groups_data.title
+                      FROM groups_data
+                        JOIN user_data u ON groups_data.id = u.group_id
+                      WHERE u.id = ?""", (user_id, ))
+    group_data = cursor.fetchone()
     return group_data
 
 
@@ -615,9 +600,22 @@ def text_to_date(text):
     return False
 
 
-def add_new_user(user_id, group_id, week_data=None):
+def add_new_user(user_id, group_id, group_title=None):
     sql_con = sqlite3.connect("Bot.db")
     cursor = sql_con.cursor()
+    if group_title is None:
+        url = "https://timetable.spbu.ru/api/v1/groups/{0}/events".format(
+            group_id)
+        group_title = requests.get(url).json()["StudentGroupDisplayName"][7:]
+    try:
+        cursor.execute("""INSERT INTO groups_data 
+                          (id, title)
+                          VALUES (?, ?)""",
+                       (group_id, group_title))
+    except sqlite3.IntegrityError:
+        sql_con.rollback()
+    finally:
+        sql_con.commit()
     try:
         cursor.execute("""INSERT INTO user_data (id, group_id)
                           VALUES (?, ?)""",
@@ -632,23 +630,6 @@ def add_new_user(user_id, group_id, week_data=None):
         sql_con.commit()
         cursor.execute("""DELETE FROM user_choice WHERE user_id = ?""",
                        (user_id,))
-        sql_con.commit()
-    if week_data is None:
-        url = "https://timetable.spbu.ru/api/v1/groups/{0}/events".format(
-            group_id)
-        week_data = requests.get(url).json()
-    data = json.dumps(week_data)
-    try:
-        cursor.execute("""INSERT INTO groups_data 
-                          (id, json_week_data)
-                          VALUES (?, ?)""",
-                       (group_id, data))
-    except sqlite3.IntegrityError:
-        cursor.execute("""UPDATE groups_data
-                          SET json_week_data = ?
-                          WHERE id = ?""",
-                       (data, group_id))
-    finally:
         sql_con.commit()
         cursor.close()
         sql_con.close()
@@ -672,11 +653,14 @@ def get_semester_dates():
 
 
 def get_json_attestation(user_id):
+    params = {"timetable": "Attestation"}
     url = "http://timetable.spbu.ru/api/v1/groups/{0}/" \
-          "events/{1}/{2}?timetable=Attestation"
+          "events/{1}/{2}"
     sem_dates = get_semester_dates()
-    req = requests.get(url.format(get_current_group(user_id)["id"],
-                                  sem_dates[0], sem_dates[1])).json()
+    req = requests.get(
+        url.format(get_current_group(user_id)[0], sem_dates[0], sem_dates[1]),
+        params=params
+    ).json()
     return req
 
 

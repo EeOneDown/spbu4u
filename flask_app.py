@@ -358,6 +358,7 @@ def sending_handler(message):
 def attestation_handler(message):
     if message.chat.id != my_id:
         return
+    bot.send_chat_action(message.chat.id, "typing")
     month = func.get_available_months(message.chat.id)
     if len(month) == 0:
         bot.send_message(message.chat.id, "<i>Нет событий</i>",
@@ -581,7 +582,7 @@ def group_templates_handler(message):
     bot.send_chat_action(message.chat.id, "typing")
     answer = ""
     groups = func.get_templates(message.chat.id)
-    group_title = func.get_current_group(message.chat.id)["title"]
+    group_title = func.get_current_group(message.chat.id)[1]
     answer += "Текущая группа: <b>{0}</b>\n".format(group_title)
     last_row = ["Отмена", "Сохранить"]
     inline_keyboard = telebot.types.InlineKeyboardMarkup(row_width=2)
@@ -811,15 +812,14 @@ def all_week_schedule_handler(call_back):
                             call_back.data == "Текущее" or
                             call_back.data == "Следующее")
 def week_day_schedule_handler(call_back):
-    bot_msg = call_back.message
+    bot_msg = bot.edit_message_text(text="Загрузка\U00002026",
+                                    chat_id=call_back.message.chat.id,
+                                    message_id=call_back.message.message_id)
     is_next_week = False
     iso_day_date = list((datetime.today() + server_timedelta).isocalendar())
     if iso_day_date[2] == 7:
         iso_day_date[1] += 1
     if call_back.data == "Следующее":
-        bot_msg = bot.edit_message_text(text="Загрузка\U00002026",
-                                        chat_id=call_back.message.chat.id,
-                                        message_id=call_back.message.message_id)
         iso_day_date[1] += 1
         is_next_week = True
     iso_day_date[2] = week_day_number[
@@ -1877,8 +1877,8 @@ def feedback_handler(call_back):
 def save_current_group_handler(call_back):
     user_id = call_back.message.chat.id
     group_data = func.get_current_group(user_id)
-    func.save_group(group_data["id"], user_id)
-    answer = "Группа <b>{0}</b> сохранена".format(group_data["title"])
+    func.save_group(group_data[0], user_id)
+    answer = "Группа <b>{0}</b> сохранена".format(group_data[1])
     bot.edit_message_text(text=answer,
                           chat_id=user_id,
                           message_id=call_back.message.message_id,
@@ -1890,8 +1890,8 @@ def save_current_group_handler(call_back):
 def delete_current_group_handler(call_back):
     user_id = call_back.message.chat.id
     group_data = func.get_current_group(user_id)
-    func.delete_group(group_data["id"], user_id)
-    answer = "Группа <b>{0}</b> удалена".format(group_data["title"])
+    func.delete_group(group_data[0], user_id)
+    answer = "Группа <b>{0}</b> удалена".format(group_data[1])
     bot.edit_message_text(text=answer,
                           chat_id=user_id,
                           message_id=call_back.message.message_id,
@@ -2114,5 +2114,11 @@ if __name__ == '__main__':
     use test_token for local testing
     or don't forget to reset webhook
     '''
+    import os
+    from sql_creator import create_sql, copy_from_db
+
+    os.chdir("PATH/TO/BOT")
+    create_sql("Bot.db")
+    copy_from_db("Bot_db", "Bot.db")
     bot.remove_webhook()
     bot.polling(none_stop=True, interval=0)

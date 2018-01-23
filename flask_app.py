@@ -774,7 +774,7 @@ def select_week_day_schedule_handler(call_back):
 def all_week_schedule_handler(call_back):
     user_id = call_back.message.chat.id
     bot_msg = bot.edit_message_text(
-        text="{0}\U00002026".format(choice(loading_text)),
+        text="{0}\U00002026".format(choice(loading_text["schedule"])),
         chat_id=call_back.message.chat.id,
         message_id=call_back.message.message_id
     )
@@ -815,7 +815,7 @@ def all_week_schedule_handler(call_back):
                             call_back.data == "Следующее")
 def week_day_schedule_handler(call_back):
     bot_msg = bot.edit_message_text(
-        text="{0}\U00002026".format(choice(loading_text)),
+        text="{0}\U00002026".format(choice(loading_text["schedule"])),
         chat_id=call_back.message.chat.id,
         message_id=call_back.message.message_id
     )
@@ -1095,6 +1095,11 @@ def end_station_handler(call_back):
 @bot.callback_query_handler(func=lambda call_back: "Выбери день:"
                                                    in call_back.message.text)
 def build_trail_handler(call_back):
+    bot_msg = bot.edit_message_text(
+        text="\U00002026".format(choice(loading_text["ya_timetable"])),
+        chat_id=call_back.message.chat.id,
+        message_id=call_back.message.message_id
+    )
     from_station_title = call_back.message.text.split("\n")[0].split(": ")[-1]
     to_station_title = call_back.message.text.split("\n")[1].split(": ")[-1]
     from_station = all_stations[from_station_title]
@@ -1128,7 +1133,7 @@ def build_trail_handler(call_back):
 
     bot.edit_message_text(text=answer,
                           chat_id=call_back.message.chat.id,
-                          message_id=call_back.message.message_id,
+                          message_id=bot_msg.message_id,
                           reply_markup=update_keyboard,
                           parse_mode="HTML")
 
@@ -1972,7 +1977,7 @@ def select_master_id_handler(call_back):
                             "Выбери месяц:" in call_back.message.text)
 def select_months_att_handler(call_back):
     bot_msg = bot.edit_message_text(
-        text="{0}\U00002026".format(choice(loading_text)),
+        text="{0}\U00002026".format(choice(loading_text["schedule"])),
         chat_id=call_back.message.chat.id,
         message_id=call_back.message.message_id
     )

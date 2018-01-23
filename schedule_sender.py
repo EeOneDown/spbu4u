@@ -16,7 +16,7 @@ def schedule_sender():
     db_path = "spbu4u/Bot.db"
     sql_con = sqlite3.connect(db_path)
     cursor = sql_con.cursor()
-    cursor.execute("""SELECT user_data.id, group_id
+    cursor.execute("""SELECT id
                       FROM user_data
                       WHERE sending = 1""")
     data = cursor.fetchall()
@@ -26,7 +26,7 @@ def schedule_sender():
     tomorrow_moscow_datetime = datetime.today() + timedelta(days=1, hours=3)
     tomorrow_moscow_date = tomorrow_moscow_datetime.date()
     for user_data in data:
-        user_id, group_id = user_data[0], user_data[1]
+        user_id = user_data[0]
         json_day = get_json_day_data(user_id, tomorrow_moscow_date)
         full_place = is_full_place(user_id, db_path=db_path)
         answer = create_schedule_answer(json_day, full_place, user_id,

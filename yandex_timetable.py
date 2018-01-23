@@ -3,11 +3,11 @@ from __future__ import unicode_literals
 
 from datetime import datetime, timedelta, time
 
+import math
 import requests
-from math import ceil
 
 from bots_constants import yandex_key
-from constants import emoji
+from constants import emoji, urls
 
 
 def get_yandex_timetable_data(from_station, to_station, date, limit=3):
@@ -15,7 +15,7 @@ def get_yandex_timetable_data(from_station, to_station, date, limit=3):
     params = {"from": from_station, "to": to_station, "apikey": yandex_key,
               "date": date, "format": "json", "lang": "ru_RU",
               "transport_types": "suburban"}
-    url = "https://api.rasp.yandex.net/v3.0/search/?"
+    url = urls["ya_search"]
     req = requests.get(url, params=params)
     code, data = req.status_code, req.json()
 
@@ -44,7 +44,7 @@ def get_yandex_timetable_data(from_station, to_station, date, limit=3):
             continue
 
         time_left = departure_datetime - server_now_date
-        total_minutes = ceil(time_left.total_seconds() / 60)
+        total_minutes = math.ceil(time_left.total_seconds() / 60)
 
         if total_minutes >= 60:
             hours = total_minutes // 60

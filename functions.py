@@ -6,10 +6,8 @@ import logging
 import sqlite3
 from datetime import datetime, date, timedelta
 
-import requests
+import spbu
 from telebot.apihelper import ApiException
-
-from constants import urls
 
 
 def insert_skip(event_name, types, event_day, event_time,
@@ -155,8 +153,8 @@ def get_json_week_data(user_id, next_week=False, for_day=None):
     else:
         monday_date = get_current_monday_date()
 
-    url = urls["events_from"].format(group_id, monday_date)
-    json_week_data = requests.get(url).json()
+    json_week_data = spbu.get_group_events(group_id=group_id,
+                                           from_date=monday_date)
     return json_week_data
 
 
@@ -587,8 +585,8 @@ def add_new_user(user_id, group_id, group_title=None):
     sql_con = sqlite3.connect("Bot.db")
     cursor = sql_con.cursor()
     if group_title is None:
-        url = urls["events"].format(group_id)
-        group_title = requests.get(url).json()["StudentGroupDisplayName"][7:]
+        group_title = spbu.get_group_events(group_id)[
+                          "StudentGroupDisplayName"][7:]
     try:
         cursor.execute("""INSERT INTO groups_data 
                           (id, title)
@@ -635,14 +633,12 @@ def get_semester_dates():
 
 
 def get_json_attestation(user_id):
-    params = {"timetable": "Attestation"}
     sem_dates = get_semester_dates()
-    url = urls["events_from_to"].format(
-        get_current_group(user_id)[0],
-        sem_dates[0],
-        sem_dates[1]
-    )
-    req = requests.get(url, params=params).json()
+    group_id = get_current_group(user_id)[0]
+    req = spbu.get_group_events(group_id=group_id,
+                                from_date=sem_dates[0],
+                                to_date=sem_dates[1],
+                                lessons_type="Attestation")
     return req
 
 

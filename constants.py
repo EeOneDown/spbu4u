@@ -22,16 +22,6 @@ webhook_url_base = "https://{0}:{1}".format(webhook_host, webhook_port)
 webhook_url_path = "/{0}/".format(sha_string)
 
 urls = {
-    "divisions": "https://timetable.spbu.ru/api/v1/study/divisions",
-    "program_levels": "https://timetable.spbu.ru/api/v1/study/divisions/{0}/"
-                      "programs/levels",
-    "groups": "https://timetable.spbu.ru/api/v1/progams/{0}/groups",
-    "events": "https://timetable.spbu.ru/api/v1/groups/{0}/events",
-    "events_from": "https://timetable.spbu.ru/api/v1/groups/{0}/events/{1}",
-    "events_from_to": "http://timetable.spbu.ru/api/v1/groups/{0}/"
-                      "events/{1}/{2}",
-    "educator_search": "https://timetable.spbu.ru/api/v1/educators/search/{0}",
-    "educator_events": "https://timetable.spbu.ru/api/v1/educators/{0}/events",
     "ya_search": "https://api.rasp.yandex.net/v3.0/search/"
 }
 

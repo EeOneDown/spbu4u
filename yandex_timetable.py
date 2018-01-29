@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+import math
 from datetime import datetime, timedelta, time
 
-import math
 import requests
 
 from bots_constants import yandex_key

@@ -3,14 +3,14 @@ from __future__ import unicode_literals
 
 import json
 import logging
+import math
 import sqlite3
 from datetime import datetime, timedelta, time as dt_time
 from random import choice
 from time import time, localtime
 
 import flask
-import math
-import requests
+import spbu
 import telebot
 from flask_sslify import SSLify
 
@@ -89,17 +89,16 @@ def start_handler(message):
             start_handler(message)
             return
 
-        url = urls["events"].format(group_id)
-        req = requests.get(url)
-        if req.status_code != 200:
+        try:
+            res = spbu.get_group_events(group_id)
+        except spbu.ApiException:
             answer = "Ошибка в id группы."
-            bot.edit_message_text(answer, message.chat.id,
-                                  bot_msg.message_id)
+            bot.edit_message_text(answer, message.chat.id, bot_msg.message_id)
             message.text = "/start"
             start_handler(message)
             return
 
-        group_title = req.json()["StudentGroupDisplayName"][7:]
+        group_title = res["StudentGroupDisplayName"][7:]
         func.add_new_user(message.chat.id, group_id, group_title)
         answer = "Готово!\nГруппа <b>{0}</b>".format(group_title)
         bot.edit_message_text(answer, message.chat.id, bot_msg.message_id,
@@ -123,8 +122,7 @@ def start_handler(message):
     bot_msg = bot.send_message(message.chat.id, answer)
     bot.send_chat_action(message.chat.id, "typing")
     answer = "Укажи свое направление:"
-    url = urls["divisions"]
-    divisions = requests.get(url).json()
+    divisions = spbu.get_study_divisions()
     division_names = [division["Name"] for division in divisions]
     divisions_keyboard = telebot.types.ReplyKeyboardMarkup(True, False)
     for division_name in division_names:
@@ -629,13 +627,16 @@ def write_educator_name_handler(message):
         bot.send_message(message.chat.id, answer,
                          reply_markup=schedule_keyboard)
         return
-    url = urls["educator_search"].format(name)
-    request = requests.get(url)
-    request_code = request.status_code
-    educators_data = request.json() if request_code == 200 else {}
 
-    if request_code != 200 or educators_data["Educators"] is None or len(
-            educators_data["Educators"]) == 0:
+    try:
+        educators_data = spbu.search_educator(name)
+    except spbu.ApiException:
+        answer = "Во время выполнения запросы произошла ошибка."
+        bot.send_message(message.chat.id, answer,
+                         reply_markup=schedule_keyboard)
+        return
+
+    if not educators_data["Educators"]:
         answer = "Никого не найдено"
         bot.send_message(message.chat.id, answer,
                          reply_markup=schedule_keyboard)
@@ -1671,7 +1672,7 @@ def return_lesson(call_back):
 
             inline_answer = "Их слишком много..."
             bot.answer_callback_query(call_back.id, inline_answer, cache_time=1)
-            for i in range(math.ceil(len(lesson_ids) / 30)):
+            for i in range(int(math.ceil(len(lesson_ids) / 30))):
                 ids_keyboard = telebot.types.InlineKeyboardMarkup(row_width=5)
                 ids_keyboard.add(
                     *[telebot.types.InlineKeyboardButton(text=name,
@@ -1931,8 +1932,7 @@ def change_template_group_handler(call_back):
                                                    in call_back.message.text)
 def select_master_id_handler(call_back):
     answer = "{0} Расписание преподавателя: <b>{1}</b>\n\n{2} {3}"
-    url = urls["educator_events"].format(call_back.data)
-    educator_schedule = requests.get(url).json()
+    educator_schedule = spbu.get_educator_events(call_back.data)
     answer = answer.format(emoji["bust_in_silhouette"],
                            educator_schedule["EducatorLongDisplayText"],
                            emoji["calendar"],
@@ -2051,9 +2051,11 @@ def main_page():
 @app.route("/tt_request", methods=["GET"])
 def check_timetable_con():
     group_id = func.get_random_group_id()
-    url = urls["events"].format(group_id)
-    code = requests.get(url).status_code
-    return "Done", code
+    try:
+        spbu.get_group_events(group_id)
+        return "Done", 200
+    except spbu.ApiException as e:
+        return "Errors", e.result.status_code
 
 
 @app.route(webhook_url_path, methods=["POST"])

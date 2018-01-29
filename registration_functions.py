@@ -4,10 +4,9 @@ from __future__ import unicode_literals
 import json
 import sqlite3
 
-import requests
+import spbu
 import telebot
 
-from constants import urls
 from functions import add_new_user
 
 
@@ -62,8 +61,7 @@ def select_division(message):
         )
         index = division_names.index(message.text)
         alias = aliases[index]
-        url = urls["program_levels"].format(alias)
-        study_programs = requests.get(url).json()
+        study_programs = spbu.get_program_levels(alias)
         for study_program in study_programs:
             study_programs_keyboard.row(study_program["StudyLevelName"])
         study_programs_keyboard.row("Другое направление")
@@ -249,8 +247,7 @@ def select_admission_year(message):
         answer += "Укажи группу:"
         index = admission_year_names.index(message.text)
         study_program_id = admission_years[index]["StudyProgramId"]
-        url = urls["groups"].format(study_program_id)
-        student_groups = requests.get(url).json()
+        student_groups = spbu.get_groups(study_program_id)
         student_group_names = []
         for student_group in student_groups["Groups"]:
             student_group_names.append(student_group["StudentGroupName"])

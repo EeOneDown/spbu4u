@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+import json
 import sqlite3
 from os import access, F_OK
 
@@ -125,8 +126,16 @@ def copy_from_db(from_db_name, to_db_name):
         user_choices = cursor.fetchall()
 
         # group data
-        cursor.execute("""SELECT id FROM groups_data""")
-        groups_data = cursor.fetchall()
+        cursor.execute("""SELECT id, json_week_data FROM groups_data""")
+        groups_data_old = cursor.fetchall()
+
+        groups_data_new = []
+        for group in groups_data_old:
+            group_id = group[0]
+            group_title = json.loads(group[1]).get("StudentGroupDisplayName")
+            if group_title:
+                group_title = group_title[7:]
+            groups_data_new.append((group_id, str(group_title)))
 
         # user data
         cursor.execute("""SELECT 
@@ -177,8 +186,8 @@ def copy_from_db(from_db_name, to_db_name):
 
     # group data
     try:
-        cursor.executemany("""INSERT INTO groups_data (id)
-                              VALUES (?)""", groups_data)
+        cursor.executemany("""INSERT INTO groups_data (id, title)
+                              VALUES (?, ?)""", groups_data_new)
         sql_con.commit()
     except sqlite3.IntegrityError:
         sql_con.rollback()

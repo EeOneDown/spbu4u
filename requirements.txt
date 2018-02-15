@@ -1,4 +1,4 @@
 Flask
 pyTelegramBotAPI
 flask_sslify
-spbuTimetableAPI==1.0.0
+spbuTimetableAPI=>1.0.1

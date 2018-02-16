@@ -32,7 +32,8 @@ def create_sql(db_name):
     cursor.execute("""CREATE TABLE IF NOT EXISTS groups_data
                         (
                             id INT PRIMARY KEY NOT NULL,
-                            title TEXT NOT NULL 
+                            title TEXT NOT NULL,
+                            json_week_data TEXT
                         )""")
     sql_con.commit()
 

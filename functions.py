@@ -135,12 +135,32 @@ def get_current_monday_date():
     return monday_date
 
 
-def get_json_week_data(user_id, next_week=False, for_day=None):
+def get_json_week_data(user_id, next_week=False):
+    if next_week:
+        return get_json_week_data_api(user_id, next_week=True)
+    else:
+        sql_con = sqlite3.connect("Bot.db")
+        cursor = sql_con.cursor()
+        cursor.execute("""SELECT json_week_data
+                          FROM groups_data
+                            JOIN user_data
+                              ON groups_data.id = user_data.group_id
+                          WHERE  user_data.id= ?""", (user_id, ))
+        data = cursor.fetchone()
+
+        json_week_data = json.loads(data[0])
+        cursor.close()
+        sql_con.close()
+
+    return json_week_data
+
+
+def get_json_week_data_api(user_id, next_week=False, for_day=None):
     sql_con = sqlite3.connect("Bot.db")
     cursor = sql_con.cursor()
     cursor.execute("""SELECT group_id
-                          FROM user_data 
-                          WHERE  id= ?""", (user_id,))
+                      FROM user_data 
+                      WHERE  id= ?""", (user_id,))
     group_id = cursor.fetchone()[0]
     cursor.close()
     sql_con.close()
@@ -558,12 +578,15 @@ def is_correct_educator_name(text):
 def text_to_date(text):
     from constants import months
 
-    text = text.replace(".", " ").replace(",", " ")
+    text = text.replace(".", " ")
     if text.replace(" ", "").isalnum():
         words = text.split()[:3]
         for word in words:
-            if not (word.isdecimal() or (
-                        word.isalpha() and (word.lower() in months.keys()))):
+            if not (
+                    word.isdecimal() or (
+                        word.isalpha() and (word.lower() in months.keys())
+                    )
+            ):
                 return False
         try:
             day = int(words[0])

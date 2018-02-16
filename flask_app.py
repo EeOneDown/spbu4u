@@ -49,7 +49,7 @@ schedule_keyboard.row(emoji["back"], emoji["bust_in_silhouette"],
 settings_keyboard = telebot.types.ReplyKeyboardMarkup(resize_keyboard=True,
                                                       one_time_keyboard=False)
 settings_keyboard.row("Сменить группу", "Завершить")
-settings_keyboard.row("Назад", "Проблема")
+settings_keyboard.row("Назад", "Поддержка")
 
 suburban_keyboard = telebot.types.ReplyKeyboardMarkup(resize_keyboard=True,
                                                       one_time_keyboard=False)
@@ -58,9 +58,8 @@ suburban_keyboard.row("Назад", "Персонализация")
 
 schedule_editor_keyboard = telebot.types.ReplyKeyboardMarkup(
     resize_keyboard=True, one_time_keyboard=False)
-schedule_editor_keyboard.row("Скрыть занятие")
-# schedule_editor_keyboard.row("Скрыть занятие", "Преподаватель")
-schedule_editor_keyboard.row("Назад", "Вернуть", "Адрес")
+schedule_editor_keyboard.row("Скрыть", "Выбрать", "Вернуть")
+schedule_editor_keyboard.row("Назад", "Адрес")
 
 server_timedelta = timedelta(hours=3)
 
@@ -127,7 +126,7 @@ def start_handler(message):
     divisions_keyboard = telebot.types.ReplyKeyboardMarkup(True, False)
     for division_name in division_names:
         divisions_keyboard.row(division_name)
-    divisions_keyboard.row("Проблема", "Завершить")
+    divisions_keyboard.row("Поддержка", "Завершить")
     data = json.dumps(divisions)
 
     sql_con = sqlite3.connect("Bot.db")
@@ -146,7 +145,7 @@ def start_handler(message):
     reg_func.set_next_step(message.chat.id, "select_division")
 
 
-@bot.message_handler(func=lambda mess: mess.text.capitalize() == "Проблема",
+@bot.message_handler(func=lambda mess: mess.text.capitalize() == "Поддержка",
                      content_types=["text"])
 def problem_text_handler(message):
     bot.send_chat_action(message.chat.id, "typing")
@@ -288,7 +287,8 @@ def schedule_handler(message):
     bot.send_message(message.chat.id, answer, reply_markup=schedule_keyboard)
 
 
-@bot.message_handler(func=lambda mess: mess.text.capitalize() == "Сегодня")
+@bot.message_handler(func=lambda mess: mess.text.capitalize() == "Сегодня",
+                     content_types=["text"])
 def today_schedule_handler(message):
     bot.send_chat_action(message.chat.id, "typing")
     today_moscow_datetime = datetime.today() + server_timedelta
@@ -504,7 +504,7 @@ def place_handler(message):
 
 
 @bot.message_handler(func=lambda mess:
-                     mess.text.capitalize() == "Преподаватель",
+                     mess.text.capitalize() == "Выбрать",
                      content_types=["text"])
 def choose_educator_handler(message):
     bot.send_chat_action(message.chat.id, "typing")
@@ -528,7 +528,7 @@ def choose_educator_handler(message):
 
 
 @bot.message_handler(func=lambda mess:
-                     mess.text.capitalize() == "Скрыть занятие",
+                     mess.text.capitalize() == "Скрыть",
                      content_types=["text"])
 def hide_lesson_handler(message):
     bot.send_chat_action(message.chat.id, "typing")
@@ -553,8 +553,7 @@ def chose_to_return(message):
     inline_keyboard = telebot.types.InlineKeyboardMarkup(True)
     inline_keyboard.row(
         *[telebot.types.InlineKeyboardButton(text=name, callback_data=name)
-          # for name in ["Занятие", "Преподаватель"]])
-          for name in ["Занятие"]])
+          for name in ["Занятия", "Преподавателей"]])
     bot.send_message(message.chat.id, answer, reply_markup=inline_keyboard)
 
 
@@ -631,7 +630,7 @@ def write_educator_name_handler(message):
     try:
         educators_data = spbu.search_educator(name)
     except spbu.ApiException:
-        answer = "Во время выполнения запросы произошла ошибка."
+        answer = "Во время выполнения запроса произошла ошибка."
         bot.send_message(message.chat.id, answer,
                          reply_markup=schedule_keyboard)
         return
@@ -669,28 +668,57 @@ def write_educator_name_handler(message):
 @bot.message_handler(func=lambda mess: mess.text.title() == "Сейчас",
                      content_types=["text"])
 @bot.message_handler(func=lambda mess:
-                     mess.text.capitalize().rstrip("?") == "Что сейчас",
+                     mess.text.capitalize() == "Что сейчас?",
                      content_types=["text"])
 def now_lesson_handler(message):
     answer = "Наверно, какая-то пара #пасхалочка"
     func.send_long_message(bot, answer, message.chat.id)
 
 
+@bot.message_handler(func=lambda mess: func.text_to_date(mess.text.lower()),
+                     content_types=["text"])
+def schedule_for_day(message):
+    bot.send_chat_action(message.chat.id, "typing")
+    day = func.text_to_date(message.text.lower())
+    json_week = func.get_json_week_data_api(message.chat.id, for_day=day)
+    json_day = func.get_json_day_data(message.chat.id, day_date=day,
+                                      json_week_data=json_week)
+    full_place = func.is_full_place(message.chat.id)
+    answer = func.create_schedule_answer(json_day, full_place,
+                                         user_id=message.chat.id,
+                                         personal=True)
+    func.send_long_message(bot, answer, message.chat.id)
+
+
+@bot.message_handler(func=lambda mess:
+                     mess.text.title() in week_day_titles.keys(),
+                     content_types=["text"])
+@bot.message_handler(func=lambda mess:
+                     mess.text.title() in week_day_titles.values(),
+                     content_types=["text"])
+def schedule_for_weekday(message):
+    bot.send_chat_action(message.chat.id, "typing")
+    message.text = message.text.title()
+    if message.text in week_day_titles.values():
+        week_day = message.text
+    else:
+        week_day = week_day_titles[message.text]
+    iso_day_date = list((datetime.today() + server_timedelta).isocalendar())
+    if iso_day_date[2] == 7:
+        iso_day_date[1] += 1
+    iso_day_date[2] = week_day_number[week_day]
+    day_date = func.date_from_iso(iso_day_date)
+    json_day = func.get_json_day_data(message.chat.id, day_date)
+    full_place = func.is_full_place(message.chat.id)
+    answer = func.create_schedule_answer(json_day, full_place,
+                                         message.chat.id)
+    func.send_long_message(bot, answer, message.chat.id)
+
+
 @bot.message_handler(func=lambda mess: True, content_types=["text"])
 def other_text_handler(message):
-    # logger.info(message)
     bot.send_chat_action(message.chat.id, "typing")
     answer = "Не понимаю"
-    if len(message.text) <= 16:
-        day = func.text_to_date(message.text.lower())
-        if day:
-            json_week = func.get_json_week_data(message.chat.id, for_day=day)
-            json_day = func.get_json_day_data(message.chat.id, day_date=day,
-                                              json_week_data=json_week)
-            full_place = func.is_full_place(message.chat.id)
-            answer = func.create_schedule_answer(json_day, full_place,
-                                                 user_id=message.chat.id,
-                                                 personal=True)
     func.send_long_message(bot, answer, message.chat.id)
 
 
@@ -1399,23 +1427,20 @@ def lesson_selected_handler(call_back):
     event_title = chosen_event.split("\n")[0].strip(" {0}".format(
         emoji["cross_mark"]))
     event_type = event_title.split(" - ")[0]
-    is_special_type = True
     event_title = " - ".join(event_title.split(" - ")[1:])
-    answer += "<b>{0}</b>\n{1}\n\nТипы: <b>{2}</b>\n\n".format(
-        event_title, "\n".join(chosen_event.split("\n")[1:]), event_type)
+    answer += "<b>{0}</b>\n{1}\n\nТипы: <b>Любой тип</b>\n\n".format(
+        event_title, "\n".join(chosen_event.split("\n")[1:]))
     answer += "Укажи типы занятия, которые скрывать: "
     types_keyboard = telebot.types.InlineKeyboardMarkup(row_width=3)
-    short_types = [short_type for short_type in subject_short_type.values()]
-    for i in range(len(short_types)):
-        if event_type == short_types[i]:
-            short_types[i] = "{0} {1}".format(emoji["heavy_check_mark"],
-                                              event_type)
-            is_special_type = False
+    short_types = list(subject_short_type.values())
+    if event_type in short_types:
+        is_special_type = False
+    else:
+        is_special_type = True
     types_keyboard.add(
         *[telebot.types.InlineKeyboardButton(text=name, callback_data=name)
           for name in short_types])
     if is_special_type:
-        event_type = "{0} {1}".format(emoji["heavy_check_mark"], event_type)
         types_keyboard.row(
             *[telebot.types.InlineKeyboardButton(text=name,
                                                  callback_data=name[:32])
@@ -1623,7 +1648,7 @@ def confirm_hide_lesson_handler(call_back):
 
 
 @bot.callback_query_handler(func=lambda call_back:
-                            call_back.data == "Занятие")
+                            call_back.data == "Занятия")
 def return_lesson(call_back):
     data = func.get_hide_lessons_data(call_back.message.chat.id)
     ids_keyboard = telebot.types.InlineKeyboardMarkup(row_width=5)
@@ -1740,7 +1765,7 @@ def return_lesson_handler(call_back):
 
 
 @bot.callback_query_handler(func=lambda call_back:
-                            call_back.data == "Преподаватель")
+                            call_back.data == "Преподавателей")
 def return_educator(call_back):
     data = func.get_hide_lessons_data(call_back.message.chat.id,
                                       is_educator=True)
@@ -1931,6 +1956,11 @@ def change_template_group_handler(call_back):
 @bot.callback_query_handler(func=lambda call_back: "Найденные преподаватели:"
                                                    in call_back.message.text)
 def select_master_id_handler(call_back):
+    bot_msg = bot.edit_message_text(
+        text="{0}\U00002026".format(choice(loading_text["schedule"])),
+        chat_id=call_back.message.chat.id,
+        message_id=call_back.message.message_id
+    )
     answer = "{0} Расписание преподавателя: <b>{1}</b>\n\n{2} {3}"
     educator_schedule = spbu.get_educator_events(call_back.data)
     answer = answer.format(emoji["bust_in_silhouette"],
@@ -1941,12 +1971,12 @@ def select_master_id_handler(call_back):
         answer += "\n\n<i>Нет событий</i>"
         bot.edit_message_text(text=answer,
                               chat_id=call_back.message.chat.id,
-                              message_id=call_back.message.message_id,
+                              message_id=bot_msg.message_id,
                               parse_mode="HTML")
     else:
         bot.edit_message_text(text=answer,
                               chat_id=call_back.message.chat.id,
-                              message_id=call_back.message.message_id,
+                              message_id=bot_msg.message_id,
                               parse_mode="HTML")
         days = [day for day in educator_schedule["EducatorEventsDays"]
                 if day["DayStudyEventsCount"]]
@@ -2104,15 +2134,17 @@ def webhook():
 
 
 if __name__ == '__main__':
-    '''
+    """
     use test_token for local testing
     or don't forget to reset webhook
-    '''
-    import os
+    """
+    # import os
     from sql_creator import create_sql, copy_from_db
+    # from sql_updater import schedule_update
 
-    os.chdir("PATH/TO/BOT")
+    # os.chdir("PATH/TO/BOT")
     create_sql("Bot.db")
     copy_from_db("Bot_db", "Bot.db")
+    # schedule_update("Bot.db")
     bot.remove_webhook()
     bot.polling(none_stop=True, interval=0)

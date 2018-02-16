@@ -618,6 +618,11 @@ def add_new_user(user_id, group_id, group_title=None):
     except sqlite3.IntegrityError:
         sql_con.rollback()
     finally:
+        json_week = spbu.get_group_events(group_id)
+        cursor.execute("""UPDATE groups_data
+                          SET json_week_data = ?
+                          WHERE id = ?""",
+                       (json_week, group_id))
         sql_con.commit()
     try:
         cursor.execute("""INSERT INTO user_data (id, group_id)

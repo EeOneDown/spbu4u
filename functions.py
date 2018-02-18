@@ -135,9 +135,11 @@ def get_current_monday_date():
     return monday_date
 
 
-def get_json_week_data(user_id, next_week=False):
+def get_json_week_data(user_id, next_week=False, for_day=None):
     if next_week:
-        return get_json_week_data_api(user_id, next_week=True)
+        return get_json_week_data_api(user_id, next_week=next_week)
+    if for_day:
+        return get_json_week_data_api(user_id, for_day=for_day)
     else:
         sql_con = sqlite3.connect("Bot.db")
         cursor = sql_con.cursor()

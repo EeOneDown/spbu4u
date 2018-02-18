@@ -351,6 +351,8 @@ def sending_handler(message):
 
 @bot.message_handler(func=lambda mess: mess.text.capitalize() == "Сессия",
                      content_types=["text"])
+@bot.message_handler(func=lambda mess: mess.text.capitalize() == "Допса",
+                     content_types=["text"])
 def attestation_handler(message):
     bot.send_chat_action(message.chat.id, "typing")
     month = func.get_available_months(message.chat.id)
@@ -364,7 +366,10 @@ def attestation_handler(message):
             *[telebot.types.InlineKeyboardButton(text=month[key],
                                                  callback_data=str(key))]
         )
-    answer = "Выбери месяц:"
+    if message.text == "Сессия":
+        answer = "Выбери месяц:"
+    else:
+        answer = "Выбери месяц для Допсы:"
     bot.send_message(message.chat.id, answer, reply_markup=inline_keyboard)
 
 
@@ -508,23 +513,12 @@ def place_handler(message):
                      content_types=["text"])
 def choose_educator_handler(message):
     bot.send_chat_action(message.chat.id, "typing")
-    answer = "Выбери день, в котором есть занятие с большим колличеством " \
-             "преподавателей:"
-    json_week_data = func.get_json_week_data(message.chat.id)
-    days = json_week_data["Days"]
-    days_keyboard = telebot.types.InlineKeyboardMarkup(True)
-    for day in days:
-        data = datetime.strptime(day["Day"], "%Y-%m-%dT%H:%M:%S").date()
-        answer_data = func.get_lessons_with_educators(message.chat.id, data)
-        if answer_data["is_empty"]:
-            continue
-        days_keyboard.row(
-            *[telebot.types.InlineKeyboardButton(text=name, callback_data=name)
-              for name in [day["DayString"].split(", ")[0].capitalize()]])
-    days_keyboard.row(
+    answer = "Выбрать занятие или преподавателя:"
+    inline_keyboard = telebot.types.InlineKeyboardMarkup(True)
+    inline_keyboard.row(
         *[telebot.types.InlineKeyboardButton(text=name, callback_data=name)
-          for name in ["Отмена"]])
-    bot.send_message(message.chat.id, answer, reply_markup=days_keyboard)
+          for name in ["Занятие", "Преподавателя"]])
+    bot.send_message(message.chat.id, answer, reply_markup=inline_keyboard)
 
 
 @bot.message_handler(func=lambda mess:
@@ -549,6 +543,7 @@ def hide_lesson_handler(message):
 @bot.message_handler(func=lambda mess: mess.text.title() == "Вернуть",
                      content_types=["text"])
 def chose_to_return(message):
+    bot.send_chat_action(message.chat.id, "typing")
     answer = "Выбери, что ты хочешь вернуть:"
     inline_keyboard = telebot.types.InlineKeyboardMarkup(True)
     inline_keyboard.row(
@@ -680,7 +675,7 @@ def now_lesson_handler(message):
 def schedule_for_day(message):
     bot.send_chat_action(message.chat.id, "typing")
     day = func.text_to_date(message.text.lower())
-    json_week = func.get_json_week_data_api(message.chat.id, for_day=day)
+    json_week = func.get_json_week_data(message.chat.id, for_day=day)
     json_day = func.get_json_day_data(message.chat.id, day_date=day,
                                       json_week_data=json_week)
     full_place = func.is_full_place(message.chat.id)
@@ -1188,8 +1183,8 @@ def change_home_station_handler(call_back):
     current_another_station = func.get_station_code(call_back.message.chat.id,
                                                     not is_home)
     station_title = func.get_key_by_value(all_stations, call_back.data)
-    answer = "{0} станция изменена на <b>{1}</b>".format(
-        type_station, station_title)
+    answer = "{0} станция изменена на <b>{1}</b>\n".format(type_station,
+                                                           station_title)
     func.change_station(call_back.message.chat.id,
                         call_back.data, is_home=is_home)
     if call_back.data == current_another_station:
@@ -1230,8 +1225,58 @@ def full_place_off_handler(call_back):
                             call_back.data == "Отмена")
 def cancel_handler(call_back):
     answer = "Отмена"
+    try:
+        bot.edit_message_text(text=answer, chat_id=call_back.message.chat.id,
+                              message_id=call_back.message.message_id)
+    except telebot.apihelper.ApiException:
+        pass
+
+
+@bot.callback_query_handler(func=lambda call_back: call_back.data == "Занятие")
+def editor_choose_lesson_handler(call_back):
+    answer = "Выбери день, когда есть это занятие:"
+    json_week_data = func.get_json_week_data(call_back.message.chat.id)
+    days = json_week_data["Days"]
+    days_keyboard = telebot.types.InlineKeyboardMarkup(True)
+    for day in days:
+        days_keyboard.row(
+            *[telebot.types.InlineKeyboardButton(text=name, callback_data=name)
+              for name in [day["DayString"].split(", ")[0].capitalize()]])
+    days_keyboard.row(
+        *[telebot.types.InlineKeyboardButton(text=name, callback_data=name)
+          for name in ["Отмена"]])
+    bot.edit_message_text(text=answer,
+                          chat_id=call_back.message.chat.id,
+                          message_id=call_back.message.message_id,
+                          reply_markup=days_keyboard)
+
+
+@bot.callback_query_handler(func=lambda call_back:
+                            call_back.data == "Преподавателя")
+def editor_choose_educator_handler(call_back):
+    answer = "Выбери день, в котором есть занятие с большим колличеством " \
+             "преподавателей:"
+    json_week_data = func.get_json_week_data(call_back.message.chat.id)
+    days = json_week_data["Days"]
+    days_keyboard = telebot.types.InlineKeyboardMarkup(True)
+    for day in days:
+        data = datetime.strptime(day["Day"], "%Y-%m-%dT%H:%M:%S").date()
+        answer_data = func.get_lessons_with_educators(call_back.message.chat.id,
+                                                      data)
+        if answer_data["is_empty"]:
+            continue
+        days_keyboard.row(
+            *[telebot.types.InlineKeyboardButton(text=name, callback_data=name)
+              for name in [day["DayString"].split(", ")[0].capitalize()]])
+    if len(days_keyboard.to_dic()["inline_keyboard"]):
+        days_keyboard.row(
+            *[telebot.types.InlineKeyboardButton(text=name, callback_data=name)
+              for name in ["Отмена"]])
+    else:
+        answer = "Нет занятий с большим колличеством преподавателей"
     bot.edit_message_text(text=answer, chat_id=call_back.message.chat.id,
-                          message_id=call_back.message.message_id)
+                          message_id=call_back.message.message_id,
+                          reply_markup=days_keyboard)
 
 
 @bot.callback_query_handler(func=lambda call_back:
@@ -1986,7 +2031,7 @@ def select_master_id_handler(call_back):
 
 
 @bot.callback_query_handler(func=lambda call_back:
-                            "Выбери месяц:" in call_back.message.text)
+                            "Выбери месяц" in call_back.message.text)
 def select_months_att_handler(call_back):
     bot_msg = bot.edit_message_text(
         text="{0}\U00002026".format(choice(loading_text["schedule"])),
@@ -1996,19 +2041,21 @@ def select_months_att_handler(call_back):
     json_attestation = func.get_json_attestation(call_back.message.chat.id)
     answer = ""
     is_full_place = func.is_full_place(call_back.message.chat.id)
-    personal = True
-    only_exams = True
-    while answer == "":
+
+    if call_back.message.text == "Выбери месяц:":
+        schedule_variations = [(True, True), (False, True)]
+    else:
+        schedule_variations = [(True, False), (False, False)]
+
+    for personal, only_exams in schedule_variations:
         answer += func.create_session_answer(json_attestation, call_back.data,
                                              call_back.message.chat.id,
                                              is_full_place, personal,
                                              only_exams)
-        only_exams = not only_exams
-        if personal and only_exams:
-            personal = False
-
-        if not personal and only_exams:
-            answer = "<i>Нет событий</i>"
+        if answer:
+            break
+    if not answer:
+        answer += "<i>Нет событий</i>"
     try:
         bot.edit_message_text(text=answer,
                               chat_id=call_back.message.chat.id,

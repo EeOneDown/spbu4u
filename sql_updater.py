@@ -28,7 +28,7 @@ def schedule_update(db_path="Bot.db"):
     cursor.execute("""SELECT id FROM groups_data""")
     groups = cursor.fetchall()
     for group in groups:
-        group_id= group[0]
+        group_id = group[0]
         url = "https://timetable.spbu.ru/api/v1/groups/{0}/events".format(
             group_id)
         res = requests.get(url)

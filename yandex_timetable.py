@@ -60,9 +60,19 @@ def get_yandex_timetable_data(from_station, to_station, date, limit=3):
             segment_answer += emoji["express"]
         else:
             segment_answer += emoji["train"]
-        segment_answer += " Отправление в <b>{0}</b> ({1})\n\n".format(
-            departure_datetime.time().strftime("%H:%M"),
-            arrival_datetime.time().strftime("%H:%M"))
+
+        price = str(segment["tickets_info"]["places"][0]["price"]["whole"])
+        if segment["tickets_info"]["places"][0]["price"]["cents"]:
+            price += ",{0}".format(
+                segment["tickets_info"]["places"][0]["price"]["cents"]
+            )
+
+        segment_answer += \
+            " Отправление в <b>{0}</b> ({1}) <code>{2}{3}</code>\n\n".format(
+                departure_datetime.time().strftime("%H:%M"),
+                arrival_datetime.time().strftime("%H:%M"),
+                price, emoji["ruble_sign"]
+            )
 
         answer += segment_answer
 

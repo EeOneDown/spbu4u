@@ -27,6 +27,8 @@ sslify = SSLify(app)
 logger = telebot.logger
 telebot.logger.setLevel(logging.INFO)
 
+server_timedelta = timedelta(hours=3)
+
 ############
 # KEYBOARDS
 ############
@@ -60,8 +62,6 @@ schedule_editor_keyboard = telebot.types.ReplyKeyboardMarkup(
     resize_keyboard=True, one_time_keyboard=False)
 schedule_editor_keyboard.row("Скрыть", "Выбрать", "Вернуть")
 schedule_editor_keyboard.row("Назад", "Адрес")
-
-server_timedelta = timedelta(hours=3)
 
 
 ############
@@ -450,10 +450,11 @@ def to_university_handler(message):
 def own_trail_handler(message):
     answer = "Выбери начальную станцию:"
     start_station_keyboard = telebot.types.InlineKeyboardMarkup(True)
-    # all_stations.keys() = all_stations_const
     for station_title in all_stations.keys():
         start_station_keyboard.row(*[telebot.types.InlineKeyboardButton(
             text=name, callback_data=name) for name in [station_title]])
+    start_station_keyboard.row(*[telebot.types.InlineKeyboardButton(
+            text=name, callback_data=name) for name in ["Домой", "В Универ"]])
     bot.send_message(message.chat.id, answer,
                      reply_markup=start_station_keyboard)
 
@@ -461,9 +462,18 @@ def own_trail_handler(message):
 @bot.message_handler(func=lambda mess: mess.text.title() == "Персонализация",
                      content_types=["text"])
 def personalisation_handler(message):
+    home_station = func.get_station_code(message.chat.id, is_home=True)
+    univer_station = func.get_station_code(message.chat.id, is_home=False)
+
+    home_station_title = func.get_key_by_value(all_stations, home_station)
+    univer_station_title = func.get_key_by_value(all_stations, univer_station)
+
     answer = "Здесь ты можешь настроить <b>домашнюю</b> и " \
              "<b>Университетскую</b> станции для команд <i>Домой</i> и " \
-             "<i>В Универ</i>"
+             "<i>В Универ</i>\n\n" \
+             "<b>Домашняя:</b> {0}\n<b>Университетская:</b> {1}".format(
+                                    home_station_title, univer_station_title)
+
     inline_keyboard = telebot.types.InlineKeyboardMarkup(True)
     inline_keyboard.row(*[telebot.types.InlineKeyboardButton(
             text=name, callback_data=name) for name in ["Домашняя"]])
@@ -1046,6 +1056,32 @@ def early_tomorrow_suburbans_handler(call_back):
         pass
 
 
+@bot.callback_query_handler(func=lambda call_back: call_back.data == "Домой")
+@bot.callback_query_handler(func=lambda call_back: call_back.data == "В Универ")
+def to_home_or_univer_handler(call_back):
+    user_id = call_back.message.chat.id
+    if call_back.data == "В Универ":
+        from_station = func.get_station_code(user_id, is_home=True)
+        to_station = func.get_station_code(user_id, is_home=False)
+    else:
+        from_station = func.get_station_code(user_id, is_home=False)
+        to_station = func.get_station_code(user_id, is_home=True)
+
+    from_station_title = func.get_key_by_value(all_stations, from_station)
+    to_station_title = func.get_key_by_value(all_stations, to_station)
+
+    answer = "Начальная: <b>{0}</b>\nКончная: <b>{1}</b>\nВыбери день:".format(
+        from_station_title, to_station_title)
+    day_keyboard = telebot.types.InlineKeyboardMarkup(True)
+    day_keyboard.row(*[telebot.types.InlineKeyboardButton(
+        text=name, callback_data=name) for name in ["Сегодня", "Завтра"]])
+    bot.edit_message_text(text=answer,
+                          chat_id=call_back.message.chat.id,
+                          message_id=call_back.message.message_id,
+                          reply_markup=day_keyboard,
+                          parse_mode="HTML")
+
+
 @bot.callback_query_handler(func=lambda call_back:
                             call_back.message.text == "Выбери начальную "
                                                       "станцию:")
@@ -1053,7 +1089,6 @@ def start_station_handler(call_back):
     answer = "Начальная: <b>{0}</b>\nВыбери конечную станцию:".format(
         call_back.data)
     end_station_keyboard = telebot.types.InlineKeyboardMarkup(True)
-    # all_stations.keys() = all_stations_const
     for station_title in all_stations.keys():
         if station_title == call_back.data:
             continue
@@ -1073,7 +1108,6 @@ def start_station_handler(call_back):
 def change_start_station_handler(call_back):
     answer = "Выбери начальную станцию:"
     start_station_keyboard = telebot.types.InlineKeyboardMarkup(True)
-    # all_stations.keys() = all_stations_const
     for station_title in all_stations.keys():
         start_station_keyboard.row(*[telebot.types.InlineKeyboardButton(
             text=name, callback_data=name) for name in [station_title]])

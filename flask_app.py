@@ -2153,10 +2153,10 @@ def reset_webhook():
     return "OK", 200
 
 
-@app.route("/", methods=["GET", "HEAD"])
+@app.route("/")
+@app.route("/index")
 def main_page():
-    page = '<meta http-equiv="refresh" content="1;url=https://t.me/Spbu4UBot">'
-    return page, 200
+    return flask.render_template("index.html")
 
 
 @app.route("/tt_request", methods=["GET"])

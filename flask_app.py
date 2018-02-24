@@ -2156,7 +2156,7 @@ def reset_webhook():
 @app.route("/")
 @app.route("/index")
 def main_page():
-    return flask.render_template("index.html")
+    return flask.render_template("index.html", bot_name="Spbu4UBot")
 
 
 @app.route("/tt_request", methods=["GET"])

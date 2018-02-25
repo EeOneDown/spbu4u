@@ -1,3 +1,31 @@
+body {
+    font-size: 18px;
+    font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.container {
+  margin-right: auto;
+  margin-left: auto;
+  padding-left: 15px;
+  padding-right: 15px;
+}
+@media (min-width: 768px) {
+  .container {
+    width: 750px;
+  }
+}
+@media (min-width: 992px) {
+  .container {
+    width: 970px;
+  }
+}
+@media (min-width: 1200px) {
+  .container {
+    width: 1170px;
+  }
+}
+
+
 .grey-color {
     color: #A8ADB4;
     font-size: 200%;
@@ -5,8 +33,4 @@
 
 .red-color {
     color: #9F2D20;
-}
-
-body {
-    font-family: -apple-system, BlinkMacSystemFont, sans-serif;
 }

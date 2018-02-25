@@ -3,10 +3,25 @@ body {
     font-family: -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
+li {
+Display:inline-block;
+}
+
+a,
+a:visited,
+a:active,
 .grey-color {
     color: #A8ADB4;
+    text-decoration: none;
 }
 
 .red-color {
     color: #9F2D20;
+}
+
+.footer {
+    position: fixed; /* Фиксированное положение */
+    left: 0; bottom: 0;
+    padding: 10px;
+    width: 100%; /* Ширина слоя */
 }

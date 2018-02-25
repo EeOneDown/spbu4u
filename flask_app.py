@@ -500,7 +500,7 @@ def schedule_editor_handler(message):
                      content_types=["text"])
 def place_handler(message):
     bot.send_chat_action(message.chat.id, "typing")
-    answer = "Здесь ты можешь выбрать отображаемый формат адрема\nСейчас: "
+    answer = "Здесь ты можешь выбрать отображаемый формат адреса\nСейчас: "
     place_keyboard = telebot.types.InlineKeyboardMarkup(True)
     if func.is_full_place(message.chat.id):
         answer += "<b>Полностью</b>"
@@ -537,7 +537,7 @@ def choose_educator_handler(message):
                      content_types=["text"])
 def hide_lesson_handler(message):
     bot.send_chat_action(message.chat.id, "typing")
-    answer = "Здесь ты можешь скрыть дюбое занятие\n\n" \
+    answer = "Здесь ты можешь скрыть любое занятие\n" \
              "Выбери день, когда есть это занятие:"
     json_week_data = func.get_json_week_data(message.chat.id)
     days = json_week_data["Days"]

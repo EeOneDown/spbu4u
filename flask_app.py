@@ -2158,7 +2158,16 @@ def reset_webhook():
 @app.route("/")
 @app.route("/index")
 def main_page():
-    return flask.render_template("index.html", bot_name="Spbu4UBot")
+    from requests import get
+    from bots_constants import yandex_key
+
+    url = "https://api.rasp.yandex.net/v3.0/copyright/"
+    params = {"apikey": yandex_key, "format": "json"}
+
+    data = get(url, params=params).json()["copyright"]
+
+    return flask.render_template("index.html", bot_name="Spbu4UBot",
+                                 url=data["url"], text=data["text"])
 
 
 @app.route("/tt_request", methods=["GET"])

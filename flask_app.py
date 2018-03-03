@@ -1270,21 +1270,10 @@ def cancel_handler(call_back):
 
 @bot.callback_query_handler(func=lambda call_back: call_back.data == "Занятие")
 def editor_choose_lesson_handler(call_back):
-    answer = "Выбери день, когда есть это занятие:"
-    json_week_data = func.get_json_week_data(call_back.message.chat.id)
-    days = json_week_data["Days"]
-    days_keyboard = telebot.types.InlineKeyboardMarkup(True)
-    for day in days:
-        days_keyboard.row(
-            *[telebot.types.InlineKeyboardButton(text=name, callback_data=name)
-              for name in [day["DayString"].split(", ")[0].capitalize()]])
-    days_keyboard.row(
-        *[telebot.types.InlineKeyboardButton(text=name, callback_data=name)
-          for name in ["Отмена"]])
+    answer = "В разработке"
     bot.edit_message_text(text=answer,
                           chat_id=call_back.message.chat.id,
-                          message_id=call_back.message.message_id,
-                          reply_markup=days_keyboard)
+                          message_id=call_back.message.message_id)
 
 
 @bot.callback_query_handler(func=lambda call_back:

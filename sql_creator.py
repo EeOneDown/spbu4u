@@ -42,6 +42,7 @@ def create_sql(db_name):
                         (
                             id INT PRIMARY KEY NOT NULL,
                             group_id INT NOT NULL,
+                            is_teacher INT DEFAULT 0 NOT NULL,
                             full_place INT DEFAULT 1 NOT NULL,
                             sending INT DEFAULT 0 NOT NULL,
                             rate INT DEFAULT 0 NOT NULL, 

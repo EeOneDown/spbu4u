@@ -154,7 +154,7 @@ def get_json_week_data(user_id, next_week=False, for_day=None):
         cursor.close()
         sql_con.close()
 
-    return json_week_data
+    return delete_symbols(json_week_data)
 
 
 def get_json_week_data_api(user_id, next_week=False, for_day=None):
@@ -177,7 +177,13 @@ def get_json_week_data_api(user_id, next_week=False, for_day=None):
 
     json_week_data = spbu.get_group_events(group_id=group_id,
                                            from_date=monday_date)
-    return json_week_data
+    return delete_symbols(json_week_data)
+
+
+def delete_symbols(json_obj):
+    return json.loads(
+        json.dumps(json_obj).replace("<", "").replace(">", "").replace("&", "")
+    )
 
 
 def get_json_day_data(user_id, day_date, json_week_data=None, next_week=False):
@@ -693,6 +699,9 @@ def get_blocks(user_id, day_date):
     day_study_events = json_day["DayStudyEvents"]
     block_answers = []
     item_block_num = 0
+    day_study_events = [
+        event for event in day_study_events if not event["IsCancelled"]
+    ]
     for num, event in enumerate(day_study_events):
         if event["IsCancelled"]:
             continue

@@ -9,6 +9,91 @@ from datetime import datetime, date, timedelta
 import spbu
 from telebot.apihelper import ApiException
 
+from constants import emoji, subject_short_type, months, months_date, \
+    week_day_number, week_day_titles, max_inline_button_text_len
+from flask_app import server_timedelta
+
+
+def add_new_user(user_id, group_id, group_title=None):
+    sql_con = sqlite3.connect("Bot.db")
+    cursor = sql_con.cursor()
+    if group_title is None:
+        group_title = spbu.get_group_events(group_id)[
+                          "StudentGroupDisplayName"][7:]
+    try:
+        cursor.execute("""INSERT INTO groups_data 
+                          (id, title)
+                          VALUES (?, ?)""",
+                       (group_id, group_title))
+    except sqlite3.IntegrityError:
+        sql_con.rollback()
+    finally:
+        json_week = json.dumps(spbu.get_group_events(group_id))
+        cursor.execute("""UPDATE groups_data
+                          SET json_week_data = ?
+                          WHERE id = ?""",
+                       (json_week, group_id))
+        sql_con.commit()
+    try:
+        cursor.execute("""INSERT INTO user_data (id, group_id)
+                          VALUES (?, ?)""",
+                       (user_id, group_id))
+    except sqlite3.IntegrityError:
+        sql_con.rollback()
+        cursor.execute("""UPDATE user_data 
+                          SET group_id = ?
+                          WHERE id = ?""",
+                       (group_id, user_id))
+    finally:
+        sql_con.commit()
+        cursor.execute("""DELETE FROM user_choice WHERE user_id = ?""",
+                       (user_id,))
+        sql_con.commit()
+        cursor.close()
+        sql_con.close()
+
+
+def parse_event_time(event):
+    return "{0} {1}".format(emoji["clock"], event["TimeIntervalString"])
+
+
+def parse_event_subject(event):
+    answer = ""
+    subject_name = ", ".join(event["Subject"].split(", ")[:-1])
+
+    subject_type = event["Subject"].split(", ")[-1]
+    stripped_subject_type = " ".join(subject_type.split()[:2])
+    if stripped_subject_type in subject_short_type.keys():
+        answer += subject_short_type[stripped_subject_type] + " - "
+    else:
+        answer += subject_type.upper() + " - "
+    answer += subject_name
+
+    return answer
+
+
+def parse_event_location(location, full_place=True):
+    answer = ""
+
+    if location["IsEmpty"]:
+        return answer
+
+    if full_place:
+        location_name = location["DisplayName"].strip(", ").strip()
+    else:
+        location_name = location["DisplayName"].split(", ")[-1].strip()
+
+    answer += location_name
+
+    if location["HasEducators"]:
+        educators = [educator["Item2"].split(", ")[0] for educator in
+                     location["EducatorIds"]]
+
+        if len(educators):
+            answer += " <i>({0})</i>".format("; ".join(educators))
+
+    return answer
+
 
 def insert_skip(event_name, types, event_day, event_time,
                 educators, user_id, is_choose_educator=False):
@@ -126,7 +211,6 @@ def date_from_iso(iso):
 
 
 def get_current_monday_date():
-    from flask_app import server_timedelta
     iso_day_date = list((date.today() + server_timedelta).isocalendar())
     if iso_day_date[2] == 7:
         iso_day_date[1] += 1
@@ -221,8 +305,6 @@ def is_event_in_skips(event, skips, week_day_string):
 
 def create_schedule_answer(day_info, full_place, user_id=None, personal=True,
                            db_path="Bot.db", only_exams=False):
-    from constants import emoji, subject_short_type
-
     if day_info is None:
         return emoji["sleep"] + " Выходной"
 
@@ -297,7 +379,6 @@ def create_schedule_answer(day_info, full_place, user_id=None, personal=True,
 
 
 def create_master_schedule_answer(day_info):
-    from constants import emoji, subject_short_type
     answer = "{0} {1}\n\n".format(emoji["calendar"], day_info["DayString"])
     for event in day_info["DayStudyEvents"]:
         answer += "{0} {1} <i>({2})</i>\n".format(
@@ -584,8 +665,6 @@ def is_correct_educator_name(text):
 
 
 def text_to_date(text):
-    from constants import months
-
     text = text.replace(".", " ")
     if text.replace(" ", "").isalnum():
         words = text.split()[:3]
@@ -610,45 +689,6 @@ def text_to_date(text):
         except ValueError:
             return False
     return False
-
-
-def add_new_user(user_id, group_id, group_title=None):
-    sql_con = sqlite3.connect("Bot.db")
-    cursor = sql_con.cursor()
-    if group_title is None:
-        group_title = spbu.get_group_events(group_id)[
-                          "StudentGroupDisplayName"][7:]
-    try:
-        cursor.execute("""INSERT INTO groups_data 
-                          (id, title)
-                          VALUES (?, ?)""",
-                       (group_id, group_title))
-    except sqlite3.IntegrityError:
-        sql_con.rollback()
-    finally:
-        json_week = json.dumps(spbu.get_group_events(group_id))
-        cursor.execute("""UPDATE groups_data
-                          SET json_week_data = ?
-                          WHERE id = ?""",
-                       (json_week, group_id))
-        sql_con.commit()
-    try:
-        cursor.execute("""INSERT INTO user_data (id, group_id)
-                          VALUES (?, ?)""",
-                       (user_id, group_id))
-    except sqlite3.IntegrityError:
-        sql_con.rollback()
-        cursor.execute("""UPDATE user_data 
-                          SET group_id = ?
-                          WHERE id = ?""",
-                       (group_id, user_id))
-    finally:
-        sql_con.commit()
-        cursor.execute("""DELETE FROM user_choice WHERE user_id = ?""",
-                       (user_id,))
-        sql_con.commit()
-        cursor.close()
-        sql_con.close()
 
 
 def get_semester_dates():
@@ -678,9 +718,24 @@ def get_json_attestation(user_id):
     return req
 
 
-def get_available_months(user_id):
-    from constants import months_date
+def get_available_day_events(user_id, day_date=None, json_day_data=None):
+    if not json_day_data:
+        json_day_data = get_json_day_data(user_id=user_id, day_date=day_date)
 
+    json_day_events = [
+        event for event in json_day_data["DayStudyEvents"]
+        if not event["IsCancelled"]
+    ]
+
+    return json_day_events
+
+
+def is_same_time(json_day_events, num):
+    return json_day_events[num]["TimeIntervalString"] != \
+           json_day_events[num - 1]["TimeIntervalString"]
+
+
+def get_available_months(user_id):
     json_att = get_json_attestation(user_id)
     available_months = {}
     for day_data in json_att["Days"]:
@@ -690,60 +745,58 @@ def get_available_months(user_id):
     return available_months
 
 
-def get_blocks(user_id, day_date):
-    from constants import emoji, subject_short_type
+def get_day_blocks(user_id, day_date=None, json_day_data=None):
+    json_day_events = get_available_day_events(user_id, day_date, json_day_data)
 
+    event_blocks = []
+    for num, event in enumerate(json_day_events):
+        if num == 0 or is_same_time(json_day_events, num):
+            event_blocks.append([event])
+        else:
+            event_blocks[-1].append(event)
+
+    return event_blocks
+
+
+def get_blocks(user_id, day_date):
     json_day = get_json_day_data(user_id, day_date)
     day_string = json_day["DayString"].capitalize()
 
-    day_study_events = json_day["DayStudyEvents"]
     block_answers = []
-    item_block_num = 0
-    day_study_events = [
-        event for event in day_study_events if not event["IsCancelled"]
-    ]
-    for num, event in enumerate(day_study_events):
-        if event["IsCancelled"]:
-            continue
-        answer = "\n<b>{ibn}. "
-        subject_type = event["Subject"].split(", ")[-1]
-        stripped_subject_type = " ".join(subject_type.split()[:2])
-        if stripped_subject_type in subject_short_type.keys():
-            answer += subject_short_type[stripped_subject_type] + " - "
-        else:
-            answer += subject_type.upper() + " - "
-        answer += ", ".join(event["Subject"].split(", ")[:-1]) + "</b>"
-        if is_event_in_skips(event, get_hide_lessons_data(
-                user_id, week_day=json_day["DayString"].split(", ")[0]),
-                             json_day["DayString"].split(", ")[0]):
-            answer += " {0}".format(emoji["cross_mark"])
-        answer += "\n"
-        for location in event["EventLocations"]:
-            if location["IsEmpty"]:
-                continue
-            location_name = location["DisplayName"].strip(", ")
-            answer += location_name
-            if location["HasEducators"]:
-                educators = [educator["Item2"].split(", ")[0] for educator in
-                             location["EducatorIds"] if educator["Item1"] != -1]
-                if len(educators):
-                    answer += " <i>({0})</i>".format("; ".join(educators))
-            answer += "\n"
-        if num != 0 and event["TimeIntervalString"] == \
-                day_study_events[num - 1]["TimeIntervalString"]:
-            item_block_num += 1
-            block_answers[-1] += answer.format(ibn=item_block_num + 1)
-        else:
-            item_block_num = 0 if num != 0 else item_block_num
-            answer = "{0} {1}\n".format(emoji["clock"],
-                                        event["TimeIntervalString"]) + answer
-            block_answers.append(answer.format(ibn=item_block_num + 1))
-    return day_string, [block + "\nВыбери занятие:" for block in block_answers]
+    day_blocks = get_day_blocks(user_id, day_date, json_day)
+
+    for events in day_blocks:
+        answer = "{0} {1}\n\n".format(emoji["clock"],
+                                      events[0]["TimeIntervalString"])
+        for num, event in enumerate(events, start=1):
+            subject = parse_event_subject(event).replace("<b>", "")
+            if is_event_in_skips(
+                    event,
+                    get_hide_lessons_data(
+                        user_id,
+                        week_day=json_day["DayString"].split(", ")[0]
+                    ),
+                    json_day["DayString"].split(", ")[0]
+            ):
+                hide_mark = " {0}".format(emoji["cross_mark"])
+            else:
+                hide_mark = ""
+
+            locations = ""
+            for location in event["EventLocations"]:
+                locations += parse_event_location(location)
+                locations += "\n"
+
+            answer += "<b>{0}. {1}</b>{2}\n{3}\n".format(
+                num, subject, hide_mark, locations
+            )
+
+        block_answers.append(answer)
+
+    return day_string, [block + "Выбери занятие:" for block in block_answers]
 
 
 def get_current_block(message_text, user_id, is_prev=False):
-    from flask_app import server_timedelta
-    from constants import week_day_number, week_day_titles
     current_block = int(message_text.split(" ")[0]) - 1
     day_string = message_text.split(")")[0].split("(")[-1]
 
@@ -766,9 +819,61 @@ def get_current_block(message_text, user_id, is_prev=False):
     return answer, events
 
 
-def get_lessons_with_educators(user_id, day_date):
-    from constants import emoji
+def is_selective_block(block):
+    return len(block) > 1
 
+
+def get_selective_blocks(user_id):
+    week = get_json_week_data(user_id)["Days"]
+    selective_blocks = {}
+    for day in week:
+        bls = get_day_blocks(user_id, json_day_data=day)
+        for bl in bls:
+            if is_selective_block(bl):
+                key = "{0} {1}".format(
+                    day["DayString"].split(", ")[0].capitalize(),
+                    bl[0]["TimeIntervalString"]
+                )
+                selective_blocks[key] = bl
+
+    return selective_blocks
+
+
+def create_selective_block_answer(user_id, selective_block, week_day):
+    keyboard = []
+    answer = ""
+    for num, event in enumerate(selective_block, start=1):
+        subject = parse_event_subject(event)
+
+        keyboard.append("{0}. {1}".format(
+            num, subject[:max_inline_button_text_len])
+        )
+
+        if is_event_in_skips(
+                event,
+                get_hide_lessons_data(
+                    user_id,
+                    week_day=week_day
+                ),
+                week_day
+        ):
+            hide_mark = " {0}".format(emoji["cross_mark"])
+        else:
+            hide_mark = ""
+
+        locations = ""
+        for location in event["EventLocations"]:
+            locations += parse_event_location(location)
+            locations += "\n"
+
+        answer += "<b>{0}. {1}</b>{2}\n{3}\n".format(
+            num, subject, hide_mark, locations
+        )
+
+    return answer, keyboard
+
+
+def get_lessons_with_educators(user_id, day_date):
     json_day = get_json_day_data(user_id, day_date)
     answer = ""
     day_study_events = json_day["DayStudyEvents"]

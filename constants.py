@@ -21,6 +21,8 @@ webhook_port = 443
 webhook_url_base = "https://{0}:{1}".format(webhook_host, webhook_port)
 webhook_url_path = "/{0}/".format(sha_string)
 
+max_inline_button_text_len = 32
+
 urls = {
     "ya_search": "https://api.rasp.yandex.net/v3.0/search/"
 }

@@ -7,7 +7,7 @@ import sqlite3
 import spbu
 import telebot
 
-from functions import add_new_user
+import functions
 
 
 def set_next_step(user_id, next_step):
@@ -378,7 +378,7 @@ def confirm_choice(message):
         cursor.close()
         sql_con.close()
 
-        add_new_user(user_id, group_id)
+        functions.add_new_user(user_id, group_id)
 
         answer = "Главное меню\n\n" \
                  "{0} - информация о боте\n" \

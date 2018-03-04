@@ -528,7 +528,7 @@ def choose_educator_handler(message):
     inline_keyboard = telebot.types.InlineKeyboardMarkup(True)
     inline_keyboard.row(
         *[telebot.types.InlineKeyboardButton(text=name, callback_data=name)
-          for name in ["Занятие", "Преподавателя"]])
+          for name in ["Преподавателя", "Занятие"]])
     bot.send_message(message.chat.id, answer, reply_markup=inline_keyboard)
 
 
@@ -560,7 +560,7 @@ def chose_to_return(message):
     inline_keyboard = telebot.types.InlineKeyboardMarkup(True)
     inline_keyboard.row(
         *[telebot.types.InlineKeyboardButton(text=name, callback_data=name)
-          for name in ["Занятия", "Преподавателей"]])
+          for name in ["Преподавателей", "Занятия"]])
     bot.send_message(message.chat.id, answer, reply_markup=inline_keyboard)
 
 
@@ -1270,16 +1270,117 @@ def cancel_handler(call_back):
 
 @bot.callback_query_handler(func=lambda call_back: call_back.data == "Занятие")
 def editor_choose_lesson_handler(call_back):
-    answer = "В разработке"
+    answer = "Выбери пару с большим количеством занятий:"
+    selective_blocks = func.get_selective_blocks(call_back.message.chat.id)
+    blocks_keyboard = telebot.types.InlineKeyboardMarkup(True)
+    for key in selective_blocks:
+        blocks_keyboard.row(
+            *[telebot.types.InlineKeyboardButton(text=name, callback_data=name)
+              for name in [key]]
+        )
+    if len(blocks_keyboard.to_dic()["inline_keyboard"]):
+        blocks_keyboard.row(
+            *[telebot.types.InlineKeyboardButton(text=name, callback_data=name)
+              for name in ["Отмена"]])
+    else:
+        answer = "Нет пар с большим количеством занятий"
     bot.edit_message_text(text=answer,
                           chat_id=call_back.message.chat.id,
+                          message_id=call_back.message.message_id,
+                          reply_markup=blocks_keyboard)
+
+
+@bot.callback_query_handler(func=lambda call_back:
+                            "Выбери пару с большим количеством занятий:" in
+                            call_back.message.text)
+def select_block_choose_lesson_handler(call_back):
+    bot.edit_message_text(chat_id=call_back.message.chat.id,
+                          text="{0} {1}".format(emoji["calendar"],
+                                                call_back.data),
                           message_id=call_back.message.message_id)
+
+    selective_blocks = func.get_selective_blocks(call_back.message.chat.id)
+
+    answer, lessons = func.create_selective_block_answer(
+        call_back.message.chat.id, selective_blocks[call_back.data],
+        call_back.data.lower()
+    )
+
+    inline_keyboard = telebot.types.InlineKeyboardMarkup()
+    for lesson in lessons:
+        inline_keyboard.row(
+            *[telebot.types.InlineKeyboardButton(text=name, callback_data=name)
+              for name in [lesson]]
+        )
+    inline_keyboard.row(
+        *[telebot.types.InlineKeyboardButton(text=name, callback_data=name)
+          for name in ["Отмена"]]
+        )
+
+    answer = "Вот список занятий, проходящих в данное время:\n\n" \
+             "{0}" \
+             "Выбери занятие, которое хочешь оставить:".format(answer)
+
+    bot.send_message(chat_id=call_back.message.chat.id,
+                     text=answer,
+                     reply_markup=inline_keyboard,
+                     parse_mode="HTML")
+
+
+@bot.callback_query_handler(func=lambda call_back:
+                            "Выбери занятие, которое хочешь оставить:" in
+                            call_back.message.text)
+def lesson_chosen_handler(call_back):
+    lessons = call_back.message.text.split("\n\n")[1:-1]
+    chosen_lesson_number = int(call_back.data.split(". ")[0]) - 1
+    chosen_lesson_name = " - ".join(
+        lessons[chosen_lesson_number].split("\n")[0].split(" - ")[1:]
+    )
+    chosen_lesson_educators = ""
+
+    for num, lesson in enumerate(lessons):
+        if num == chosen_lesson_number:
+
+            continue
+
+        lesson = lesson.replace(emoji["cross_mark"], "")
+
+        hide_event_name = " - ".join(lesson.split("\n")[0].split(" - ")[1:])
+        hide_event_types = "all"
+        hide_day = "all"
+        hide_time = "all"
+        hide_educators = ""
+        if hide_event_name == chosen_lesson_name:
+            if not chosen_lesson_educators:
+                for place_edu in lesson.split("\n")[1:]:
+                    pos = place_edu.find("(")
+                    if pos != -1:
+                        chosen_lesson_educators += place_edu[pos + 1:-1] + "; "
+                chosen_lesson_educators = "(" + chosen_lesson_educators.strip(
+                    "; ") + ")"
+
+            for place_edu in lesson.split("\n")[1:]:
+                pos = place_edu.find("(")
+                if pos != -1:
+                    hide_educators += place_edu[pos + 1:-1] + "; "
+            hide_educators = hide_educators.strip("; ")
+        else:
+            hide_educators = "all"
+
+        func.insert_skip(hide_event_name, hide_event_types, hide_day, hide_time,
+                         hide_educators, call_back.message.chat.id)
+    answer = "Выбрано занятие <b>{0}</b> <i>{1}</i>".format(
+        chosen_lesson_name, chosen_lesson_educators
+    )
+    bot.edit_message_text(text=answer, chat_id=call_back.message.chat.id,
+                          message_id=call_back.message.message_id,
+                          parse_mode="HTML")
 
 
 @bot.callback_query_handler(func=lambda call_back:
                             call_back.data == "Преподавателя")
 def editor_choose_educator_handler(call_back):
-    answer = "Выбери день, в котором есть занятие с большим колличеством " \
+    answer = "Выбери день, в котором есть занятие с большим количеством " \
              "преподавателей:"
     json_week_data = func.get_json_week_data(call_back.message.chat.id)
     days = json_week_data["Days"]
@@ -1298,7 +1399,7 @@ def editor_choose_educator_handler(call_back):
             *[telebot.types.InlineKeyboardButton(text=name, callback_data=name)
               for name in ["Отмена"]])
     else:
-        answer = "Нет занятий с большим колличеством преподавателей"
+        answer = "Нет занятий с большим количеством преподавателей"
     bot.edit_message_text(text=answer, chat_id=call_back.message.chat.id,
                           message_id=call_back.message.message_id,
                           reply_markup=days_keyboard)
@@ -1328,9 +1429,9 @@ def select_day_choose_educator_handler(call_back):
             button_text = "{0}".format(event.split("\n")[0].strip(" {0}".format(
                 emoji["cross_mark"]))[3:-4])
             inline_keyboard.row(
-                *[telebot.types.InlineKeyboardButton(text=name,
-                                                     callback_data=name[:32])
-                  for name in [button_text]]
+                *[telebot.types.InlineKeyboardButton(
+                    text=name, callback_data=name[:max_inline_button_text_len]
+                ) for name in [button_text]]
             )
         inline_keyboard.row(
             telebot.types.InlineKeyboardButton(text="Отмена",
@@ -1350,11 +1451,14 @@ def select_educator_handler(call_back):
     chosen_event_data = chosen_event.split("\n")
     inline_keyboard = telebot.types.InlineKeyboardMarkup(row_width=1)
     inline_keyboard.add(
-        *[telebot.types.InlineKeyboardButton(text=name,
-                                             callback_data=name[:32])
-          for name in [place_edu.strip(" {0}".format(
-                                emoji["heavy_check_mark"])).split("(")[1][:-1]
-                       for place_edu in chosen_event_data[1:]]]
+        *[telebot.types.InlineKeyboardButton(
+            text=name, callback_data=name[:max_inline_button_text_len]
+        ) for name in [
+            place_edu.strip(
+                " {0}".format(emoji["heavy_check_mark"])
+            ).split("(")[1][:-1]
+            for place_edu in chosen_event_data[1:]
+        ]]
     )
     inline_keyboard.row(
         telebot.types.InlineKeyboardButton(text="Отмена",
@@ -1414,9 +1518,10 @@ def select_day_hide_lesson_handler(call_back):
         button_text = "{0} - {1}".format(event_name[0],
                                          event_name[1].split(". ")[-1])
         events_keyboard.row(
-            *[telebot.types.InlineKeyboardButton(text=name,
-                                                 callback_data=name[:32])
-              for name in [button_text]])
+            *[telebot.types.InlineKeyboardButton(
+                text=name, callback_data=name[:max_inline_button_text_len]
+            ) for name in [button_text]]
+        )
     events_keyboard.row(
         *[telebot.types.InlineKeyboardButton(text=emoji[name],
                                              callback_data=name)
@@ -1439,9 +1544,10 @@ def next_block_handler(call_back):
         button_text = "{0} - {1}".format(event_name[0],
                                          event_name[1].split(". ")[-1])
         events_keyboard.row(
-            *[telebot.types.InlineKeyboardButton(text=name,
-                                                 callback_data=name[:32])
-              for name in [button_text]])
+            *[telebot.types.InlineKeyboardButton(
+                text=name, callback_data=name[:max_inline_button_text_len]
+            ) for name in [button_text]]
+        )
     events_keyboard.row(
         *[telebot.types.InlineKeyboardButton(text=emoji[name],
                                              callback_data=name)
@@ -1469,9 +1575,10 @@ def prev_block_handler(call_back):
         button_text = "{0} - {1}".format(event_name[0],
                                          event_name[1].split(". ")[-1])
         events_keyboard.row(
-            *[telebot.types.InlineKeyboardButton(text=name,
-                                                 callback_data=name[:32])
-              for name in [button_text]])
+            *[telebot.types.InlineKeyboardButton(
+                text=name, callback_data=name[:max_inline_button_text_len]
+            ) for name in [button_text]]
+        )
     events_keyboard.row(
         *[telebot.types.InlineKeyboardButton(text=emoji[name],
                                              callback_data=name)
@@ -1512,9 +1619,10 @@ def lesson_selected_handler(call_back):
           for name in short_types])
     if is_special_type:
         types_keyboard.row(
-            *[telebot.types.InlineKeyboardButton(text=name,
-                                                 callback_data=name[:32])
-              for name in [event_type]])
+            *[telebot.types.InlineKeyboardButton(
+                text=name, callback_data=name[:max_inline_button_text_len]
+            ) for name in [event_type]]
+        )
     types_keyboard.row(
         *[telebot.types.InlineKeyboardButton(text=name, callback_data=name)
           for name in ["Отмена", "Далее"]])
@@ -1592,9 +1700,10 @@ def select_types_handler(call_back):
             chosen_type = "{0} {1}".format(emoji["heavy_check_mark"],
                                            chosen_type)
         types_keyboard.row(
-            *[telebot.types.InlineKeyboardButton(text=name,
-                                                 callback_data=name[:32])
-              for name in [chosen_type]])
+            *[telebot.types.InlineKeyboardButton(
+                text=name, callback_data=name[:max_inline_button_text_len]
+            ) for name in [chosen_type]]
+        )
     types_keyboard.row(
         *[telebot.types.InlineKeyboardButton(text=name, callback_data=name)
           for name in ["Отмена", "Далее"]])
@@ -1725,19 +1834,28 @@ def return_lesson(call_back):
     if len(data):
         answer = "Вот список скрытых тобой занятий:\n\n"
         for lesson in data:
-            answer += "<b>id: {0}</b>\n<b>Название</b>: {1}\n<b>Типы</b>: {2}" \
-                      "\n<b>Дни</b>: {3}\n<b>Время</b>: {4}\n" \
-                      "<b>Преподаватели</b>: {5}\n\n".format(
-                        lesson[0],
-                        lesson[1] if lesson[1] != "all" else "Любые",
-                        lesson[2] if lesson[2] != "all" else "Любые",
-                        lesson[3] if lesson[3] != "all" else "Любые",
-                        lesson[4] if lesson[4] != "all" else "Любое",
-                        lesson[5] if lesson[5] != "all" else "Любые")
+            answer += "<b>id: {0}</b>\n".format(lesson[0])
+            if lesson[1] != "all":
+                answer += "<b>Название</b>: {0}\n".format(lesson[1])
+
+            if lesson[2] != "all":
+                answer += "<b>Типы</b>: {0}\n".format(lesson[2])
+
+            if lesson[3] != "all":
+                answer += "<b>Дни</b>: {0}\n".format(lesson[3])
+
+            if lesson[4] != "all":
+                answer += "<b>Время</b>: {0}\n".format(lesson[4])
+
+            if lesson[5] != "all":
+                answer += "<b>Преподаватели</b>: {0}\n".format(lesson[5])
+
+            answer += "\n"
+
             ids_keyboard.row(
-                *[telebot.types.InlineKeyboardButton(text=name,
-                                                     callback_data=name[:32])
-                  for name in ["{0} - {1}".format(lesson[0], lesson[1])]]
+                *[telebot.types.InlineKeyboardButton(
+                    text=name, callback_data=name[:max_inline_button_text_len]
+                ) for name in ["{0} - {1}".format(lesson[0], lesson[1])]]
             )
         ids_keyboard.row(
             *[telebot.types.InlineKeyboardButton(text=name, callback_data=name)
@@ -1812,11 +1930,10 @@ def return_all(call_back):
 def return_lesson_handler(call_back):
     lesson_id = call_back.data.split(" - ")[0]
     events = call_back.message.text.split("\n\n")[1:-1]
-    lesson_title = lesson_type = ""
+    lesson_title = ""
     for event in events:
         if event.split("\n")[0].split(": ")[1] == lesson_id:
             lesson_title = event.split("\n")[1].split(": ")[1]
-            lesson_type = event.split("\n")[2].split(": ")[1]
             break
     sql_con = sqlite3.connect("Bot.db")
     cursor = sql_con.cursor()
@@ -1827,8 +1944,7 @@ def return_lesson_handler(call_back):
     sql_con.commit()
     cursor.close()
     sql_con.close()
-    answer = "<b>Занятие возвращено:</b>\n{0}, {1}".format(lesson_title,
-                                                           lesson_type)
+    answer = "<b>Занятие возвращено:</b>\n{0}".format(lesson_title)
     bot.edit_message_text(text=answer, chat_id=call_back.message.chat.id,
                           message_id=call_back.message.message_id,
                           parse_mode="HTML")
@@ -1847,9 +1963,9 @@ def return_educator(call_back):
                       "<b>Преподаватель</b>: {2}\n\n".format(
                                     lesson[0], lesson[1], lesson[5])
             ids_keyboard.row(
-                *[telebot.types.InlineKeyboardButton(text=name,
-                                                     callback_data=name[:32])
-                  for name in ["{0} - {1}".format(lesson[0], lesson[1])]]
+                *[telebot.types.InlineKeyboardButton(
+                    text=name, callback_data=name[:max_inline_button_text_len]
+                ) for name in ["{0} - {1}".format(lesson[0], lesson[1])]]
             )
         ids_keyboard.row(
             *[telebot.types.InlineKeyboardButton(text=name, callback_data=name)

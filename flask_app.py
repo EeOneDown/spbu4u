@@ -5,7 +5,7 @@ import json
 import logging
 import math
 import sqlite3
-from datetime import datetime, timedelta, time as dt_time
+from datetime import datetime, time as dt_time
 from random import choice
 from time import time, localtime
 
@@ -26,8 +26,6 @@ sslify = SSLify(app)
 
 logger = telebot.logger
 telebot.logger.setLevel(logging.INFO)
-
-server_timedelta = timedelta(hours=3)
 
 ############
 # KEYBOARDS

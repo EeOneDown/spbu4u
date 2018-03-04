@@ -10,8 +10,8 @@ import spbu
 from telebot.apihelper import ApiException
 
 from constants import emoji, subject_short_type, months, months_date, \
-    week_day_number, week_day_titles, max_inline_button_text_len
-from flask_app import server_timedelta
+    week_day_number, week_day_titles, max_inline_button_text_len, \
+    server_timedelta
 
 
 def add_new_user(user_id, group_id, group_title=None):

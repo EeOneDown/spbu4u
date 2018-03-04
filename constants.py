@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 
 import hmac
 from collections import OrderedDict
+from datetime import timedelta
 from hashlib import sha256
 
 from bots_constants import secret_key, test_token, user_name
@@ -22,6 +23,8 @@ webhook_url_base = "https://{0}:{1}".format(webhook_host, webhook_port)
 webhook_url_path = "/{0}/".format(sha_string)
 
 max_inline_button_text_len = 32
+
+server_timedelta = timedelta(hours=3)
 
 urls = {
     "ya_search": "https://api.rasp.yandex.net/v3.0/search/"

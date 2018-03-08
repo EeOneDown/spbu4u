@@ -52,8 +52,8 @@ def select_division(message):
     sql_con.close()
 
     divisions = json.loads(data[0])
-    division_names = [division["Name"] for division in divisions]
-    aliases = [division["Alias"] for division in divisions]
+    division_names = [division["Name"].strip() for division in divisions]
+    aliases = [division["Alias"].strip() for division in divisions]
     if message.text in division_names:
         answer += "Выбери ступень:"
         study_programs_keyboard = telebot.types.ReplyKeyboardMarkup(
@@ -105,7 +105,7 @@ def select_study_level(message):
 
     study_level_names = []
     for study_program in study_programs:
-        study_level_names.append(study_program["StudyLevelName"])
+        study_level_names.append(study_program["StudyLevelName"].strip())
     if message.text in study_level_names:
         answer += "Укажи программу:"
         study_program_combinations_keyboard = telebot.types.ReplyKeyboardMarkup(
@@ -165,7 +165,7 @@ def select_study_program_combination(message):
     study_program_combination_names = []
     for study_program_combination in study_program_combinations:
         study_program_combination_names.append(
-            study_program_combination["Name"])
+            study_program_combination["Name"].strip())
     if message.text in study_program_combination_names:
         answer += "Укажи год поступления:"
         admission_years_keyboard = telebot.types.ReplyKeyboardMarkup(
@@ -242,7 +242,7 @@ def select_admission_year(message):
     admission_years = study_program_combinations[index]["AdmissionYears"]
     admission_year_names = []
     for admission_year in admission_years:
-        admission_year_names.append(admission_year["YearName"])
+        admission_year_names.append(admission_year["YearName"].strip())
     if message.text in admission_year_names:
         answer += "Укажи группу:"
         index = admission_year_names.index(message.text)
@@ -309,7 +309,7 @@ def select_student_group(message):
     student_groups = json.loads(data)
     student_group_names = []
     for student_group in student_groups["Groups"]:
-        student_group_names.append(student_group["StudentGroupName"])
+        student_group_names.append(student_group["StudentGroupName"].strip())
     if message.text in student_group_names:
         index = student_group_names.index(message.text)
         student_group_id = student_groups["Groups"][index]["StudentGroupId"]
@@ -385,7 +385,7 @@ def confirm_choice(message):
                  "{1} - оценить бота\n" \
                  "{2} - настройки\n" \
                  "{3} - электрички\n" \
-                 "{4} - редактор расписания\n" \
+                 "{4} - <b>редактор расписания</b>\n" \
                  "@Spbu4u_news - новости бота".format(emoji["info"],
                                                       emoji["star"],
                                                       emoji["settings"],

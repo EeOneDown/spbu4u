@@ -105,7 +105,7 @@ def start_handler(message):
                  "{1} - оценить бота\n" \
                  "{2} - настройки\n" \
                  "{3} - электрички\n" \
-                 "{4} - редактор расписания\n" \
+                 "{4} - <b>редактор расписания</b>\n" \
                  "@Spbu4u_news - новости бота".format(emoji["info"],
                                                       emoji["star"],
                                                       emoji["settings"],
@@ -148,9 +148,9 @@ def start_handler(message):
 def problem_text_handler(message):
     bot.send_chat_action(message.chat.id, "typing")
     answer = "Если возникла проблема, то:\n" \
-             "1. возможно, информация по этому поводу есть в нашем канале" \
+             "1. Возможно, информация по этому поводу есть в нашем канале" \
              " - @Spbu4u_news;\n" \
-             "2. ты всегда можешь связаться с " \
+             "2. Ты всегда можешь связаться с " \
              "<a href='https://t.me/eeonedown'>разработчиком</a>."
     bot.send_message(message.chat.id, answer,
                      disable_web_page_preview=True,
@@ -730,6 +730,17 @@ def other_text_handler(message):
 ############
 # CALLBACK
 ############
+@bot.callback_query_handler(func=lambda call_back:
+                            not func.is_user_exist(call_back.message.chat.id))
+def not_exist_user_callback_handler(call_back):
+    answer = "Чтобы пользоваться сервисом, необходимо " \
+             "зарегистрироваться.\nВоспользуйся коммандой /start"
+    bot.edit_message_text(text=answer,
+                          chat_id=call_back.message.chat.id,
+                          message_id=call_back.message.message_id,
+                          parse_mode="HTML")
+
+
 @bot.callback_query_handler(func=lambda call_back:
                             call_back.data == "Полное ИНФО")
 def show_full_info(call_back):

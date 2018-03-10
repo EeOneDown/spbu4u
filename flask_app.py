@@ -1340,7 +1340,8 @@ def select_block_choose_lesson_handler(call_back):
                             "Выбери занятие, которое хочешь оставить:" in
                             call_back.message.text)
 def lesson_chosen_handler(call_back):
-    bot_message_text = call_back.message.text.replace(emoji["cross_mark"], "")
+    bot_message_text = call_back.message.text.replace(
+        " {0}".format(emoji["cross_mark"]), "")
     lessons = bot_message_text.split("\n\n")[1:-1]
     chosen_lesson_number = int(call_back.data.split(". ")[0]) - 1
     chosen_lesson_name = " - ".join(

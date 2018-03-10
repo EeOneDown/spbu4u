@@ -559,6 +559,9 @@ def chose_to_return(message):
     inline_keyboard.row(
         *[telebot.types.InlineKeyboardButton(text=name, callback_data=name)
           for name in ["Преподавателей", "Занятия"]])
+    inline_keyboard.row(
+        *[telebot.types.InlineKeyboardButton(text=name, callback_data=name)
+          for name in ["Полный сброс"]])
     bot.send_message(message.chat.id, answer, reply_markup=inline_keyboard)
 
 
@@ -1351,7 +1354,6 @@ def lesson_chosen_handler(call_back):
 
     for num, lesson in enumerate(lessons):
         if num == chosen_lesson_number:
-
             continue
 
         hide_event_name = " - ".join(lesson.split("\n")[0].split(" - ")[1:])
@@ -1361,7 +1363,7 @@ def lesson_chosen_handler(call_back):
         hide_educators = ""
         if hide_event_name == chosen_lesson_name:
             if not chosen_lesson_educators:
-                for place_edu in lesson.split("\n")[1:]:
+                for place_edu in lessons[chosen_lesson_number].split("\n")[1:]:
                     pos = place_edu.find("(")
                     if pos != -1:
                         chosen_lesson_educators += place_edu[pos + 1:-1] + "; "
@@ -1919,14 +1921,8 @@ def return_lesson(call_back):
 
 @bot.callback_query_handler(func=lambda call_back:
                             call_back.data == "Вернуть всё")
-def return_all(call_back):
-    sql_con = sqlite3.connect("Bot.db")
-    cursor = sql_con.cursor()
-    cursor.execute("""DELETE FROM skips 
-                      WHERE user_id = ?""", (call_back.message.chat.id, ))
-    sql_con.commit()
-    cursor.close()
-    sql_con.close()
+def return_all_lessons(call_back):
+    func.delete_all_hides(call_back.message.chat.id, hide_type=1)
 
     answer = "Все занятия возвращены"
     bot.edit_message_text(text=answer, chat_id=call_back.message.chat.id,
@@ -1999,14 +1995,8 @@ def return_educator(call_back):
 
 @bot.callback_query_handler(func=lambda call_back:
                             call_back.data == "Вернуть всех")
-def return_all(call_back):
-    sql_con = sqlite3.connect("Bot.db")
-    cursor = sql_con.cursor()
-    cursor.execute("""DELETE FROM user_educators 
-                      WHERE user_id = ?""", (call_back.message.chat.id, ))
-    sql_con.commit()
-    cursor.close()
-    sql_con.close()
+def return_all_educators(call_back):
+    func.delete_all_hides(call_back.message.chat.id, hide_type=2)
 
     answer = "Все преподаватели возвращены"
     bot.edit_message_text(text=answer, chat_id=call_back.message.chat.id,
@@ -2039,6 +2029,16 @@ def return_lesson_handler(call_back):
     bot.edit_message_text(text=answer, chat_id=call_back.message.chat.id,
                           message_id=call_back.message.message_id,
                           parse_mode="HTML")
+
+
+@bot.callback_query_handler(func=lambda call_back:
+                            call_back.data == "Полный сброс")
+def return_everything_handler(call_back):
+    func.delete_all_hides(call_back.message.chat.id, hide_type=0)
+
+    answer = "Все занятия и преподаватели возвращены"
+    bot.edit_message_text(text=answer, chat_id=call_back.message.chat.id,
+                          message_id=call_back.message.message_id)
 
 
 @bot.callback_query_handler(func=lambda call_back:

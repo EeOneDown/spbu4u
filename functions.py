@@ -949,3 +949,27 @@ def get_random_group_id():
     cursor.close()
     sql_con.close()
     return group_id
+
+
+def delete_all_hides(user_id, hide_type=0):
+    """
+
+    :param user_id:
+    :param hide_type: 0 - all, 1 - lessons, 2 - educators
+    :return:
+    """
+    sql_con = sqlite3.connect("Bot.db")
+    cursor = sql_con.cursor()
+    if hide_type == 0 or hide_type == 1:
+        cursor.execute("""DELETE FROM skips 
+                          WHERE user_id = ?""",
+                       (user_id,))
+        sql_con.commit()
+
+    if hide_type == 0 or hide_type == 2:
+        cursor.execute("""DELETE FROM user_educators 
+                          WHERE user_id = ?""", (user_id,))
+        sql_con.commit()
+
+    cursor.close()
+    sql_con.close()

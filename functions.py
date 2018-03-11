@@ -283,8 +283,7 @@ def get_json_day_data(user_id, day_date, json_week_data=None, next_week=False):
 def is_event_in_skips(event, skips, week_day_string):
     event_educators = []
     for educator in event["EducatorIds"]:
-        if educator["Item1"] != -1:
-            event_educators.append(educator["Item2"].split(", ")[0])
+        event_educators.append(educator["Item2"].split(", ")[0])
     event_educators = set(event_educators)
 
     for skip_lesson in skips:
@@ -363,7 +362,7 @@ def create_schedule_answer(day_info, full_place, user_id=None, personal=True,
             answer += location_name
             if location["HasEducators"]:
                 educators = [educator["Item2"].split(", ")[0] for educator in
-                             location["EducatorIds"] if educator["Item1"] != -1]
+                             location["EducatorIds"]]
                 if len(educators):
                     answer += " <i>({0})</i>".format("; ".join(educators))
             if event["LocationsWereChanged"] or \
@@ -901,7 +900,7 @@ def get_lessons_with_educators(user_id, day_date):
         for location in event["EventLocations"]:
             event_text += location["DisplayName"].strip(", ")
             educators = {educator["Item2"].split(", ")[0] for educator in
-                         location["EducatorIds"] if educator["Item1"] != -1}
+                         location["EducatorIds"]}
             if len(educators):
                 event_text += " <i>({0})</i>".format("; ".join(educators))
             if have_chosen_educator and educators.issubset(chosen_educators[

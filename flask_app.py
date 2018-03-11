@@ -1460,16 +1460,19 @@ def select_educator_handler(call_back):
     chosen_event = ". ".join(
         message_text_data[chosen_event_number].split(". ")[1:])
     chosen_event_data = chosen_event.split("\n")
+    available_educators = []
+    for place_edu in chosen_event_data[1:]:
+        if "(" not in place_edu:
+            continue
+
+        place_edu = place_edu.strip(" {0}".format(emoji["heavy_check_mark"]))
+        available_educators.append(place_edu.split("(")[1][:-1])
+
     inline_keyboard = telebot.types.InlineKeyboardMarkup(row_width=1)
     inline_keyboard.add(
         *[telebot.types.InlineKeyboardButton(
             text=name, callback_data=name[:max_inline_button_text_len]
-        ) for name in [
-            place_edu.strip(
-                " {0}".format(emoji["heavy_check_mark"])
-            ).split("(")[1][:-1]
-            for place_edu in chosen_event_data[1:]
-        ]]
+        ) for name in available_educators]
     )
     inline_keyboard.row(
         telebot.types.InlineKeyboardButton(text="Отмена",

@@ -111,6 +111,22 @@ def create_sql(db_name):
                             )""")
     sql_con.commit()
 
+    # user_lessons
+    cursor.execute("""CREATE TABLE IF NOT EXISTS user_lessons
+                                (
+                                    user_id INT NOT NULL,
+                                    lesson_id INT NOT NULL,
+                                    CONSTRAINT user_lessons_user_id_lesson_id_pk 
+                                      PRIMARY KEY  (user_id, lesson_id),
+                                    CONSTRAINT user_lessons_user_data_id_fk 
+                                      FOREIGN KEY (user_id) 
+                                        REFERENCES user_data (id),
+                                    CONSTRAINT user_lessons_lessons_id_fk 
+                                      FOREIGN KEY (lesson_id) 
+                                        REFERENCES lessons (id)
+                                )""")
+    sql_con.commit()
+
     cursor.close()
     sql_con.close()
 

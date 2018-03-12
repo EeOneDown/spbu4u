@@ -71,6 +71,12 @@ schedule_editor_keyboard.row("Назад", "Адрес")
                      content_types=["text"])
 def start_handler(message):
     answer = ""
+
+    if bot_name != "Spbu4UBot" and message.chat.id not in ids:
+        answer = "Это тестовый бот. Используйте @Spbu4UBot"
+        bot.send_message(message.chat.id, answer)
+        return
+
     if message.text == "/start":
         answer = "Приветствую!\n"
     elif "/start" in message.text:

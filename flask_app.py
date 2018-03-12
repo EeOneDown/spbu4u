@@ -72,7 +72,7 @@ schedule_editor_keyboard.row("Назад", "Адрес")
 def start_handler(message):
     answer = ""
 
-    if bot_name != "Spbu4UBot" and message.chat.id not in ids:
+    if bot_name != "Spbu4UBot" and message.chat.id not in ids.values():
         answer = "Это тестовый бот. Используйте @Spbu4UBot"
         bot.send_message(message.chat.id, answer)
         return

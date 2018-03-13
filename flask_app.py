@@ -251,11 +251,9 @@ def not_exist_user_handler(message):
 def help_handler(message):
     bot.send_chat_action(message.chat.id, "typing")
     inline_full_info_keyboard = telebot.types.InlineKeyboardMarkup()
-    ''' delete this?
     inline_full_info_keyboard.row(
         *[telebot.types.InlineKeyboardButton(text=name, callback_data=name) for
-          name in ["Полное ИНФО"]])
-    '''
+          name in ["Благодарности"]])
     answer = briefly_info_answer
     bot.send_message(message.chat.id, answer,
                      parse_mode="HTML",
@@ -751,37 +749,16 @@ def not_exist_user_callback_handler(call_back):
 
 
 @bot.callback_query_handler(func=lambda call_back:
-                            call_back.data == "Полное ИНФО")
+                            call_back.data == "Благодарности")
 def show_full_info(call_back):
-    inline_keyboard = telebot.types.InlineKeyboardMarkup()
-    inline_keyboard.row(
-        *[telebot.types.InlineKeyboardButton(text=name, callback_data=name) for
-          name in ["Краткое ИНФО"]])
-    answer = full_info_answer
+    answer = special_thanks
     bot.edit_message_text(text=answer,
                           chat_id=call_back.message.chat.id,
                           message_id=call_back.message.message_id,
                           parse_mode="HTML",
-                          disable_web_page_preview=True,
-                          reply_markup=inline_keyboard)
-    inline_answer = "Много текста " + emoji["arrow_up"]
+                          disable_web_page_preview=True)
+    inline_answer = "И тебе :)"
     bot.answer_callback_query(call_back.id, inline_answer, cache_time=1)
-
-
-@bot.callback_query_handler(func=lambda call_back:
-                            call_back.data == "Краткое ИНФО")
-def show_briefly_info(call_back):
-    inline_keyboard = telebot.types.InlineKeyboardMarkup()
-    inline_keyboard.row(
-        *[telebot.types.InlineKeyboardButton(text=name, callback_data=name) for
-          name in ["Полное ИНФО"]])
-    answer = briefly_info_answer
-    bot.edit_message_text(text=answer,
-                          chat_id=call_back.message.chat.id,
-                          message_id=call_back.message.message_id,
-                          parse_mode="HTML",
-                          disable_web_page_preview=True,
-                          reply_markup=inline_keyboard)
 
 
 @bot.callback_query_handler(func=lambda call_back:

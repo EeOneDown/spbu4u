@@ -2344,6 +2344,10 @@ def webhook():
                                      disable_web_page_preview=True,
                                      parse_mode="HTML")
                     was_sent = True
+                    bot.send_message(ids["my"],
+                                     str(err) + "\n\nWas sent: {0}".format(
+                                         was_sent),
+                                     disable_notification=True)
                 except telebot.apihelper.ApiException as ApiExcept:
                     json_err = json.loads(ApiExcept.result.text)
                     if json_err["description"] == "Forbidden: bot was " \
@@ -2356,9 +2360,6 @@ def webhook():
                             json_err["description"]))
             else:
                 pass
-            bot.send_message(ids["my"],
-                             str(err) + "\n\nWas sent: {0}".format(was_sent),
-                             disable_notification=True)
         finally:
             func.write_log(update, time() - tic, was_error)
         return "OK", 200

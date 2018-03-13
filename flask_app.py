@@ -2336,18 +2336,14 @@ def webhook():
                      "канале - @Spbu4u_news\nИ ты всегда можешь связаться с " \
                      "<a href='https://t.me/eeonedown'>разработчиком</a>"
             was_error = True
-            was_sent = False
             if update.message is not None:
                 try:
                     bot.send_message(update.message.chat.id,
                                      answer,
                                      disable_web_page_preview=True,
                                      parse_mode="HTML")
-                    was_sent = True
                     bot.send_message(ids["my"],
-                                     str(err) + "\n\nWas sent: {0}".format(
-                                         was_sent),
-                                     disable_notification=True)
+                                     str(err) + "\n\nWas sent: True")
                 except telebot.apihelper.ApiException as ApiExcept:
                     json_err = json.loads(ApiExcept.result.text)
                     if json_err["description"] == "Forbidden: bot was " \

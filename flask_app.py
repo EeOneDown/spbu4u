@@ -2250,7 +2250,8 @@ def set_rate_handler(call_back):
 def inline_query_not_exist_user(inline_query):
     text = "Необходимо зарегистрироваться в группу"
     bot.answer_inline_query(inline_query.id, [], switch_pm_text=text,
-                            switch_pm_parameter="new_from_inline")
+                            switch_pm_parameter="new_from_inline",
+                            cache_time=1, is_personal=True)
 
 
 @bot.inline_handler(func=lambda query:
@@ -2277,13 +2278,13 @@ def inline_query_weekday_schedule_handler(inline_query):
         ),
         description=group_info[1]
     )
-    bot.answer_inline_query(inline_query.id, [r], cache_time=30,
+    bot.answer_inline_query(inline_query.id, [r], cache_time=1,
                             is_personal=True)
 
 
 @bot.inline_handler(func=lambda query: True)
 def inline_query_other_text_handler(inline_query):
-    bot.answer_inline_query(inline_query.id, [])
+    bot.answer_inline_query(inline_query.id, [], cache_time=1, is_personal=True)
 
 
 ############

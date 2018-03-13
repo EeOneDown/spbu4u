@@ -1,12 +1,17 @@
 # -*- coding: utf-8 -*-
+from __future__ import unicode_literals
+
 import json
 import sqlite3
-import requests
+
+import spbu
 import telebot
+
+import functions
 
 
 def set_next_step(user_id, next_step):
-    sql_con = sqlite3.connect("Bot_db")
+    sql_con = sqlite3.connect("Bot.db")
     cursor = sql_con.cursor()
     cursor.execute("""UPDATE user_choice
                       SET step = ? 
@@ -18,7 +23,7 @@ def set_next_step(user_id, next_step):
 
 
 def get_step(user_id):
-    sql_con = sqlite3.connect("Bot_db")
+    sql_con = sqlite3.connect("Bot.db")
     cursor = sql_con.cursor()
     cursor.execute("""SELECT  step
                       FROM user_choice
@@ -37,7 +42,7 @@ def select_division(message):
 
     answer = ""
 
-    sql_con = sqlite3.connect("Bot_db")
+    sql_con = sqlite3.connect("Bot.db")
     cursor = sql_con.cursor()
     cursor.execute("""SELECT divisions_json 
                       FROM user_choice 
@@ -47,22 +52,22 @@ def select_division(message):
     sql_con.close()
 
     divisions = json.loads(data[0])
-    division_names = [division["Name"] for division in divisions]
-    aliases = [division["Alias"] for division in divisions]
+    division_names = [division["Name"].strip() for division in divisions]
+    aliases = [division["Alias"].strip() for division in divisions]
     if message.text in division_names:
         answer += "Выбери ступень:"
-        study_programs_keyboard = telebot.types.ReplyKeyboardMarkup(True, False)
+        study_programs_keyboard = telebot.types.ReplyKeyboardMarkup(
+            resize_keyboard=True, one_time_keyboard=False
+        )
         index = division_names.index(message.text)
         alias = aliases[index]
-        url = "https://timetable.spbu.ru/api/v1/study/divisions/{0}/" \
-              "programs/levels".format(alias)
-        study_programs = requests.get(url).json()
+        study_programs = spbu.get_program_levels(alias)
         for study_program in study_programs:
             study_programs_keyboard.row(study_program["StudyLevelName"])
         study_programs_keyboard.row("Другое направление")
 
         data = json.dumps(study_programs)
-        sql_con = sqlite3.connect("Bot_db")
+        sql_con = sqlite3.connect("Bot.db")
         cursor = sql_con.cursor()
         cursor.execute("""UPDATE user_choice 
                           SET alias = ?, division_name = ?, 
@@ -87,7 +92,7 @@ def select_study_level(message):
 
     answer = ""
 
-    sql_con = sqlite3.connect("Bot_db")
+    sql_con = sqlite3.connect("Bot.db")
     cursor = sql_con.cursor()
     cursor.execute("""SELECT study_programs_json 
                       FROM user_choice 
@@ -100,11 +105,12 @@ def select_study_level(message):
 
     study_level_names = []
     for study_program in study_programs:
-        study_level_names.append(study_program["StudyLevelName"])
+        study_level_names.append(study_program["StudyLevelName"].strip())
     if message.text in study_level_names:
         answer += "Укажи программу:"
         study_program_combinations_keyboard = telebot.types.ReplyKeyboardMarkup(
-            True, False)
+            resize_keyboard=True, one_time_keyboard=False
+        )
         index = study_level_names.index(message.text)
         study_program_combinations = study_programs[index][
             "StudyProgramCombinations"]
@@ -113,7 +119,7 @@ def select_study_level(message):
                 study_program_combination["Name"])
         study_program_combinations_keyboard.row("Другая ступень")
 
-        sql_con = sqlite3.connect("Bot_db")
+        sql_con = sqlite3.connect("Bot.db")
         cursor = sql_con.cursor()
         cursor.execute("""UPDATE user_choice 
                           SET study_level_name = ?
@@ -140,7 +146,7 @@ def select_study_program_combination(message):
 
     answer = ""
 
-    sql_con = sqlite3.connect("Bot_db")
+    sql_con = sqlite3.connect("Bot.db")
     cursor = sql_con.cursor()
     cursor.execute("""SELECT study_level_name, study_programs_json 
                       FROM user_choice 
@@ -159,18 +165,19 @@ def select_study_program_combination(message):
     study_program_combination_names = []
     for study_program_combination in study_program_combinations:
         study_program_combination_names.append(
-            study_program_combination["Name"])
+            study_program_combination["Name"].strip())
     if message.text in study_program_combination_names:
         answer += "Укажи год поступления:"
-        admission_years_keyboard = telebot.types.ReplyKeyboardMarkup(True,
-                                                                     False)
+        admission_years_keyboard = telebot.types.ReplyKeyboardMarkup(
+            resize_keyboard=True, one_time_keyboard=False
+        )
         index = study_program_combination_names.index(message.text)
         admission_years = study_program_combinations[index]["AdmissionYears"]
         for admission_year in admission_years:
             admission_years_keyboard.row(admission_year["YearName"])
         admission_years_keyboard.row("Другая программа")
 
-        sql_con = sqlite3.connect("Bot_db")
+        sql_con = sqlite3.connect("Bot.db")
         cursor = sql_con.cursor()
         cursor.execute("""UPDATE user_choice
                           SET study_program_combination_name = ? 
@@ -184,7 +191,7 @@ def select_study_program_combination(message):
                          reply_markup=admission_years_keyboard)
         set_next_step(message.chat.id, "select_admission_year")
     elif message.text == "Другая ступень":
-        sql_con = sqlite3.connect("Bot_db")
+        sql_con = sqlite3.connect("Bot.db")
         cursor = sql_con.cursor()
         cursor.execute("""SELECT division_name 
                           FROM user_choice 
@@ -207,7 +214,7 @@ def select_admission_year(message):
 
     answer = ""
 
-    sql_con = sqlite3.connect("Bot_db")
+    sql_con = sqlite3.connect("Bot.db")
     cursor = sql_con.cursor()
     cursor.execute("""SELECT study_programs_json, study_level_name, 
                              study_program_combination_name
@@ -235,24 +242,24 @@ def select_admission_year(message):
     admission_years = study_program_combinations[index]["AdmissionYears"]
     admission_year_names = []
     for admission_year in admission_years:
-        admission_year_names.append(admission_year["YearName"])
+        admission_year_names.append(admission_year["YearName"].strip())
     if message.text in admission_year_names:
         answer += "Укажи группу:"
         index = admission_year_names.index(message.text)
         study_program_id = admission_years[index]["StudyProgramId"]
-        url = "https://timetable.spbu.ru/api/v1/progams/{0}/groups".format(
-            study_program_id)
-        student_groups = requests.get(url).json()
+        student_groups = spbu.get_groups(study_program_id)
         student_group_names = []
         for student_group in student_groups["Groups"]:
             student_group_names.append(student_group["StudentGroupName"])
-        student_groups_keyboard = telebot.types.ReplyKeyboardMarkup(True, False)
+        student_groups_keyboard = telebot.types.ReplyKeyboardMarkup(
+            resize_keyboard=True, one_time_keyboard=False
+        )
         for student_group_name in student_group_names:
             student_groups_keyboard.row(student_group_name)
         student_groups_keyboard.row("Другой год")
         data = json.dumps(student_groups)
 
-        sql_con = sqlite3.connect("Bot_db")
+        sql_con = sqlite3.connect("Bot.db")
         cursor = sql_con.cursor()
         cursor.execute("""UPDATE user_choice 
                           SET admission_year_name = ?, 
@@ -267,7 +274,7 @@ def select_admission_year(message):
                          reply_markup=student_groups_keyboard)
         set_next_step(message.chat.id, "select_student_group")
     elif message.text == "Другая программа":
-        sql_con = sqlite3.connect("Bot_db")
+        sql_con = sqlite3.connect("Bot.db")
         cursor = sql_con.cursor()
         cursor.execute("""SELECT study_level_name
                           FROM user_choice 
@@ -290,7 +297,7 @@ def select_student_group(message):
 
     answer = ""
 
-    sql_con = sqlite3.connect("Bot_db")
+    sql_con = sqlite3.connect("Bot.db")
     cursor = sql_con.cursor()
     cursor.execute("""SELECT student_groups_json
                       FROM user_choice 
@@ -302,12 +309,12 @@ def select_student_group(message):
     student_groups = json.loads(data)
     student_group_names = []
     for student_group in student_groups["Groups"]:
-        student_group_names.append(student_group["StudentGroupName"])
+        student_group_names.append(student_group["StudentGroupName"].strip())
     if message.text in student_group_names:
         index = student_group_names.index(message.text)
         student_group_id = student_groups["Groups"][index]["StudentGroupId"]
 
-        sql_con = sqlite3.connect("Bot_db")
+        sql_con = sqlite3.connect("Bot.db")
         cursor = sql_con.cursor()
         cursor.execute("""UPDATE user_choice 
                           SET student_group_name = ?, 
@@ -326,7 +333,9 @@ def select_student_group(message):
 
         text = ">> " + "\n>> ".join(data)
         answer += "Подтверди выбор:\n" + "<b>" + text + "</b>"
-        choice_keyboard = telebot.types.ReplyKeyboardMarkup(True, False)
+        choice_keyboard = telebot.types.ReplyKeyboardMarkup(
+            resize_keyboard=True, one_time_keyboard=False
+        )
         buttons = ["Все верно", "Другая группа", "Другой год",
                    "Другая программа", "Другая ступень", "Другое направление"]
         for button in buttons:
@@ -335,7 +344,7 @@ def select_student_group(message):
                          reply_markup=choice_keyboard)
         set_next_step(message.chat.id, "confirm_choice")
     elif message.text == "Другой год":
-        sql_con = sqlite3.connect("Bot_db")
+        sql_con = sqlite3.connect("Bot.db")
         cursor = sql_con.cursor()
         cursor.execute("""SELECT study_program_combination_name
                           FROM user_choice 
@@ -358,53 +367,25 @@ def confirm_choice(message):
     from constants import emoji
 
     if message.text == "Все верно":
-        sql_con = sqlite3.connect("Bot_db")
+        sql_con = sqlite3.connect("Bot.db")
         cursor = sql_con.cursor()
-        cursor.execute("""SELECT alias, student_group_id
+        cursor.execute("""SELECT student_group_id
                           FROM user_choice 
                           WHERE user_id = ?""", (message.chat.id,))
-        data = cursor.fetchone()
-        alias = data[0]
-        group_id = data[1]
-        try:
-            cursor.execute("""INSERT INTO user_data (id, alias, group_id)
-                              VALUES (?, ?, ?)""",
-                           (message.chat.id, alias, group_id))
-        except sqlite3.IntegrityError:
-            sql_con.rollback()
-            cursor.execute("""UPDATE user_data 
-                              SET alias = ?, group_id = ?
-                              WHERE id = ?""",
-                           (alias, group_id, message.chat.id))
-        finally:
-            sql_con.commit()
-            cursor.execute("""DELETE FROM user_choice WHERE user_id = ?""",
-                           (message.chat.id,))
-            sql_con.commit()
-        url = "https://timetable.spbu.ru/api/v1/groups/{0}/events".format(
-            group_id)
-        week_data = requests.get(url).json()
-        data = json.dumps(week_data)
-        try:
-            cursor.execute("""INSERT INTO groups_data 
-                              (id, alias, json_week_data)
-                              VALUES (?, ?, ?)""",
-                           (group_id, alias, data))
-        except sqlite3.IntegrityError:
-            cursor.execute("""UPDATE groups_data
-                              SET json_week_data = ?
-                              WHERE id = ? AND alias = ?""",
-                           (data, group_id, alias))
-        finally:
-            sql_con.commit()
-            cursor.close()
-            sql_con.close()
+        group_id = cursor.fetchone()[0]
+        user_id = message.chat.id
+
+        cursor.close()
+        sql_con.close()
+
+        functions.add_new_user(user_id, group_id)
+
         answer = "Главное меню\n\n" \
                  "{0} - информация о боте\n" \
                  "{1} - оценить бота\n" \
                  "{2} - настройки\n" \
                  "{3} - электрички\n" \
-                 "{4} - редактор расписания\n" \
+                 "{4} - <b>редактор расписания</b>\n" \
                  "@Spbu4u_news - новости бота".format(emoji["info"],
                                                       emoji["star"],
                                                       emoji["settings"],
@@ -413,7 +394,7 @@ def confirm_choice(message):
         bot.send_message(message.chat.id, answer, reply_markup=main_keyboard,
                          parse_mode="HTML")
     elif message.text == "Другая группа":
-        sql_con = sqlite3.connect("Bot_db")
+        sql_con = sqlite3.connect("Bot.db")
         cursor = sql_con.cursor()
         cursor.execute("""SELECT admission_year_name
                           FROM user_choice 

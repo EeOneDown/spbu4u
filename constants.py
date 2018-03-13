@@ -127,7 +127,7 @@ briefly_info_answer = \
 special_thanks = \
     'ОСОБАЯ БЛАГОДАРНОСТЬ\n\n' \
     '@SuaiBot - идейный вдохновитель\n' \
-    '<a href="https://rasp.yandex.ru">Яндекс.Расписаня</a> - ' \
+    '<a href="https://rasp.yandex.ru">Яндекс.Расписания</a> - ' \
     '<a href="https://tech.yandex.ru/rasp/raspapi/">бесплатный API</a> ' \
     'для доступа к расписаниям электричек\n' \
     '<a href="https://it.spbu.ru">УСИТ СПбГУ</a> - предоставление ' \

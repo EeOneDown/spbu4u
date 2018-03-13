@@ -972,3 +972,11 @@ def delete_all_hides(user_id, hide_type=0):
 
     cursor.close()
     sql_con.close()
+
+
+def get_day_date_by_weekday_title(week_day):
+    iso_day_date = list((datetime.today() + server_timedelta).isocalendar())
+    if iso_day_date[2] == 7:
+        iso_day_date[1] += 1
+    iso_day_date[2] = week_day_number[week_day]
+    return date_from_iso(iso_day_date)

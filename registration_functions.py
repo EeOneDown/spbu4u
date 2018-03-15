@@ -2,7 +2,6 @@
 from __future__ import unicode_literals
 
 import json
-import sqlite3
 
 import spbu
 import telebot
@@ -11,7 +10,7 @@ import functions
 
 
 def set_next_step(user_id, next_step):
-    sql_con = sqlite3.connect("Bot.db")
+    sql_con = functions.get_connection()
     cursor = sql_con.cursor()
     cursor.execute("""UPDATE user_choice
                       SET step = ? 
@@ -23,7 +22,7 @@ def set_next_step(user_id, next_step):
 
 
 def get_step(user_id):
-    sql_con = sqlite3.connect("Bot.db")
+    sql_con = functions.get_connection()
     cursor = sql_con.cursor()
     cursor.execute("""SELECT  step
                       FROM user_choice
@@ -42,7 +41,7 @@ def select_division(message):
 
     answer = ""
 
-    sql_con = sqlite3.connect("Bot.db")
+    sql_con = functions.get_connection()
     cursor = sql_con.cursor()
     cursor.execute("""SELECT divisions_json 
                       FROM user_choice 
@@ -67,7 +66,7 @@ def select_division(message):
         study_programs_keyboard.row("Другое направление")
 
         data = json.dumps(study_programs)
-        sql_con = sqlite3.connect("Bot.db")
+        sql_con = functions.get_connection()
         cursor = sql_con.cursor()
         cursor.execute("""UPDATE user_choice 
                           SET alias = ?, division_name = ?, 
@@ -92,7 +91,7 @@ def select_study_level(message):
 
     answer = ""
 
-    sql_con = sqlite3.connect("Bot.db")
+    sql_con = functions.get_connection()
     cursor = sql_con.cursor()
     cursor.execute("""SELECT study_programs_json 
                       FROM user_choice 
@@ -119,7 +118,7 @@ def select_study_level(message):
                 study_program_combination["Name"])
         study_program_combinations_keyboard.row("Другая ступень")
 
-        sql_con = sqlite3.connect("Bot.db")
+        sql_con = functions.get_connection()
         cursor = sql_con.cursor()
         cursor.execute("""UPDATE user_choice 
                           SET study_level_name = ?
@@ -146,7 +145,7 @@ def select_study_program_combination(message):
 
     answer = ""
 
-    sql_con = sqlite3.connect("Bot.db")
+    sql_con = functions.get_connection()
     cursor = sql_con.cursor()
     cursor.execute("""SELECT study_level_name, study_programs_json 
                       FROM user_choice 
@@ -177,7 +176,7 @@ def select_study_program_combination(message):
             admission_years_keyboard.row(admission_year["YearName"])
         admission_years_keyboard.row("Другая программа")
 
-        sql_con = sqlite3.connect("Bot.db")
+        sql_con = functions.get_connection()
         cursor = sql_con.cursor()
         cursor.execute("""UPDATE user_choice
                           SET study_program_combination_name = ? 
@@ -191,7 +190,7 @@ def select_study_program_combination(message):
                          reply_markup=admission_years_keyboard)
         set_next_step(message.chat.id, "select_admission_year")
     elif message.text == "Другая ступень":
-        sql_con = sqlite3.connect("Bot.db")
+        sql_con = functions.get_connection()
         cursor = sql_con.cursor()
         cursor.execute("""SELECT division_name 
                           FROM user_choice 
@@ -214,7 +213,7 @@ def select_admission_year(message):
 
     answer = ""
 
-    sql_con = sqlite3.connect("Bot.db")
+    sql_con = functions.get_connection()
     cursor = sql_con.cursor()
     cursor.execute("""SELECT study_programs_json, study_level_name, 
                              study_program_combination_name
@@ -259,7 +258,7 @@ def select_admission_year(message):
         student_groups_keyboard.row("Другой год")
         data = json.dumps(student_groups)
 
-        sql_con = sqlite3.connect("Bot.db")
+        sql_con = functions.get_connection()
         cursor = sql_con.cursor()
         cursor.execute("""UPDATE user_choice 
                           SET admission_year_name = ?, 
@@ -274,7 +273,7 @@ def select_admission_year(message):
                          reply_markup=student_groups_keyboard)
         set_next_step(message.chat.id, "select_student_group")
     elif message.text == "Другая программа":
-        sql_con = sqlite3.connect("Bot.db")
+        sql_con = functions.get_connection()
         cursor = sql_con.cursor()
         cursor.execute("""SELECT study_level_name
                           FROM user_choice 
@@ -297,7 +296,7 @@ def select_student_group(message):
 
     answer = ""
 
-    sql_con = sqlite3.connect("Bot.db")
+    sql_con = functions.get_connection()
     cursor = sql_con.cursor()
     cursor.execute("""SELECT student_groups_json
                       FROM user_choice 
@@ -314,7 +313,7 @@ def select_student_group(message):
         index = student_group_names.index(message.text)
         student_group_id = student_groups["Groups"][index]["StudentGroupId"]
 
-        sql_con = sqlite3.connect("Bot.db")
+        sql_con = functions.get_connection()
         cursor = sql_con.cursor()
         cursor.execute("""UPDATE user_choice 
                           SET student_group_name = ?, 
@@ -344,7 +343,7 @@ def select_student_group(message):
                          reply_markup=choice_keyboard)
         set_next_step(message.chat.id, "confirm_choice")
     elif message.text == "Другой год":
-        sql_con = sqlite3.connect("Bot.db")
+        sql_con = functions.get_connection()
         cursor = sql_con.cursor()
         cursor.execute("""SELECT study_program_combination_name
                           FROM user_choice 
@@ -367,7 +366,7 @@ def confirm_choice(message):
     from constants import emoji
 
     if message.text == "Все верно":
-        sql_con = sqlite3.connect("Bot.db")
+        sql_con = functions.get_connection()
         cursor = sql_con.cursor()
         cursor.execute("""SELECT student_group_id
                           FROM user_choice 
@@ -394,7 +393,7 @@ def confirm_choice(message):
         bot.send_message(message.chat.id, answer, reply_markup=main_keyboard,
                          parse_mode="HTML")
     elif message.text == "Другая группа":
-        sql_con = sqlite3.connect("Bot.db")
+        sql_con = functions.get_connection()
         cursor = sql_con.cursor()
         cursor.execute("""SELECT admission_year_name
                           FROM user_choice 

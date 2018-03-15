@@ -1,3 +1,4 @@
+requests
 Flask
 pyTelegramBotAPI
 flask_sslify

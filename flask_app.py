@@ -4,7 +4,6 @@ from __future__ import unicode_literals
 import json
 import logging
 import math
-import sqlite3
 from datetime import datetime, time as dt_time
 from random import choice
 from time import time, localtime
@@ -133,7 +132,7 @@ def start_handler(message):
     divisions_keyboard.row("Поддержка", "Завершить")
     data = json.dumps(divisions)
 
-    sql_con = sqlite3.connect("Bot.db")
+    sql_con = func.get_connection()
     cursor = sql_con.cursor()
     cursor.execute("""DELETE FROM user_choice WHERE user_id = ?""",
                    (message.chat.id, ))
@@ -1926,7 +1925,7 @@ def return_lesson_handler(call_back):
         if event.split("\n")[0].split(": ")[1] == lesson_id:
             lesson_title = event.split("\n")[1].split(": ")[1]
             break
-    sql_con = sqlite3.connect("Bot.db")
+    sql_con = func.get_connection()
     cursor = sql_con.cursor()
     cursor.execute("""DELETE FROM skips 
                       WHERE user_id = ?
@@ -2001,7 +2000,7 @@ def return_lesson_handler(call_back):
             lesson_title = event.split("\n")[1].split(": ")[1]
             educator = event.split("\n")[2].split(": ")[1]
             break
-    sql_con = sqlite3.connect("Bot.db")
+    sql_con = func.get_connection()
     cursor = sql_con.cursor()
     cursor.execute("""DELETE FROM user_educators 
                       WHERE user_id = ?
@@ -2115,7 +2114,7 @@ def change_group_handler(call_back):
 def change_template_group_handler(call_back):
     answer = "Группа успешно изменена на <b>{0}</b>"
     chosen_group_id = int(call_back.data)
-    sql_con = sqlite3.connect("Bot.db")
+    sql_con = func.get_connection()
     cursor = sql_con.cursor()
     cursor.execute("""SELECT title
                       FROM groups_data
@@ -2330,13 +2329,10 @@ if __name__ == '__main__':
     use test_token for local testing
     or don't forget to reset webhook
     """
-    # import os
-    from sql_creator import create_sql, copy_from_db
-    # from sql_updater import schedule_update
+    from sql_creator import create_sql
 
-    # os.chdir("PATH/TO/BOT")
-    create_sql("Bot.db")
-    copy_from_db("Bot_db", "Bot.db")
+    create_sql()
+    # copy_from_db("Bot_db", "Bot.db")
     # schedule_update("Bot.db")
     bot.remove_webhook()
     bot.polling(none_stop=True, interval=0)

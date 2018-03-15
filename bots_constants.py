@@ -1,3 +1,7 @@
+# -*- coding: utf-8 -*-
+from __future__ import unicode_literals
+
+
 test_token = ""
 release_token = ""
 yandex_key = ""

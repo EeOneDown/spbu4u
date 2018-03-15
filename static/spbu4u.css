@@ -1,0 +1,16 @@
+body {
+    font-size: 18px;
+    font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+a,
+a:visited,
+a:active,
+.grey-color {
+    color: #A8ADB4;
+    text-decoration: none;
+}
+
+.red-color {
+    color: #9F2D20;
+}

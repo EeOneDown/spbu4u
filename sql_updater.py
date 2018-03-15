@@ -1,4 +1,7 @@
+#!/home/user_name/myvenv/bin/python3.6
 # -*- coding: utf-8 -*-
+from __future__ import unicode_literals
+
 import json
 import sqlite3
 
@@ -29,13 +32,18 @@ def schedule_update(db_path="Bot.db"):
         group_id = group[0]
         url = "https://timetable.spbu.ru/api/v1/groups/{0}/events".format(
             group_id)
-        json_week_data = requests.get(url).json()
+        res = requests.get(url)
+        if res.status_code != 200:
+            print("ERROR:", group_id, res.json())
+            continue
+        json_week_data = res.json()
         data = json.dumps(json_week_data)
         cursor.execute("""UPDATE groups_data
                           SET json_week_data = ?
                           WHERE id = ?""",
                        (data, group_id))
         sql_con.commit()
+        print(group_id)
     cursor.close()
     sql_con.close()
 

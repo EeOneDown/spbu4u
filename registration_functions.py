@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
+from __future__ import unicode_literals
+
 import json
 import sqlite3
 
-import requests
+import spbu
 import telebot
 
-from functions import add_new_user
+import functions
 
 
 def set_next_step(user_id, next_step):
@@ -50,16 +52,16 @@ def select_division(message):
     sql_con.close()
 
     divisions = json.loads(data[0])
-    division_names = [division["Name"] for division in divisions]
-    aliases = [division["Alias"] for division in divisions]
+    division_names = [division["Name"].strip() for division in divisions]
+    aliases = [division["Alias"].strip() for division in divisions]
     if message.text in division_names:
         answer += "Выбери ступень:"
-        study_programs_keyboard = telebot.types.ReplyKeyboardMarkup(True, False)
+        study_programs_keyboard = telebot.types.ReplyKeyboardMarkup(
+            resize_keyboard=True, one_time_keyboard=False
+        )
         index = division_names.index(message.text)
         alias = aliases[index]
-        url = "https://timetable.spbu.ru/api/v1/study/divisions/{0}/" \
-              "programs/levels".format(alias)
-        study_programs = requests.get(url).json()
+        study_programs = spbu.get_program_levels(alias)
         for study_program in study_programs:
             study_programs_keyboard.row(study_program["StudyLevelName"])
         study_programs_keyboard.row("Другое направление")
@@ -103,11 +105,12 @@ def select_study_level(message):
 
     study_level_names = []
     for study_program in study_programs:
-        study_level_names.append(study_program["StudyLevelName"])
+        study_level_names.append(study_program["StudyLevelName"].strip())
     if message.text in study_level_names:
         answer += "Укажи программу:"
         study_program_combinations_keyboard = telebot.types.ReplyKeyboardMarkup(
-            True, False)
+            resize_keyboard=True, one_time_keyboard=False
+        )
         index = study_level_names.index(message.text)
         study_program_combinations = study_programs[index][
             "StudyProgramCombinations"]
@@ -162,11 +165,12 @@ def select_study_program_combination(message):
     study_program_combination_names = []
     for study_program_combination in study_program_combinations:
         study_program_combination_names.append(
-            study_program_combination["Name"])
+            study_program_combination["Name"].strip())
     if message.text in study_program_combination_names:
         answer += "Укажи год поступления:"
-        admission_years_keyboard = telebot.types.ReplyKeyboardMarkup(True,
-                                                                     False)
+        admission_years_keyboard = telebot.types.ReplyKeyboardMarkup(
+            resize_keyboard=True, one_time_keyboard=False
+        )
         index = study_program_combination_names.index(message.text)
         admission_years = study_program_combinations[index]["AdmissionYears"]
         for admission_year in admission_years:
@@ -238,18 +242,18 @@ def select_admission_year(message):
     admission_years = study_program_combinations[index]["AdmissionYears"]
     admission_year_names = []
     for admission_year in admission_years:
-        admission_year_names.append(admission_year["YearName"])
+        admission_year_names.append(admission_year["YearName"].strip())
     if message.text in admission_year_names:
         answer += "Укажи группу:"
         index = admission_year_names.index(message.text)
         study_program_id = admission_years[index]["StudyProgramId"]
-        url = "https://timetable.spbu.ru/api/v1/progams/{0}/groups".format(
-            study_program_id)
-        student_groups = requests.get(url).json()
+        student_groups = spbu.get_groups(study_program_id)
         student_group_names = []
         for student_group in student_groups["Groups"]:
             student_group_names.append(student_group["StudentGroupName"])
-        student_groups_keyboard = telebot.types.ReplyKeyboardMarkup(True, False)
+        student_groups_keyboard = telebot.types.ReplyKeyboardMarkup(
+            resize_keyboard=True, one_time_keyboard=False
+        )
         for student_group_name in student_group_names:
             student_groups_keyboard.row(student_group_name)
         student_groups_keyboard.row("Другой год")
@@ -305,7 +309,7 @@ def select_student_group(message):
     student_groups = json.loads(data)
     student_group_names = []
     for student_group in student_groups["Groups"]:
-        student_group_names.append(student_group["StudentGroupName"])
+        student_group_names.append(student_group["StudentGroupName"].strip())
     if message.text in student_group_names:
         index = student_group_names.index(message.text)
         student_group_id = student_groups["Groups"][index]["StudentGroupId"]
@@ -329,7 +333,9 @@ def select_student_group(message):
 
         text = ">> " + "\n>> ".join(data)
         answer += "Подтверди выбор:\n" + "<b>" + text + "</b>"
-        choice_keyboard = telebot.types.ReplyKeyboardMarkup(True, False)
+        choice_keyboard = telebot.types.ReplyKeyboardMarkup(
+            resize_keyboard=True, one_time_keyboard=False
+        )
         buttons = ["Все верно", "Другая группа", "Другой год",
                    "Другая программа", "Другая ступень", "Другое направление"]
         for button in buttons:
@@ -372,14 +378,14 @@ def confirm_choice(message):
         cursor.close()
         sql_con.close()
 
-        add_new_user(user_id, group_id)
+        functions.add_new_user(user_id, group_id)
 
         answer = "Главное меню\n\n" \
                  "{0} - информация о боте\n" \
                  "{1} - оценить бота\n" \
                  "{2} - настройки\n" \
                  "{3} - электрички\n" \
-                 "{4} - редактор расписания\n" \
+                 "{4} - <b>редактор расписания</b>\n" \
                  "@Spbu4u_news - новости бота".format(emoji["info"],
                                                       emoji["star"],
                                                       emoji["settings"],

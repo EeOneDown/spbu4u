@@ -1,25 +1,22 @@
 # -*- coding: utf-8 -*-
+from __future__ import unicode_literals
+
+import math
 from datetime import datetime, timedelta, time
-from math import ceil
 
 import requests
 
 from bots_constants import yandex_key
-from constants import emoji
+from constants import emoji, urls
 
 
 def get_yandex_timetable_data(from_station, to_station, date, limit=3):
     from flask_app import server_timedelta
-    url = "https://api.rasp.yandex.net/v3.0/search/?" \
-          "from={0}" \
-          "&to={1}" \
-          "&format=json" \
-          "&lang=ru_RU" \
-          "&apikey={2}" \
-          "&date={3}" \
-          "&transport_types=suburban".format(from_station, to_station,
-                                             yandex_key, date)
-    req = requests.get(url)
+    params = {"from": from_station, "to": to_station, "apikey": yandex_key,
+              "date": date, "format": "json", "lang": "ru_RU",
+              "transport_types": "suburban"}
+    url = urls["ya_search"]
+    req = requests.get(url, params=params)
     code, data = req.status_code, req.json()
 
     if code != 200:
@@ -47,7 +44,7 @@ def get_yandex_timetable_data(from_station, to_station, date, limit=3):
             continue
 
         time_left = departure_datetime - server_now_date
-        total_minutes = ceil(time_left.total_seconds() / 60)
+        total_minutes = math.ceil(time_left.total_seconds() / 60)
 
         if total_minutes >= 60:
             hours = total_minutes // 60
@@ -59,9 +56,23 @@ def get_yandex_timetable_data(from_station, to_station, date, limit=3):
         else:
             segment_answer = emoji["runner"] + segment_answer
         segment_answer += "{0} мин\n".format(total_minutes)
-        segment_answer += "Отправление в <b>{0}</b> ({1})\n\n".format(
-            departure_datetime.time().strftime("%H:%M"),
-            arrival_datetime.time().strftime("%H:%M"))
+        if segment["thread"]["express_type"] is not None:
+            segment_answer += emoji["express"]
+        else:
+            segment_answer += emoji["train"]
+
+        price = str(segment["tickets_info"]["places"][0]["price"]["whole"])
+        if segment["tickets_info"]["places"][0]["price"]["cents"]:
+            price += ",{0}".format(
+                segment["tickets_info"]["places"][0]["price"]["cents"]
+            )
+
+        segment_answer += \
+            " Отправление в <b>{0}</b> ({1}) <code>{2}{3}</code>\n\n".format(
+                departure_datetime.time().strftime("%H:%M"),
+                arrival_datetime.time().strftime("%H:%M"),
+                price, emoji["ruble_sign"]
+            )
 
         answer += segment_answer
 

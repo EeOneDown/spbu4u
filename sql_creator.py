@@ -1,3 +1,7 @@
+# -*- coding: utf-8 -*-
+from __future__ import unicode_literals
+
+import json
 import sqlite3
 from os import access, F_OK
 
@@ -28,8 +32,8 @@ def create_sql(db_name):
     cursor.execute("""CREATE TABLE IF NOT EXISTS groups_data
                         (
                             id INT PRIMARY KEY NOT NULL,
-                            json_week_data TEXT,
-                            interim_attestation TEXT
+                            title TEXT NOT NULL,
+                            json_week_data TEXT
                         )""")
     sql_con.commit()
 
@@ -38,11 +42,13 @@ def create_sql(db_name):
                         (
                             id INT PRIMARY KEY NOT NULL,
                             group_id INT NOT NULL,
+                            is_teacher INT DEFAULT 0 NOT NULL,
                             full_place INT DEFAULT 1 NOT NULL,
                             sending INT DEFAULT 0 NOT NULL,
                             rate INT DEFAULT 0 NOT NULL, 
                             home_station_code TEXT DEFAULT 'c2' NOT NULL, 
-                            is_univer INT DEFAULT 1 NOT NULL,
+                            univer_station_code TEXT 
+                                              DEFAULT 's9603770' NOT NULL,
                             CONSTRAINT user_data_groups_data_id_fk 
                               FOREIGN KEY (group_id) REFERENCES groups_data (id)
                         )""")
@@ -105,6 +111,22 @@ def create_sql(db_name):
                             )""")
     sql_con.commit()
 
+    # user_lessons
+    cursor.execute("""CREATE TABLE IF NOT EXISTS user_lessons
+                                (
+                                    user_id INT NOT NULL,
+                                    lesson_id INT NOT NULL,
+                                    CONSTRAINT user_lessons_user_id_lesson_id_pk 
+                                      PRIMARY KEY  (user_id, lesson_id),
+                                    CONSTRAINT user_lessons_user_data_id_fk 
+                                      FOREIGN KEY (user_id) 
+                                        REFERENCES user_data (id),
+                                    CONSTRAINT user_lessons_lessons_id_fk 
+                                      FOREIGN KEY (lesson_id) 
+                                        REFERENCES lessons (id)
+                                )""")
+    sql_con.commit()
+
     cursor.close()
     sql_con.close()
 
@@ -122,8 +144,16 @@ def copy_from_db(from_db_name, to_db_name):
         user_choices = cursor.fetchall()
 
         # group data
-        cursor.execute("""SELECT id FROM groups_data""")
-        groups_data = cursor.fetchall()
+        cursor.execute("""SELECT id, json_week_data FROM groups_data""")
+        groups_data_old = cursor.fetchall()
+
+        groups_data_new = []
+        for group in groups_data_old:
+            group_id = group[0]
+            group_title = json.loads(group[1]).get("StudentGroupDisplayName")
+            if group_title:
+                group_title = group_title[7:]
+            groups_data_new.append((group_id, str(group_title)))
 
         # user data
         cursor.execute("""SELECT 
@@ -134,6 +164,13 @@ def copy_from_db(from_db_name, to_db_name):
                             is_univer 
                           FROM user_data""")
         users_data = cursor.fetchall()
+
+        for i, user in enumerate(users_data):
+            users_data[i] = list(user)
+            if user[6]:
+                users_data[i][6] = "s9603770"
+            else:
+                users_data[i][6] = "s9603547"
 
         # lessons
         cursor.execute("""SELECT * FROM lessons""")
@@ -167,8 +204,8 @@ def copy_from_db(from_db_name, to_db_name):
 
     # group data
     try:
-        cursor.executemany("""INSERT INTO groups_data (id)
-                              VALUES (?)""", groups_data)
+        cursor.executemany("""INSERT INTO groups_data (id, title)
+                              VALUES (?, ?)""", groups_data_new)
         sql_con.commit()
     except sqlite3.IntegrityError:
         sql_con.rollback()
@@ -177,7 +214,7 @@ def copy_from_db(from_db_name, to_db_name):
     try:
         cursor.executemany("""INSERT INTO user_data
                               (id, group_id, full_place, sending, rate, 
-                              home_station_code, is_univer)
+                              home_station_code, univer_station_code)
                               VALUES (?, ?, ?, ?, ?, ?, ?)""", users_data)
         sql_con.commit()
     except sqlite3.IntegrityError:

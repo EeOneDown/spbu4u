@@ -971,12 +971,12 @@ def delete_all_hides(user_id, hide_type=0):
 
 def get_connection():
     con = pymysql.connect(
-        host="localhost",
-        user="root",
-        password="livan",
-        db="Bot_db",
-        charset="utf8mb4",
-        cursorclass=pymysql.cursors.DictCursor
+        host="",
+        user="",
+        password="",
+        db="",
+        charset="",
+        cursorclass=pymysql.cursors.Cursor
     )
 
     return con

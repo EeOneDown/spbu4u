@@ -134,11 +134,11 @@ def start_handler(message):
 
     sql_con = func.get_connection()
     cursor = sql_con.cursor()
-    cursor.execute("""DELETE FROM user_choice WHERE user_id = ?""",
+    cursor.execute("""DELETE FROM user_choice WHERE user_id = %s""",
                    (message.chat.id, ))
     sql_con.commit()
     cursor.execute("""INSERT INTO user_choice (user_id, divisions_json)
-                      VALUES (?, ?)""", (message.chat.id, data))
+                      VALUES (%s, %s)""", (message.chat.id, data))
     sql_con.commit()
     cursor.close()
     sql_con.close()
@@ -1928,8 +1928,8 @@ def return_lesson_handler(call_back):
     sql_con = func.get_connection()
     cursor = sql_con.cursor()
     cursor.execute("""DELETE FROM skips 
-                      WHERE user_id = ?
-                        AND lesson_id = ?""",
+                      WHERE user_id = %s
+                        AND lesson_id = %s""",
                    (call_back.message.chat.id, lesson_id))
     sql_con.commit()
     cursor.close()
@@ -2003,8 +2003,8 @@ def return_lesson_handler(call_back):
     sql_con = func.get_connection()
     cursor = sql_con.cursor()
     cursor.execute("""DELETE FROM user_educators 
-                      WHERE user_id = ?
-                        AND lesson_id = ?""",
+                      WHERE user_id = %s
+                        AND lesson_id = %s""",
                    (call_back.message.chat.id, lesson_id))
     sql_con.commit()
     cursor.close()
@@ -2118,11 +2118,11 @@ def change_template_group_handler(call_back):
     cursor = sql_con.cursor()
     cursor.execute("""SELECT title
                       FROM groups_data
-                      WHERE id = ?""", (chosen_group_id, ))
+                      WHERE id = %s""", (chosen_group_id, ))
     group_title = cursor.fetchone()[0]
     cursor.execute("""UPDATE user_data 
-                      SET group_id = ?
-                      WHERE id = ?""",
+                      SET group_id = %s
+                      WHERE id = %s""",
                    (chosen_group_id, call_back.message.chat.id))
     sql_con.commit()
     cursor.close()

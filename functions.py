@@ -23,7 +23,7 @@ def add_new_user(user_id, group_id, group_title=None):
     try:
         cursor.execute("""INSERT INTO groups_data 
                           (id, title)
-                          VALUES (?, ?)""",
+                          VALUES (%s, %s)""",
                        (group_id, group_title))
     except pymysql.IntegrityError:
         sql_con.rollback()
@@ -31,17 +31,17 @@ def add_new_user(user_id, group_id, group_title=None):
         sql_con.commit()
     try:
         cursor.execute("""INSERT INTO user_data (id, group_id)
-                          VALUES (?, ?)""",
+                          VALUES (%s, %s)""",
                        (user_id, group_id))
     except pymysql.IntegrityError:
         sql_con.rollback()
         cursor.execute("""UPDATE user_data 
-                          SET group_id = ?
-                          WHERE id = ?""",
+                          SET group_id = %s
+                          WHERE id = %s""",
                        (group_id, user_id))
     finally:
         sql_con.commit()
-        cursor.execute("""DELETE FROM user_choice WHERE user_id = ?""",
+        cursor.execute("""DELETE FROM user_choice WHERE user_id = %s""",
                        (user_id,))
         sql_con.commit()
         cursor.close()
@@ -97,7 +97,7 @@ def insert_skip(event_name, types, event_day, event_time,
     try:
         cursor.execute("""INSERT INTO lessons 
                           (name, types, day, time, educators) 
-                              VALUES (?, ?, ?, ?, ?)""",
+                              VALUES (%s, %s, %s, %s, %s)""",
                        (event_name, types, event_day, event_time, educators))
         sql_con.commit()
     except pymysql.IntegrityError:
@@ -105,19 +105,19 @@ def insert_skip(event_name, types, event_day, event_time,
     finally:
         cursor.execute("""SELECT id 
                           FROM lessons 
-                          WHERE name = ? 
-                            AND types = ? 
-                            AND day = ? 
-                            AND time = ?
-                            AND educators = ?""",
+                          WHERE name = %s 
+                            AND types = %s 
+                            AND day = %s 
+                            AND time = %s
+                            AND educators = %s""",
                        (event_name, types, event_day, event_time, educators))
         lesson_id = cursor.fetchone()[0]
     try:
         if is_choose_educator:
-            cursor.execute("""INSERT INTO user_educators VALUES (?, ?)""",
+            cursor.execute("""INSERT INTO user_educators VALUES (%s, %s)""",
                            (user_id, lesson_id))
         else:
-            cursor.execute("""INSERT INTO skips VALUES (?, ?)""",
+            cursor.execute("""INSERT INTO skips VALUES (%s, %s)""",
                            (lesson_id, user_id))
         sql_con.commit()
     except pymysql.IntegrityError:
@@ -149,10 +149,10 @@ def get_hide_lessons_data(user_id, week_day=None,
                         JOIN lessons AS l
                           ON l.id = s.lesson_id
                    """
-    sql_req += """WHERE user_id = ?"""
+    sql_req += """WHERE user_id = %s"""
     req_param = (user_id,)
     if week_day:
-        sql_req += "  AND (day = 'all' OR day = ?)"
+        sql_req += "  AND (day = 'all' OR day = %s)"
         req_param += (week_day, )
     cursor.execute(sql_req, req_param)
     data = cursor.fetchall()
@@ -171,7 +171,7 @@ def get_chosen_educators(user_id):
                  FROM user_educators
                    JOIN lessons
                      ON user_educators.lesson_id = lessons.id
-                 WHERE user_educators.user_id = ?"""
+                 WHERE user_educators.user_id = %s"""
     for row in cursor.execute(sql_req, (user_id,)):
         if row[0] in data.keys():
             data[row[0]].add(row[1])
@@ -184,17 +184,17 @@ def delete_user(user_id, only_choice=False):
     sql_con = get_connection()
     cursor = sql_con.cursor()
     cursor.execute("""DELETE FROM user_choice 
-                      WHERE user_id = ?""", (user_id,))
+                      WHERE user_id = %s""", (user_id,))
     sql_con.commit()
     if not only_choice:
         cursor.execute("""DELETE FROM user_groups 
-                          WHERE user_id = ?""", (user_id,))
+                          WHERE user_id = %s""", (user_id,))
         sql_con.commit()
         cursor.execute("""DELETE FROM skips 
-                          WHERE user_id = ?""", (user_id,))
+                          WHERE user_id = %s""", (user_id,))
         sql_con.commit()
         cursor.execute("""DELETE FROM user_data 
-                          WHERE id = ?""", (user_id,))
+                          WHERE id = %s""", (user_id,))
         sql_con.commit()
     cursor.close()
     sql_con.close()
@@ -226,7 +226,7 @@ def get_json_week_data_db(user_id, next_week=False, for_day=None):
                           FROM groups_data
                             JOIN user_data
                               ON groups_data.id = user_data.group_id
-                          WHERE  user_data.id= ?""", (user_id, ))
+                          WHERE  user_data.id= %s""", (user_id, ))
         data = cursor.fetchone()
 
         json_week_data = json.loads(data[0])
@@ -241,7 +241,7 @@ def get_json_week_data(user_id, next_week=False, for_day=None):
     cursor = sql_con.cursor()
     cursor.execute("""SELECT group_id
                       FROM user_data 
-                      WHERE  id= ?""", (user_id,))
+                      WHERE  id= %s""", (user_id,))
     group_id = cursor.fetchone()[0]
     cursor.close()
     sql_con.close()
@@ -401,7 +401,7 @@ def is_user_exist(user_id):
     cursor = sql_con.cursor()
     cursor.execute("""SELECT count(id) 
                       FROM user_data
-                      WHERE id = ?""", (user_id,))
+                      WHERE id = %s""", (user_id,))
     data = cursor.fetchone()
     cursor.close()
     sql_con.close()
@@ -413,7 +413,7 @@ def is_sending_on(user_id):
     cursor = sql_con.cursor()
     cursor.execute("""SELECT sending 
                       FROM user_data
-                      WHERE id = ?""", (user_id,))
+                      WHERE id = %s""", (user_id,))
     data = cursor.fetchone()
     cursor.close()
     sql_con.close()
@@ -424,8 +424,8 @@ def set_sending(user_id, on=True):
     sql_con = get_connection()
     cursor = sql_con.cursor()
     cursor.execute("""UPDATE user_data
-                      SET sending = ?
-                      WHERE id = ?""",
+                      SET sending = %s
+                      WHERE id = %s""",
                    (int(on), user_id))
     sql_con.commit()
     cursor.close()
@@ -448,7 +448,7 @@ def is_full_place(user_id):
     cursor = sql_con.cursor()
     cursor.execute("""SELECT full_place 
                       FROM user_data
-                      WHERE id = ?""", (user_id,))
+                      WHERE id = %s""", (user_id,))
     data = cursor.fetchone()
     cursor.close()
     sql_con.close()
@@ -459,8 +459,8 @@ def set_full_place(user_id, on=True):
     sql_con = get_connection()
     cursor = sql_con.cursor()
     cursor.execute("""UPDATE user_data
-                      SET full_place = ?
-                      WHERE id = ?""",
+                      SET full_place = %s
+                      WHERE id = %s""",
                    (int(on), user_id))
     sql_con.commit()
     cursor.close()
@@ -486,8 +486,8 @@ def set_rate(user_id, count_of_stars):
     sql_con = get_connection()
     cursor = sql_con.cursor()
     cursor.execute("""UPDATE user_data
-                      SET rate = ?
-                      WHERE id = ?""",
+                      SET rate = %s
+                      WHERE id = %s""",
                    (int(count_of_stars), user_id))
     sql_con.commit()
     cursor.close()
@@ -518,7 +518,7 @@ def get_templates(user_id):
                       FROM user_groups AS ug
                         JOIN groups_data AS gd
                           ON ug.group_id = gd.id
-                      WHERE ug.user_id = ?;""", (user_id,))
+                      WHERE ug.user_id = %s;""", (user_id,))
     data = cursor.fetchall()
     cursor.close()
     sql_con.close()
@@ -534,7 +534,7 @@ def get_current_group(user_id):
     cursor.execute("""SELECT groups_data.id, groups_data.title
                       FROM groups_data
                         JOIN user_data u ON groups_data.id = u.group_id
-                      WHERE u.id = ?""", (user_id, ))
+                      WHERE u.id = %s""", (user_id, ))
     group_data = cursor.fetchone()
     return group_data
 
@@ -543,7 +543,7 @@ def save_group(group_id, user_id):
     sql_con = get_connection()
     cursor = sql_con.cursor()
     try:
-        cursor.execute("""INSERT INTO user_groups VALUES (?, ?)""",
+        cursor.execute("""INSERT INTO user_groups VALUES (%s, %s)""",
                        (group_id, user_id))
         sql_con.commit()
     except pymysql.IntegrityError:
@@ -558,8 +558,8 @@ def delete_group(group_id, user_id):
     cursor = sql_con.cursor()
     try:
         cursor.execute("""DELETE FROM user_groups 
-                          WHERE group_id = ? 
-                            AND user_id = ?""",
+                          WHERE group_id = %s 
+                            AND user_id = %s""",
                        (group_id, user_id))
         sql_con.commit()
     except pymysql.IntegrityError:
@@ -600,11 +600,11 @@ def get_station_code(user_id, is_home):
     if is_home:
         cursor.execute("""SELECT home_station_code
                           FROM user_data
-                          WHERE id = ?""", (user_id,))
+                          WHERE id = %s""", (user_id,))
     else:
         cursor.execute("""SELECT univer_station_code
                           FROM user_data
-                          WHERE id = ?""", (user_id,))
+                          WHERE id = %s""", (user_id,))
     station_code = cursor.fetchone()[0]
     cursor.close()
     sql_con.close()
@@ -616,13 +616,13 @@ def change_station(user_id, station_code, is_home):
     cursor = sql_con.cursor()
     if is_home:
         cursor.execute("""UPDATE user_data
-                          SET home_station_code = ?
-                          WHERE id = ?""",
+                          SET home_station_code = %s
+                          WHERE id = %s""",
                        (station_code, user_id))
     else:
         cursor.execute("""UPDATE user_data
-                          SET univer_station_code = ?
-                          WHERE id = ?""",
+                          SET univer_station_code = %s
+                          WHERE id = %s""",
                        (station_code, user_id))
     sql_con.commit()
     cursor.close()
@@ -647,7 +647,7 @@ def get_user_rate(user_id):
     cursor = sql_con.cursor()
     cursor.execute("""SELECT rate
                       FROM user_data
-                      WHERE id = ?""", (user_id,))
+                      WHERE id = %s""", (user_id,))
     rate = cursor.fetchone()[0]
     cursor.close()
     sql_con.close()
@@ -956,13 +956,13 @@ def delete_all_hides(user_id, hide_type=0):
     cursor = sql_con.cursor()
     if hide_type == 0 or hide_type == 1:
         cursor.execute("""DELETE FROM skips 
-                          WHERE user_id = ?""",
+                          WHERE user_id = %s""",
                        (user_id,))
         sql_con.commit()
 
     if hide_type == 0 or hide_type == 2:
         cursor.execute("""DELETE FROM user_educators 
-                          WHERE user_id = ?""", (user_id,))
+                          WHERE user_id = %s""", (user_id,))
         sql_con.commit()
 
     cursor.close()

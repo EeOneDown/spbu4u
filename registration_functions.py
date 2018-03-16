@@ -13,8 +13,8 @@ def set_next_step(user_id, next_step):
     sql_con = functions.get_connection()
     cursor = sql_con.cursor()
     cursor.execute("""UPDATE user_choice
-                      SET step = ? 
-                      WHERE user_id = ?""",
+                      SET step = %s 
+                      WHERE user_id = %s""",
                    (next_step, user_id))
     sql_con.commit()
     cursor.close()
@@ -26,7 +26,7 @@ def get_step(user_id):
     cursor = sql_con.cursor()
     cursor.execute("""SELECT  step
                       FROM user_choice
-                      WHERE user_id = ?""", (user_id, ))
+                      WHERE user_id = %s""", (user_id, ))
     step = cursor.fetchone()
     cursor.close()
     sql_con.close()
@@ -45,7 +45,7 @@ def select_division(message):
     cursor = sql_con.cursor()
     cursor.execute("""SELECT divisions_json 
                       FROM user_choice 
-                      WHERE user_id = ?""", (message.chat.id,))
+                      WHERE user_id = %s""", (message.chat.id,))
     data = cursor.fetchone()
     cursor.close()
     sql_con.close()
@@ -69,9 +69,9 @@ def select_division(message):
         sql_con = functions.get_connection()
         cursor = sql_con.cursor()
         cursor.execute("""UPDATE user_choice 
-                          SET alias = ?, division_name = ?, 
-                              study_programs_json = ? 
-                          WHERE user_id = ?""",
+                          SET alias = %s, division_name = %s, 
+                              study_programs_json = %s 
+                          WHERE user_id = %s""",
                        (alias, message.text, data, message.chat.id))
         sql_con.commit()
         cursor.close()
@@ -95,7 +95,7 @@ def select_study_level(message):
     cursor = sql_con.cursor()
     cursor.execute("""SELECT study_programs_json 
                       FROM user_choice 
-                      WHERE user_id = ?""", (message.chat.id,))
+                      WHERE user_id = %s""", (message.chat.id,))
     data = cursor.fetchone()[0]
     cursor.close()
     sql_con.close()
@@ -121,8 +121,8 @@ def select_study_level(message):
         sql_con = functions.get_connection()
         cursor = sql_con.cursor()
         cursor.execute("""UPDATE user_choice 
-                          SET study_level_name = ?
-                          WHERE user_id = ?""",
+                          SET study_level_name = %s
+                          WHERE user_id = %s""",
                        (message.text, message.chat.id))
         sql_con.commit()
         cursor.close()
@@ -149,7 +149,7 @@ def select_study_program_combination(message):
     cursor = sql_con.cursor()
     cursor.execute("""SELECT study_level_name, study_programs_json 
                       FROM user_choice 
-                      WHERE user_id = ?""", (message.chat.id,))
+                      WHERE user_id = %s""", (message.chat.id,))
     data = cursor.fetchone()
     cursor.close()
     sql_con.close()
@@ -179,8 +179,8 @@ def select_study_program_combination(message):
         sql_con = functions.get_connection()
         cursor = sql_con.cursor()
         cursor.execute("""UPDATE user_choice
-                          SET study_program_combination_name = ? 
-                          WHERE user_id = ?""",
+                          SET study_program_combination_name = %s 
+                          WHERE user_id = %s""",
                        (message.text, message.chat.id))
         sql_con.commit()
         cursor.close()
@@ -194,7 +194,7 @@ def select_study_program_combination(message):
         cursor = sql_con.cursor()
         cursor.execute("""SELECT division_name 
                           FROM user_choice 
-                          WHERE user_id = ?""", (message.chat.id,))
+                          WHERE user_id = %s""", (message.chat.id,))
         data = cursor.fetchone()
         cursor.close()
         sql_con.close()
@@ -218,7 +218,7 @@ def select_admission_year(message):
     cursor.execute("""SELECT study_programs_json, study_level_name, 
                              study_program_combination_name
                       FROM user_choice 
-                      WHERE user_id = ?""", (message.chat.id,))
+                      WHERE user_id = %s""", (message.chat.id,))
     data = cursor.fetchone()
     cursor.close()
     sql_con.close()
@@ -261,9 +261,9 @@ def select_admission_year(message):
         sql_con = functions.get_connection()
         cursor = sql_con.cursor()
         cursor.execute("""UPDATE user_choice 
-                          SET admission_year_name = ?, 
-                              student_groups_json = ? 
-                          WHERE user_id = ?""",
+                          SET admission_year_name = %s, 
+                              student_groups_json = %s 
+                          WHERE user_id = %s""",
                        (message.text, data, message.chat.id))
         sql_con.commit()
         cursor.close()
@@ -277,7 +277,7 @@ def select_admission_year(message):
         cursor = sql_con.cursor()
         cursor.execute("""SELECT study_level_name
                           FROM user_choice 
-                          WHERE user_id = ?""", (message.chat.id,))
+                          WHERE user_id = %s""", (message.chat.id,))
         data = cursor.fetchone()
         cursor.close()
         sql_con.close()
@@ -300,7 +300,7 @@ def select_student_group(message):
     cursor = sql_con.cursor()
     cursor.execute("""SELECT student_groups_json
                       FROM user_choice 
-                      WHERE user_id = ?""", (message.chat.id,))
+                      WHERE user_id = %s""", (message.chat.id,))
     data = cursor.fetchone()[0]
     cursor.close()
     sql_con.close()
@@ -316,16 +316,16 @@ def select_student_group(message):
         sql_con = functions.get_connection()
         cursor = sql_con.cursor()
         cursor.execute("""UPDATE user_choice 
-                          SET student_group_name = ?, 
-                              student_group_id = ? 
-                          WHERE user_id = ?""",
+                          SET student_group_name = %s, 
+                              student_group_id = %s 
+                          WHERE user_id = %s""",
                        (message.text, student_group_id, message.chat.id))
         sql_con.commit()
         cursor.execute("""SELECT division_name, study_level_name, 
                                  study_program_combination_name,
                                  admission_year_name, student_group_name 
                           FROM user_choice 
-                          WHERE user_id = ?""", (message.chat.id,))
+                          WHERE user_id = %s""", (message.chat.id,))
         data = cursor.fetchone()
         cursor.close()
         sql_con.close()
@@ -347,7 +347,7 @@ def select_student_group(message):
         cursor = sql_con.cursor()
         cursor.execute("""SELECT study_program_combination_name
                           FROM user_choice 
-                          WHERE user_id = ?""", (message.chat.id,))
+                          WHERE user_id = %s""", (message.chat.id,))
         data = cursor.fetchone()
         cursor.close()
         sql_con.close()
@@ -370,7 +370,7 @@ def confirm_choice(message):
         cursor = sql_con.cursor()
         cursor.execute("""SELECT student_group_id
                           FROM user_choice 
-                          WHERE user_id = ?""", (message.chat.id,))
+                          WHERE user_id = %s""", (message.chat.id,))
         group_id = cursor.fetchone()[0]
         user_id = message.chat.id
 
@@ -397,7 +397,7 @@ def confirm_choice(message):
         cursor = sql_con.cursor()
         cursor.execute("""SELECT admission_year_name
                           FROM user_choice 
-                          WHERE user_id = ?""", (message.chat.id,))
+                          WHERE user_id = %s""", (message.chat.id,))
         data = cursor.fetchone()
         cursor.close()
         sql_con.close()

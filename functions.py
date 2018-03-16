@@ -9,6 +9,7 @@ from datetime import datetime, date, timedelta
 import spbu
 from telebot.apihelper import ApiException
 
+from bots_constants import db_name, user_name, slq_password
 from constants import emoji, subject_short_type, months, months_date, \
     week_day_number, week_day_titles, max_inline_button_text_len, \
     server_timedelta
@@ -172,7 +173,8 @@ def get_chosen_educators(user_id):
                    JOIN lessons
                      ON user_educators.lesson_id = lessons.id
                  WHERE user_educators.user_id = %s"""
-    for row in cursor.execute(sql_req, (user_id,)):
+    cursor.execute(sql_req, (user_id,))
+    for row in cursor.fetchall():
         if row[0] in data.keys():
             data[row[0]].add(row[1])
         else:
@@ -971,11 +973,11 @@ def delete_all_hides(user_id, hide_type=0):
 
 def get_connection():
     con = pymysql.connect(
-        host="",
-        user="",
-        password="",
-        db="",
-        charset="",
+        host="localhost",
+        user=user_name,
+        password=slq_password,
+        db=db_name,
+        charset="utf8",
         cursorclass=pymysql.cursors.Cursor
     )
 

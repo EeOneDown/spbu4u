@@ -9,3 +9,5 @@ secret_key = ""
 
 bot_name = ""
 user_name = ""
+slq_password = ""
+db_name = ""

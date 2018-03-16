@@ -127,9 +127,9 @@ def insert_skip(event_name, types, event_day, event_time,
         sql_con.close()
 
 
-def get_hide_lessons_data(user_id, db_path="Bot.db", week_day=None,
+def get_hide_lessons_data(user_id, week_day=None,
                           is_educator=False):
-    sql_con = pymysql.connect(db_path)
+    sql_con = get_connection()
     cursor = sql_con.cursor()
     sql_req = """SELECT
                    s.lesson_id,
@@ -161,8 +161,8 @@ def get_hide_lessons_data(user_id, db_path="Bot.db", week_day=None,
     return data
 
 
-def get_chosen_educators(user_id, dp_path="Bot.db"):
-    sql_con = pymysql.connect(dp_path)
+def get_chosen_educators(user_id):
+    sql_con = get_connection()
     cursor = sql_con.cursor()
     data = {}
     sql_req = """SELECT
@@ -298,7 +298,7 @@ def is_event_in_skips(event, skips, week_day_string):
 
 
 def create_schedule_answer(day_info, full_place, user_id=None, personal=True,
-                           db_path="Bot.db", only_exams=False):
+                           only_exams=False):
     if day_info is None:
         return emoji["sleep"] + " Выходной"
 
@@ -307,7 +307,7 @@ def create_schedule_answer(day_info, full_place, user_id=None, personal=True,
     day_study_events = day_info["DayStudyEvents"]
 
     if personal:
-        skips = get_hide_lessons_data(user_id, db_path,
+        skips = get_hide_lessons_data(user_id,
                                       day_info["DayString"].split(", ")[0])
         chosen_educators = get_chosen_educators(user_id)
     else:
@@ -443,8 +443,8 @@ def select_all_users():
     return ids
 
 
-def is_full_place(user_id, db_path="Bot.db"):
-    sql_con = pymysql.connect(db_path)
+def is_full_place(user_id):
+    sql_con = get_connection()
     cursor = sql_con.cursor()
     cursor.execute("""SELECT full_place 
                       FROM user_data

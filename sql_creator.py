@@ -1,6 +1,10 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+import sqlite3
+
+import pymysql
+
 from functions import get_connection
 
 
@@ -123,6 +127,73 @@ def create_sql():
                                         REFERENCES lessons (id)
                                 )""")
     sql_con.commit()
+
+    cursor.close()
+    sql_con.close()
+
+
+def copy_from_db():
+    # FROM DB
+    sql_con = sqlite3.connect("Bot.db")
+    cursor = sql_con.cursor()
+
+    try:
+        # user choice
+        cursor.execute("""SELECT * FROM user_choice""")
+        user_choices = cursor.fetchall()
+
+        # group data
+        cursor.execute("""SELECT id, title FROM groups_data""")
+        groups_data = cursor.fetchall()
+
+        # user data
+        cursor.execute("""SELECT
+                            id, group_id,
+                            is_teacher,
+                            full_place,
+                            sending, rate,
+                            home_station_code,
+                            univer_station_code
+                          FROM user_data""")
+        users_data = cursor.fetchall()
+
+    except sqlite3.OperationalError:
+        return
+    finally:
+        cursor.close()
+        sql_con.close()
+
+    # TO DB
+    sql_con = get_connection()
+    cursor = sql_con.cursor()
+
+    # user choice
+    try:
+        cursor.executemany("""INSERT INTO user_choice
+                              VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
+                           user_choices)
+        sql_con.commit()
+    except pymysql.IntegrityError:
+        sql_con.rollback()
+
+    # group data
+    try:
+        cursor.executemany("""INSERT INTO groups_data (id, title)
+                              VALUES (%s, %s)""", groups_data)
+        sql_con.commit()
+    except pymysql.IntegrityError:
+        sql_con.rollback()
+
+    # user data
+    try:
+        cursor.executemany("""INSERT INTO user_data
+                              (id, group_id, is_teacher, full_place, 
+                              sending, rate,
+                              home_station_code, univer_station_code)
+                              VALUES (%s, %s, %s, %s, %s, %s, %s, %s)""", users_data)
+        sql_con.commit()
+    except pymysql.IntegrityError:
+        sql_con.rollback()
 
     cursor.close()
     sql_con.close()

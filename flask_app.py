@@ -78,7 +78,7 @@ def start_handler(message):
 
     if message.text == "/start":
         answer = "Приветствую!\n"
-    elif "/start" in message.text:
+    elif message.text.split()[1].isdecimal():
         answer = "Приветствую!\nДобавляю тебя в группу..."
         bot_msg = bot.send_message(message.chat.id, answer)
         try:
@@ -714,11 +714,8 @@ def schedule_for_weekday(message):
         week_day = message.text
     else:
         week_day = week_day_titles[message.text]
-    iso_day_date = list((datetime.today() + server_timedelta).isocalendar())
-    if iso_day_date[2] == 7:
-        iso_day_date[1] += 1
-    iso_day_date[2] = week_day_number[week_day]
-    day_date = func.date_from_iso(iso_day_date)
+
+    day_date = func.get_day_date_by_weekday_title(week_day)
     json_day = func.get_json_day_data(message.chat.id, day_date)
     full_place = func.is_full_place(message.chat.id)
     answer = func.create_schedule_answer(json_day, full_place,
@@ -2245,6 +2242,51 @@ def set_rate_handler(call_back):
 
 
 ############
+# QUERY
+############
+@bot.inline_handler(func=lambda query:
+                    not func.is_user_exist(query.from_user.id))
+def inline_query_not_exist_user(inline_query):
+    text = "Необходимо зарегистрироваться в группу"
+    bot.answer_inline_query(inline_query.id, [], switch_pm_text=text,
+                            switch_pm_parameter="new_from_inline",
+                            cache_time=1, is_personal=True)
+
+
+@bot.inline_handler(func=lambda query:
+                    query.query.title() in week_day_titles.values())
+def inline_query_weekday_schedule_handler(inline_query):
+    user_id = inline_query.from_user.id
+    week_day = inline_query.query.title()
+
+    day_date = func.get_day_date_by_weekday_title(week_day)
+    json_day = func.get_json_day_data(user_id, day_date)
+    full_place = func.is_full_place(user_id)
+    answer = func.create_schedule_answer(json_day, full_place, user_id)
+
+    group_info = func.get_current_group(user_id)
+
+    week_num = (datetime.today() + server_timedelta).isocalendar()[1]
+
+    r = telebot.types.InlineQueryResultArticle(
+        id="{0}_{1}_{2}_{3}".format(user_id, group_info[0], week_num,
+                                    week_day_number[week_day]),
+        title=answer.split("\n\n")[0],
+        input_message_content=telebot.types.InputTextMessageContent(
+            answer, parse_mode="HTML"
+        ),
+        description=group_info[1]
+    )
+    bot.answer_inline_query(inline_query.id, [r], cache_time=1,
+                            is_personal=True)
+
+
+@bot.inline_handler(func=lambda query: True)
+def inline_query_other_text_handler(inline_query):
+    bot.answer_inline_query(inline_query.id, [], cache_time=1, is_personal=True)
+
+
+############
 # ROUTES
 ############
 @app.route("/reset_webhook", methods=["GET", "HEAD"])
@@ -2294,14 +2336,14 @@ def webhook():
                      "канале - @Spbu4u_news\nИ ты всегда можешь связаться с " \
                      "<a href='https://t.me/eeonedown'>разработчиком</a>"
             was_error = True
-            was_sent = False
             if update.message is not None:
                 try:
                     bot.send_message(update.message.chat.id,
                                      answer,
                                      disable_web_page_preview=True,
                                      parse_mode="HTML")
-                    was_sent = True
+                    bot.send_message(ids["my"],
+                                     str(err) + "\n\nWas sent: True")
                 except telebot.apihelper.ApiException as ApiExcept:
                     json_err = json.loads(ApiExcept.result.text)
                     if json_err["description"] == "Forbidden: bot was " \
@@ -2314,9 +2356,6 @@ def webhook():
                             json_err["description"]))
             else:
                 pass
-            bot.send_message(ids["my"],
-                             str(err) + "\n\nWas sent: {0}".format(was_sent),
-                             disable_notification=True)
         finally:
             func.write_log(update, time() - tic, was_error)
         return "OK", 200

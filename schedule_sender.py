@@ -1,4 +1,3 @@
-#!/home/user_name/myvenv/bin/python3.6
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
@@ -12,9 +11,8 @@ from functions import get_json_day_data, create_schedule_answer, \
     is_full_place, send_long_message
 
 
-def schedule_sender():
+def schedule_sender(db_path="Bot.db"):
     bot = telebot.TeleBot(release_token)
-    db_path = "spbu4u/Bot.db"
     sql_con = sqlite3.connect(db_path)
     cursor = sql_con.cursor()
     cursor.execute("""SELECT id

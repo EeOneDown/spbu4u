@@ -61,11 +61,14 @@ def get_yandex_timetable_data(from_station, to_station, date, limit=3):
         else:
             segment_answer += emoji["train"]
 
-        price = str(segment["tickets_info"]["places"][0]["price"]["whole"])
-        if segment["tickets_info"]["places"][0]["price"]["cents"]:
-            price += ",{0}".format(
-                segment["tickets_info"]["places"][0]["price"]["cents"]
-            )
+        if segment["tickets_info"]:
+            price = str(segment["tickets_info"]["places"][0]["price"]["whole"])
+            if segment["tickets_info"]["places"][0]["price"]["cents"]:
+                price += ",{0}".format(
+                    segment["tickets_info"]["places"][0]["price"]["cents"]
+                )
+        else:
+            price = "?"
 
         segment_answer += \
             " Отправление в <b>{0}</b> ({1}) <code>{2}{3}</code>\n\n".format(

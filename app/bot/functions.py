@@ -9,8 +9,8 @@ import pymysql
 import spbu
 from telebot.apihelper import ApiException
 
-from bots_constants import db_name, user_name, slq_password
-from constants import emoji, subject_short_type, months, months_date, \
+from app.bot.bots_constants import db_name, user_name, slq_password
+from app.bot.constants import emoji, subject_short_type, months, months_date, \
     week_day_number, week_day_titles, max_inline_button_text_len, \
     server_timedelta
 

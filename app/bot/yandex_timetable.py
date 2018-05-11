@@ -6,12 +6,12 @@ from datetime import datetime, timedelta, time
 
 import requests
 
-from bots_constants import yandex_key
-from constants import emoji, urls
+from app.bot.bots_constants import yandex_key
+from app.bot.constants import emoji, urls
 
 
 def get_yandex_timetable_data(from_station, to_station, date, limit=3):
-    from flask_app import server_timedelta
+    from app import server_timedelta
     params = {"from": from_station, "to": to_station, "apikey": yandex_key,
               "date": date, "format": "json", "lang": "ru_RU",
               "transport_types": "suburban"}

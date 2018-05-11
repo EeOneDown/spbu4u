@@ -6,7 +6,7 @@ from collections import OrderedDict
 from datetime import timedelta
 from hashlib import sha256
 
-from bots_constants import secret_key, test_token
+from app.bot.bots_constants import secret_key, test_token
 
 sha_string = hmac.new(bytearray(secret_key, "utf-8"),
                       bytearray(test_token, "utf-8"),

@@ -11,7 +11,7 @@ from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton, ForceReply
 
 import bot.functions as func
 from bot.constants import *
-from bot import *
+from bot import bot
 from bot.message_handlers import start_handler
 from bot.yandex_timetable import get_yandex_timetable_data
 
@@ -960,14 +960,14 @@ def select_types_handler(call_back):
     short_types = [short_type for short_type in subject_short_type.values()]
     is_special_type = chosen_type not in short_types
     for i in range(len(short_types)):
-        if short_types[i] in types:
+        if short_types[i] in all_chosen_types:
             short_types[i] = "{0} {1}".format(emoji["heavy_check_mark"],
                                               short_types[i])
     types_keyboard.add(
         *[InlineKeyboardButton(text=name, callback_data=name)
           for name in short_types])
     if is_special_type:
-        if chosen_type in types:
+        if chosen_type in all_chosen_types:
             chosen_type = "{0} {1}".format(emoji["heavy_check_mark"],
                                            chosen_type)
         types_keyboard.row(

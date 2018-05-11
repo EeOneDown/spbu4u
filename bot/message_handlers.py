@@ -10,9 +10,10 @@ from telebot.types import ReplyKeyboardMarkup, ReplyKeyboardRemove, \
 
 import bot.functions as func
 import bot.registration_functions as reg_func
+from bot import bot
 from bot.bots_constants import bot_name
 from bot.constants import *
-from bot import *
+from bot.keyboards import *
 from bot.yandex_timetable import get_yandex_timetable_data
 
 

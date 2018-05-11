@@ -4,7 +4,6 @@ from __future__ import unicode_literals
 import json
 import logging
 import math
-import sqlite3
 from datetime import datetime, time as dt_time
 from random import choice
 from time import time, localtime
@@ -133,13 +132,13 @@ def start_handler(message):
     divisions_keyboard.row("Поддержка", "Завершить")
     data = json.dumps(divisions)
 
-    sql_con = sqlite3.connect("Bot.db")
+    sql_con = func.get_connection()
     cursor = sql_con.cursor()
-    cursor.execute("""DELETE FROM user_choice WHERE user_id = ?""",
+    cursor.execute("""DELETE FROM user_choice WHERE user_id = %s""",
                    (message.chat.id, ))
     sql_con.commit()
     cursor.execute("""INSERT INTO user_choice (user_id, divisions_json)
-                      VALUES (?, ?)""", (message.chat.id, data))
+                      VALUES (%s, %s)""", (message.chat.id, data))
     sql_con.commit()
     cursor.close()
     sql_con.close()
@@ -1923,11 +1922,11 @@ def return_lesson_handler(call_back):
         if event.split("\n")[0].split(": ")[1] == lesson_id:
             lesson_title = event.split("\n")[1].split(": ")[1]
             break
-    sql_con = sqlite3.connect("Bot.db")
+    sql_con = func.get_connection()
     cursor = sql_con.cursor()
     cursor.execute("""DELETE FROM skips 
-                      WHERE user_id = ?
-                        AND lesson_id = ?""",
+                      WHERE user_id = %s
+                        AND lesson_id = %s""",
                    (call_back.message.chat.id, lesson_id))
     sql_con.commit()
     cursor.close()
@@ -1998,11 +1997,11 @@ def return_lesson_handler(call_back):
             lesson_title = event.split("\n")[1].split(": ")[1]
             educator = event.split("\n")[2].split(": ")[1]
             break
-    sql_con = sqlite3.connect("Bot.db")
+    sql_con = func.get_connection()
     cursor = sql_con.cursor()
     cursor.execute("""DELETE FROM user_educators 
-                      WHERE user_id = ?
-                        AND lesson_id = ?""",
+                      WHERE user_id = %s
+                        AND lesson_id = %s""",
                    (call_back.message.chat.id, lesson_id))
     sql_con.commit()
     cursor.close()
@@ -2112,15 +2111,15 @@ def change_group_handler(call_back):
 def change_template_group_handler(call_back):
     answer = "Группа успешно изменена на <b>{0}</b>"
     chosen_group_id = int(call_back.data)
-    sql_con = sqlite3.connect("Bot.db")
+    sql_con = func.get_connection()
     cursor = sql_con.cursor()
     cursor.execute("""SELECT title
                       FROM groups_data
-                      WHERE id = ?""", (chosen_group_id, ))
+                      WHERE id = %s""", (chosen_group_id, ))
     group_title = cursor.fetchone()[0]
     cursor.execute("""UPDATE user_data 
-                      SET group_id = ?
-                      WHERE id = ?""",
+                      SET group_id = %s
+                      WHERE id = %s""",
                    (chosen_group_id, call_back.message.chat.id))
     sql_con.commit()
     cursor.close()
@@ -2369,13 +2368,10 @@ if __name__ == '__main__':
     use test_token for local testing
     or don't forget to reset webhook
     """
-    # import os
-    from sql_creator import create_sql, copy_from_db
-    # from sql_updater import schedule_update
+    from sql_creator import create_sql
 
-    # os.chdir("PATH/TO/BOT")
-    create_sql("Bot.db")
-    copy_from_db("Bot_db", "Bot.db")
+    create_sql()
+    # copy_from_db("Bot_db", "Bot.db")
     # schedule_update("Bot.db")
     bot.remove_webhook()
     bot.polling(none_stop=True, interval=0)

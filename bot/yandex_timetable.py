@@ -11,7 +11,7 @@ from bot.constants import emoji, urls
 
 
 def get_yandex_timetable_data(from_station, to_station, date, limit=3):
-    from app import server_timedelta
+    from bot.constants import server_timedelta
     params = {"from": from_station, "to": to_station, "apikey": yandex_key,
               "date": date, "format": "json", "lang": "ru_RU",
               "transport_types": "suburban"}

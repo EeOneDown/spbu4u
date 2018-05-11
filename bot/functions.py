@@ -9,7 +9,7 @@ import pymysql
 import spbu
 from telebot.apihelper import ApiException
 
-from bot.bots_constants import db_name, user_name, slq_password
+from bot.bots_constants import db_name, user_name, slq_password, db_host
 from bot.constants import emoji, subject_short_type, months, months_date, \
     week_day_number, week_day_titles, max_inline_button_text_len, \
     server_timedelta
@@ -973,7 +973,7 @@ def delete_all_hides(user_id, hide_type=0):
 
 def get_connection():
     con = pymysql.connect(
-        host="localhost",
+        host=db_host,
         user=user_name,
         password=slq_password,
         db=db_name,

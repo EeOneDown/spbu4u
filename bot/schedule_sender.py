@@ -6,8 +6,8 @@ from datetime import datetime, timedelta
 
 import telebot
 
-from app.bot.bots_constants import release_token
-from app.bot.functions import get_json_day_data, create_schedule_answer, \
+from bot.bots_constants import release_token
+from bot import get_json_day_data, create_schedule_answer, \
     is_full_place, send_long_message
 
 

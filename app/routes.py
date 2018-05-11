@@ -10,16 +10,16 @@ from telebot.apihelper import ApiException
 from telebot.types import Update
 
 from app import app
-from app.bot import bot
-from app.bot.constants import webhook_url_base, webhook_url_path, ids
-from app.bot.functions import delete_user, write_log
+from bot import bot
+from bot.constants import webhook_url_base, webhook_url_path, ids
+from bot.functions import delete_user, write_log
 
 
 @app.route("/")
 @app.route("/index")
 def main_page():
     from requests import get
-    from app.bot.bots_constants import yandex_key
+    from bot.bots_constants import yandex_key
 
     url = "https://api.rasp.yandex.net/v3.0/copyright/"
     params = {"apikey": yandex_key, "format": "json"}
@@ -77,3 +77,12 @@ def webhook():
         return "OK", 200
     else:
         abort(403)
+
+
+@app.route("/test_route", methods=["POST"])
+def test_route():
+    json_string = request.get_data().decode("utf-8")
+    print(json_string)
+    update = Update.de_json(json_string)
+    bot.process_new_updates([update])
+    return "OK", 200

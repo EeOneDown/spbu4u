@@ -9,12 +9,11 @@ import spbu
 from telebot.apihelper import ApiException
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton, ForceReply
 
-import app.bot.functions as func
-from app.bot import bot
-from app.bot.constants import *
-from app.bot.keyboards import *
-from app.bot.message_handlers import start_handler
-from app.bot.yandex_timetable import get_yandex_timetable_data
+import bot.functions as func
+from bot.constants import *
+from bot import *
+from bot.message_handlers import start_handler
+from bot.yandex_timetable import get_yandex_timetable_data
 
 
 @bot.callback_query_handler(func=lambda call_back:

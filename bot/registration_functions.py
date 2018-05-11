@@ -6,7 +6,7 @@ import json
 import spbu
 import telebot
 
-from app.bot import functions
+from bot import functions
 
 
 def set_next_step(user_id, next_step):
@@ -37,7 +37,7 @@ def get_step(user_id):
 
 
 def select_division(message):
-    from app.bot import bot
+    from bot import bot
 
     answer = ""
 
@@ -87,8 +87,8 @@ def select_division(message):
 
 
 def select_study_level(message):
-    from app.bot import bot
-    from app.bot.message_handlers import start_handler
+    from bot import bot
+    from bot.message_handlers import start_handler
 
     answer = ""
 
@@ -142,7 +142,7 @@ def select_study_level(message):
 
 
 def select_study_program_combination(message):
-    from app.bot import bot
+    from bot import bot
 
     answer = ""
 
@@ -210,7 +210,7 @@ def select_study_program_combination(message):
 
 
 def select_admission_year(message):
-    from app.bot import bot
+    from bot import bot
 
     answer = ""
 
@@ -293,7 +293,7 @@ def select_admission_year(message):
 
 
 def select_student_group(message):
-    from app.bot import bot
+    from bot import bot
 
     answer = ""
 
@@ -363,10 +363,10 @@ def select_student_group(message):
 
 
 def confirm_choice(message):
-    from app.bot import bot
-    from app.bot.keyboards import main_keyboard
-    from app.bot.message_handlers import start_handler
-    from app.bot.constants import emoji
+    from bot import bot
+    from bot import main_keyboard
+    from bot.message_handlers import start_handler
+    from bot.constants import emoji
 
     if message.text == "Все верно":
         sql_con = functions.get_connection()

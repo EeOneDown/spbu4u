@@ -5,7 +5,7 @@ import sqlite3
 
 import pymysql
 
-from app.bot.functions import get_connection
+from bot import get_connection
 
 
 def create_sql():

@@ -5,9 +5,9 @@ from datetime import datetime
 
 from telebot.types import InlineQueryResultArticle, InputTextMessageContent
 
-import app.bot.functions as func
-from app.bot import bot
-from app.bot.constants import week_day_titles, week_day_number, server_timedelta
+import bot.functions as func
+from bot import bot
+from bot.constants import week_day_titles, week_day_number, server_timedelta
 
 
 @bot.inline_handler(func=lambda query:

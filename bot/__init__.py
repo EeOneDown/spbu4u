@@ -5,7 +5,7 @@ import logging
 
 from telebot import TeleBot, logger
 
-from app.bot.bots_constants import release_token
+from bot.bots_constants import release_token
 
 
 bot = TeleBot(release_token, threaded=False)
@@ -13,4 +13,4 @@ bot = TeleBot(release_token, threaded=False)
 logger.setLevel(logging.INFO)
 
 
-from app.bot import *
+from bot import message_handlers, callback_query_handlers, inline_handlers

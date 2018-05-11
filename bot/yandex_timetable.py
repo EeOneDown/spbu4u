@@ -6,8 +6,8 @@ from datetime import datetime, timedelta, time
 
 import requests
 
-from app.bot.bots_constants import yandex_key
-from app.bot.constants import emoji, urls
+from bot.bots_constants import yandex_key
+from bot.constants import emoji, urls
 
 
 def get_yandex_timetable_data(from_station, to_station, date, limit=3):

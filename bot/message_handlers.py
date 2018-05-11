@@ -8,13 +8,12 @@ import spbu
 from telebot.types import ReplyKeyboardMarkup, ReplyKeyboardRemove, \
     InlineKeyboardMarkup, InlineKeyboardButton, ForceReply
 
-import app.bot.functions as func
-import app.bot.registration_functions as reg_func
-from app.bot import bot
-from app.bot.bots_constants import bot_name
-from app.bot.constants import *
-from app.bot.keyboards import *
-from app.bot.yandex_timetable import get_yandex_timetable_data
+import bot.functions as func
+import bot.registration_functions as reg_func
+from bot.bots_constants import bot_name
+from bot.constants import *
+from bot import *
+from bot.yandex_timetable import get_yandex_timetable_data
 
 
 @bot.message_handler(commands=["start"])

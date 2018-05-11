@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 
 from telebot import types
 from time import localtime
-from app.bot.constants import emoji
+from bot.constants import emoji
 
 
 main_keyboard = types.ReplyKeyboardMarkup(resize_keyboard=True,

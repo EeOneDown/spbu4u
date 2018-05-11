@@ -8,4 +8,5 @@ import flask
 app = flask.Flask(__name__)
 # sslify = SSLify(app)
 
-from app import routes, bot
+from app import routes
+

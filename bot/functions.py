@@ -54,7 +54,7 @@ def datetime_from_string(dt_string):
 
 
 def parse_event_time(event):
-    return "{0} {1}:{2:0>2}{3}{4}:{5:0>2}".format(
+    return "{0} {1:0>2}:{2:0>2}{3}{4:0>2}:{5:0>2}".format(
         emoji["clock"],
         datetime_from_string(event["Start"]).time().hour,
         datetime_from_string(event["Start"]).time().minute,

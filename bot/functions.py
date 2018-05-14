@@ -49,8 +49,19 @@ def add_new_user(user_id, group_id, group_title=None):
         sql_con.close()
 
 
+def datetime_from_string(dt_string):
+    return datetime.strptime(dt_string, "%Y-%m-%dT%H:%M:%S")
+
+
 def parse_event_time(event):
-    return "{0} {1}".format(emoji["clock"], event["TimeIntervalString"])
+    return "{0} {1}:{2}{3}{4}:{5}".format(
+        emoji["clock"],
+        datetime_from_string(event["Start"]).time().hour,
+        datetime_from_string(event["Start"]).time().minute,
+        emoji["en_dash"],
+        datetime_from_string(event["End"]).time().hour,
+        datetime_from_string(event["End"]).time().minute
+    )
 
 
 def parse_event_subject(event):
@@ -271,8 +282,7 @@ def get_json_day_data(user_id, day_date, json_week_data=None, next_week=False):
     if json_week_data is None:
         json_week_data = get_json_week_data(user_id, next_week)
     for day_info in json_week_data["Days"]:
-        if datetime.strptime(day_info["Day"],
-                             "%Y-%m-%dT%H:%M:%S").date() == day_date:
+        if datetime_from_string(day_info["Day"]).date() == day_date:
             return day_info
     return None
 
@@ -292,7 +302,7 @@ def is_event_in_skips(event, skips, week_day_string):
                 (skip_lesson[3] == "all" or
                  skip_lesson[3] == week_day_string) and \
                 (skip_lesson[4] == "all" or
-                 skip_lesson[4] == event["TimeIntervalString"]) and \
+                 skip_lesson[4] == parse_event_time(event)) and \
                 (skip_lesson[5] == "all" or
                  event_educators.issubset(skip_educators)):
             return True
@@ -326,7 +336,7 @@ def create_schedule_answer(day_info, full_place, user_id=None, personal=True,
             continue
         if event["IsAssigned"]:
             answer += emoji["new"] + " "
-        answer += emoji["clock"] + " " + event["TimeIntervalString"]
+        answer += parse_event_time(event)
         if event["TimeWasChanged"]:
             answer += " " + emoji["warning"]
         answer += "\n<b>"

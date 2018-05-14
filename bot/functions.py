@@ -362,15 +362,18 @@ def create_schedule_answer(day_info, full_place, user_id=None, personal=True,
             have_chosen_educator = True
 
         for location in event["EventLocations"]:
-            answer += parse_event_location(location, full_place,
-                                           have_chosen_educator,
-                                           chosen_educators[subject_name])
+            loc_answer = parse_event_location(
+                location, full_place, have_chosen_educator,
+                chosen_educators[subject_name] if have_chosen_educator else None
+            )
+            answer += loc_answer
 
-            if event["LocationsWereChanged"] or \
-                    event["EducatorsWereReassigned"]:
-                answer += " " + emoji["warning"]
+            if loc_answer:
+                if event["LocationsWereChanged"] or \
+                        event["EducatorsWereReassigned"]:
+                    answer += " " + emoji["warning"]
 
-            answer += "\n"
+                answer += "\n"
 
         answer += "\n"
 
@@ -922,9 +925,9 @@ def get_lessons_with_educators(user_id, day_date):
     return data
 
 
-def create_session_answer(json_attestation, month, user_id, full_place,
-                          personal, only_exams):
-    answer = ""
+def create_session_answers(json_attestation, month, user_id, full_place,
+                           personal, only_exams):
+    answers = []
     for day_data in json_attestation["Days"]:
         event_date = datetime.strptime(day_data["Day"], "%Y-%m-%dT%H:%M:%S")
         if month == str(event_date.month):
@@ -932,8 +935,8 @@ def create_session_answer(json_attestation, month, user_id, full_place,
                 day_data, full_place, user_id=user_id, personal=personal,
                 only_exams=only_exams)
             if "Выходной" not in cur_answer:
-                answer += cur_answer.replace("\n\n", "\n") + "\n"
-    return answer
+                answers.append(cur_answer)
+    return answers
 
 
 def get_key_by_value(dct, val):

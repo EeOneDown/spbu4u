@@ -1447,7 +1447,7 @@ def select_months_att_handler(call_back):
         message_id=call_back.message.message_id
     )
     json_attestation = func.get_json_attestation(call_back.message.chat.id)
-    answer = ""
+    answers = []
     is_full_place = func.is_full_place(call_back.message.chat.id)
 
     if call_back.message.text == "Выбери месяц:":
@@ -1456,21 +1456,24 @@ def select_months_att_handler(call_back):
         schedule_variations = [(True, False), (False, False)]
 
     for personal, only_exams in schedule_variations:
-        answer += func.create_session_answer(json_attestation, call_back.data,
-                                             call_back.message.chat.id,
-                                             is_full_place, personal,
-                                             only_exams)
-        if answer:
+        answers += func.create_session_answers(json_attestation, call_back.data,
+                                               call_back.message.chat.id,
+                                               is_full_place, personal,
+                                               only_exams)
+        if answers:
             break
-    if not answer:
-        answer += "<i>Нет событий</i>"
+    if not answers:
+        answers.append("<i>Нет событий</i>")
     try:
-        bot.edit_message_text(text=answer,
+        bot.edit_message_text(text=answers[0],
                               chat_id=call_back.message.chat.id,
                               message_id=bot_msg.message_id,
                               parse_mode="HTML")
     except ApiException:
-        func.send_long_message(bot, answer, call_back.message.chat.id, "\n\n\n")
+        func.send_long_message(bot, answers[0], call_back.message.chat.id)
+    finally:
+        for answer in answers[1:]:
+            func.send_long_message(bot, answer, call_back.message.chat.id)
 
 
 @bot.callback_query_handler(func=lambda call_back:

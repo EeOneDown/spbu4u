@@ -1,19 +1,15 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-import sqlite3
 from datetime import datetime, timedelta
 
-import telebot
-
-from bot.bots_constants import release_token
-from bot import get_json_day_data, create_schedule_answer, \
-    is_full_place, send_long_message
+from bot import bot
+from bot.functions import get_json_day_data, create_schedule_answer, \
+    is_full_place, send_long_message, get_connection
 
 
-def schedule_sender(db_path="Bot.db"):
-    bot = telebot.TeleBot(release_token)
-    sql_con = sqlite3.connect(db_path)
+def schedule_sender():
+    sql_con = get_connection()
     cursor = sql_con.cursor()
     cursor.execute("""SELECT id
                       FROM user_data

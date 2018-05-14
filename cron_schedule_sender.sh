@@ -5,4 +5,4 @@ if ! [ -d $HOME/spbu4u/logs/ ]; then
     ls
 fi
 
-python schedule_sender.py 1>>logs/schedule_sender_log.txt 2>>logs/schedule_sender_err.txt
+$HOME/spbu4u/venv/bin/python $HOME/spbu4u/schedule_sender.py 1>>$HOME/spbu4u/logs/schedule_sender_log.txt 2>>$HOME/spbu4u/logs/schedule_sender_err.txt

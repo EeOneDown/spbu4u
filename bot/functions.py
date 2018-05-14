@@ -79,10 +79,16 @@ def parse_event_subject(event):
     return answer
 
 
-def parse_event_location(location, full_place=True):
+def parse_event_location(location, full_place=True, have_chosen_educator=False,
+                         chosen_educator=None):
     answer = ""
 
     if location["IsEmpty"]:
+        return answer
+
+    if have_chosen_educator and not chosen_educator.issuperset(
+            {edu["Item2"].split(", ")[0] for edu in location["EducatorIds"]}
+    ):
         return answer
 
     if full_place:
@@ -339,43 +345,33 @@ def create_schedule_answer(day_info, full_place, user_id=None, personal=True,
         answer += parse_event_time(event)
         if event["TimeWasChanged"]:
             answer += " " + emoji["warning"]
-        answer += "\n<b>"
+
+        answer += "\n<b>" + parse_event_subject(event) + "</b>\n"
         subject_name = ", ".join(event["Subject"].split(", ")[:-1])
-        subject_type = event["Subject"].split(", ")[-1]
-        stripped_subject_type = " ".join(subject_type.split()[:2])
-        if stripped_subject_type in subject_short_type.keys():
-            answer += subject_short_type[stripped_subject_type] + " - "
-        else:
-            answer += subject_type.upper() + " - "
-        answer += subject_name + "</b>\n"
+
+        # is chosen_educator in event's educators
         have_chosen_educator = False
         if subject_name in chosen_educators.keys() and \
-                any(ch_edu in [edu["Item2"].split(", ")[0] for edu in
-                               event["EducatorIds"]] for ch_edu in
-                    chosen_educators[subject_name]):
+                any(
+                    ch_edu in [
+                        edu["Item2"].split(", ")[0]
+                        for edu in event["EducatorIds"]
+                    ]
+                    for ch_edu in chosen_educators[subject_name]
+                ):
             have_chosen_educator = True
-        for location in event["EventLocations"]:
-            if location["IsEmpty"]:
-                continue
 
-            if have_chosen_educator and not chosen_educators[
-                subject_name].issuperset({edu["Item2"].split(", ")[0] for edu in
-                                          location["EducatorIds"]}):
-                continue
-            if full_place:
-                location_name = location["DisplayName"].strip(", ").strip()
-            else:
-                location_name = location["DisplayName"].split(", ")[-1].strip()
-            answer += location_name
-            if location["HasEducators"]:
-                educators = [educator["Item2"].split(", ")[0] for educator in
-                             location["EducatorIds"]]
-                if len(educators):
-                    answer += " <i>({0})</i>".format("; ".join(educators))
+        for location in event["EventLocations"]:
+            answer += parse_event_location(location, full_place,
+                                           have_chosen_educator,
+                                           chosen_educators[subject_name])
+
             if event["LocationsWereChanged"] or \
                     event["EducatorsWereReassigned"]:
                 answer += " " + emoji["warning"]
+
             answer += "\n"
+
         answer += "\n"
 
     if len(answer.strip().split("\n\n")) == 1:

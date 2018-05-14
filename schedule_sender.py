@@ -19,6 +19,9 @@ def schedule_sender():
     cursor.close()
     sql_con.close()
 
+    send_cnt = 0
+    err_cnt = 0
+
     tomorrow_moscow_datetime = \
         datetime.today() + timedelta(days=1) + server_timedelta
     tomorrow_moscow_date = tomorrow_moscow_datetime.date()
@@ -35,12 +38,17 @@ def schedule_sender():
         try:
             answer = "Расписание на завтра:\n\n" + answer
             send_long_message(bot, answer, user_id)
+            send_cnt += 1
         except Exception as err:
             print(err)
             print(user_id)
+            err_cnt += 1
             continue
+
+    return send_cnt, err_cnt
 
 
 if __name__ == '__main__':
-    schedule_sender()
-    print("Done", datetime.today().time())
+    send_cnt, err_cnt = schedule_sender()
+    print(datetime.today().time(),
+          "Sends: {0}; Errs: {1}".format(send_cnt, err_cnt))

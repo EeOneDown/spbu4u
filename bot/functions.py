@@ -321,8 +321,13 @@ def is_event_in_skips(event, skips, week_day_string):
     return False
 
 
+def is_resit(event):
+    return "пересдача" in event["Subject"] or "консультация" in event[
+        "Subject"] or "комиссия" in event["Subject"]
+
+
 def create_schedule_answer(day_info, full_place, user_id=None, personal=True,
-                           only_exams=False):
+                           session=False, only_resit=False):
     if day_info is None:
         return emoji["sleep"] + " Выходной"
 
@@ -339,13 +344,17 @@ def create_schedule_answer(day_info, full_place, user_id=None, personal=True,
         chosen_educators = {}
 
     for event in day_study_events:
-        if event["IsCancelled"] or \
-                (only_exams and "пересдача" in event["Subject"]) or \
-                (only_exams and "консультация" in event["Subject"]) or \
-                (only_exams and "комиссия" in event["Subject"]) or \
-                is_event_in_skips(event, skips,
-                                  day_info["DayString"].split(", ")[0]):
+        if event["IsCancelled"] or is_event_in_skips(
+                event, skips, day_info["DayString"].split(", ")[0]
+        ):
             continue
+
+        if session and is_resit(event):
+            continue
+
+        if only_resit and not is_resit(event):
+            continue
+
         if event["IsAssigned"]:
             answer += emoji["new"] + " "
         answer += parse_event_time(event)
@@ -932,14 +941,14 @@ def get_lessons_with_educators(user_id, day_date):
 
 
 def create_session_answers(json_attestation, month, user_id, full_place,
-                           personal, only_exams):
+                           personal, session, only_resit):
     answers = []
     for day_data in json_attestation["Days"]:
         event_date = datetime.strptime(day_data["Day"], "%Y-%m-%dT%H:%M:%S")
         if month == str(event_date.month):
             cur_answer = create_schedule_answer(
                 day_data, full_place, user_id=user_id, personal=personal,
-                only_exams=only_exams)
+                session=session, only_resit=only_resit)
             if "Выходной" not in cur_answer:
                 answers.append(cur_answer)
     return answers

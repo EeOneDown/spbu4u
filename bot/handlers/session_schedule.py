@@ -7,7 +7,7 @@ from telebot.apihelper import ApiException
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 from bot import bot, functions as func
-from bot.constants import loading_text
+from bot.constants import loading_text, emoji
 
 
 # Session message
@@ -48,19 +48,21 @@ def select_months_att_handler(call_back):
     is_full_place = func.is_full_place(call_back.message.chat.id)
 
     if call_back.message.text == "Выбери месяц:":
-        schedule_variations = [(True, True), (False, True)]
+        schedule_variations = [(True, True, False), (False, True, False)]
     else:
-        schedule_variations = [(True, False), (False, False)]
+        schedule_variations = [(True, False, True), (False, False, True)]
 
-    for personal, only_exams in schedule_variations:
+    for personal, session, only_resit in schedule_variations:
         answers += func.create_session_answers(json_attestation, call_back.data,
                                                call_back.message.chat.id,
                                                is_full_place, personal,
-                                               only_exams)
+                                               session, only_resit)
         if answers:
             break
     if not answers:
-        answers.append("<i>Нет событий</i>")
+        answers.append("<i>Нет событий</i>\n\n"
+                       "{0} Для просмотра пересдач и комиссий напиши боту "
+                       "<b>Допса</b>".format(emoji["warning"]))
     try:
         bot.edit_message_text(text=answers[0],
                               chat_id=call_back.message.chat.id,

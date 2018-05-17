@@ -31,6 +31,7 @@ def schedule_handler(message):
     bot.send_message(message.chat.id, answer, reply_markup=schedule_keyboard)
 
 
+# Suburbans message
 @bot.message_handler(func=lambda mess: mess.text == emoji["suburban"],
                      content_types=["text"])
 def suburban_handler(message):
@@ -46,6 +47,7 @@ def suburban_handler(message):
                      disable_web_page_preview=True)
 
 
+# Editor message
 @bot.message_handler(func=lambda mess: mess.text.title() == "Редактор",
                      content_types=["text"])
 @bot.message_handler(func=lambda mess: mess.text == emoji["editor"],
@@ -59,6 +61,7 @@ def schedule_editor_handler(message):
                      parse_mode='HTML')
 
 
+# Settings message
 @bot.message_handler(commands=["settings"])
 @bot.message_handler(func=lambda mess: mess.text == emoji["settings"],
                      content_types=["text"])
@@ -69,6 +72,7 @@ def settings_handler(message):
     bot.send_message(message.chat.id, answer, reply_markup=settings_keyboard)
 
 
+# Rate message
 @bot.message_handler(func=lambda mess: mess.text == emoji["star"],
                      content_types=["text"])
 def rate_handler(message):

@@ -10,6 +10,7 @@ from bot import bot, functions as func
 from bot.constants import loading_text
 
 
+# Session message
 @bot.message_handler(func=lambda mess: mess.text.capitalize() == "Сессия",
                      content_types=["text"])
 @bot.message_handler(func=lambda mess: mess.text.capitalize() == "Допса",
@@ -33,6 +34,7 @@ def attestation_handler(message):
     bot.send_message(message.chat.id, answer, reply_markup=inline_keyboard)
 
 
+# Month callback
 @bot.callback_query_handler(func=lambda call_back:
                             "Выбери месяц" in call_back.message.text)
 def select_months_att_handler(call_back):

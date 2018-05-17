@@ -10,6 +10,7 @@ from bot.constants import emoji, ids
 from bot.keyboards import main_keyboard
 
 
+# Feedback text message
 @bot.message_handler(
     func=lambda mess:
         mess.reply_to_message is not None and
@@ -23,6 +24,7 @@ def users_callback_handler(message):
                      reply_to_message_id=message.message_id)
 
 
+# Statistics callback
 @bot.callback_query_handler(func=lambda call_back:
                             call_back.data == "Статистика")
 def statistics_handler(call_back):
@@ -51,6 +53,7 @@ def statistics_handler(call_back):
         pass
 
 
+# Feedback callback
 @bot.callback_query_handler(func=lambda call_back:
                             call_back.data == "Связь")
 def feedback_handler(call_back):
@@ -67,6 +70,7 @@ def feedback_handler(call_back):
                          reply_markup=markup)
 
 
+# Rate mark callback
 @bot.callback_query_handler(func=lambda call_back:
                             call_back.data in ["1", "2", "3", "4", "5"])
 def set_rate_handler(call_back):

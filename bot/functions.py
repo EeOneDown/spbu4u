@@ -212,6 +212,12 @@ def delete_user(user_id, only_choice=False):
         cursor.execute("""DELETE FROM skips 
                           WHERE user_id = %s""", (user_id,))
         sql_con.commit()
+        cursor.execute("""DELETE FROM user_educators 
+                          WHERE user_id = %s""", (user_id,))
+        sql_con.commit()
+        cursor.execute("""DELETE FROM user_lessons 
+                          WHERE user_id = %s""", (user_id,))
+        sql_con.commit()
         cursor.execute("""DELETE FROM user_data 
                           WHERE id = %s""", (user_id,))
         sql_con.commit()

@@ -1,512 +1,84 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from datetime import datetime, time
+from datetime import datetime
 from math import ceil
-from random import choice
 
-import spbu
 from telebot.apihelper import ApiException
-from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton, ForceReply
+from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
-import bot.functions as func
-from bot.constants import *
-from bot import bot
-from bot.message_handlers import start_handler
-from bot.yandex_timetable import get_yandex_timetable_data
+from bot import bot, functions as func
+from bot.constants import emoji, max_inline_button_text_len, server_timedelta, \
+    subject_short_type, week_day_titles, week_day_number
 
 
-@bot.callback_query_handler(func=lambda call_back:
-                            not func.is_user_exist(call_back.message.chat.id))
-def not_exist_user_callback_handler(call_back):
-    answer = "Чтобы пользоваться сервисом, необходимо " \
-             "зарегистрироваться.\nВоспользуйся коммандой /start"
-    bot.edit_message_text(text=answer,
-                          chat_id=call_back.message.chat.id,
-                          message_id=call_back.message.message_id,
-                          parse_mode="HTML")
-
-
-@bot.callback_query_handler(func=lambda call_back:
-                            call_back.data == "Благодарности")
-def show_full_info(call_back):
-    answer = special_thanks
-    bot.edit_message_text(text=answer,
-                          chat_id=call_back.message.chat.id,
-                          message_id=call_back.message.message_id,
-                          parse_mode="HTML",
-                          disable_web_page_preview=True)
-    inline_answer = "И тебе :)"
-    bot.answer_callback_query(call_back.id, inline_answer, cache_time=1)
-
-
-@bot.callback_query_handler(func=lambda call_back:
-                            call_back.data in week_day_number.keys() or
-                            call_back.data == "Вся неделя")
-def select_week_day_schedule_handler(call_back):
-    day = ""
-    if call_back.data == "Вся неделя":
-        day += "Неделя"
+@bot.message_handler(func=lambda mess: mess.text.title() == "Адрес",
+                     content_types=["text"])
+def place_handler(message):
+    bot.send_chat_action(message.chat.id, "typing")
+    answer = "Здесь ты можешь выбрать отображаемый формат адреса\nСейчас: "
+    place_keyboard = InlineKeyboardMarkup(True)
+    if func.is_full_place(message.chat.id):
+        answer += "<b>Полностью</b>"
+        place_keyboard.row(
+            *[InlineKeyboardButton(text=name, callback_data="Аудитория")
+              for name in ["Только аудитория"]])
     else:
-        day += [item[0] for item in week_day_titles.items() if
-                item[1] == call_back.data][0]
-    answer = "Расписание на: <i>{0}</i>\n".format(day)
-    week_type_keyboard = InlineKeyboardMarkup()
-    week_type_keyboard.row(
-        *[InlineKeyboardButton(text=name, callback_data=name) for
-          name in ["Текущее", "Следующее"]]
-    )
-    bot.edit_message_text(text=answer,
-                          chat_id=call_back.message.chat.id,
-                          message_id=call_back.message.message_id,
-                          parse_mode="HTML",
-                          reply_markup=week_type_keyboard)
+        answer += "<b>Только аудитория</b>"
+        place_keyboard.row(
+            *[InlineKeyboardButton(text=name, callback_data="Полностью")
+              for name in ["Полностью"]])
+    bot.send_message(message.chat.id, answer, parse_mode="HTML",
+                     reply_markup=place_keyboard)
 
 
-@bot.callback_query_handler(func=lambda call_back:
-                            "Расписание на: Неделя" in call_back.message.text)
-def all_week_schedule_handler(call_back):
-    user_id = call_back.message.chat.id
-    bot_msg = bot.edit_message_text(
-        text="{0}\U00002026".format(choice(loading_text["schedule"])),
-        chat_id=call_back.message.chat.id,
-        message_id=call_back.message.message_id
-    )
-    if call_back.data == "Текущее":
-        json_week = func.get_json_week_data(user_id)
-    else:
-        json_week = func.get_json_week_data(user_id, next_week=True)
-    inline_answer = json_week["WeekDisplayText"]
-    bot.answer_callback_query(call_back.id, inline_answer, cache_time=1)
-    is_send = False
-    if len(json_week["Days"]):
-        for day in json_week["Days"]:
-            full_place = func.is_full_place(call_back.message.chat.id)
-            answer = func.create_schedule_answer(day, full_place,
-                                                 call_back.message.chat.id)
-            if "Выходной" in answer:
-                continue
-            if json_week["Days"].index(day) == 0 or not is_send:
-                try:
-                    bot.edit_message_text(text=answer,
-                                          chat_id=user_id,
-                                          message_id=bot_msg.message_id,
-                                          parse_mode="HTML")
-                except ApiException:
-                    func.send_long_message(bot, answer, user_id)
-            else:
-                func.send_long_message(bot, answer, user_id)
-            is_send = True
-    if not is_send or not len(json_week["Days"]):
-        answer = "{0} Выходная неделя".format(emoji["sleep"])
-        bot.edit_message_text(text=answer,
-                              chat_id=user_id,
-                              message_id=bot_msg.message_id)
+@bot.message_handler(func=lambda mess:
+                     mess.text.capitalize() == "Выбрать",
+                     content_types=["text"])
+def choose_educator_handler(message):
+    bot.send_chat_action(message.chat.id, "typing")
+    answer = "Здесь ты можешь выбрать для отображения занятие или " \
+             "преподавателя:"
+    inline_keyboard = InlineKeyboardMarkup(True)
+    inline_keyboard.row(
+        *[InlineKeyboardButton(text=name, callback_data=name)
+          for name in ["Преподавателя", "Занятие"]])
+    bot.send_message(message.chat.id, answer, reply_markup=inline_keyboard)
 
 
-@bot.callback_query_handler(func=lambda call_back:
-                            call_back.data == "Текущее" or
-                            call_back.data == "Следующее")
-def week_day_schedule_handler(call_back):
-    bot_msg = bot.edit_message_text(
-        text="{0}\U00002026".format(choice(loading_text["schedule"])),
-        chat_id=call_back.message.chat.id,
-        message_id=call_back.message.message_id
-    )
-    is_next_week = False
-    iso_day_date = list((datetime.today() + server_timedelta).isocalendar())
-    if iso_day_date[2] == 7:
-        iso_day_date[1] += 1
-    if call_back.data == "Следующее":
-        iso_day_date[1] += 1
-        is_next_week = True
-    iso_day_date[2] = week_day_number[
-        week_day_titles[call_back.message.text.split(": ")[-1]]]
-    day_date = func.date_from_iso(iso_day_date)
-    json_day = func.get_json_day_data(call_back.message.chat.id, day_date,
-                                      next_week=is_next_week)
-    full_place = func.is_full_place(call_back.message.chat.id)
-    answer = func.create_schedule_answer(json_day, full_place,
-                                         call_back.message.chat.id)
-    try:
-        bot.edit_message_text(text=answer,
-                              chat_id=call_back.message.chat.id,
-                              message_id=bot_msg.message_id,
-                              parse_mode="HTML")
-    except ApiException:
-        func.send_long_message(bot, answer, call_back.message.chat.id)
+@bot.message_handler(func=lambda mess:
+                     mess.text.capitalize() == "Скрыть",
+                     content_types=["text"])
+def hide_lesson_handler(message):
+    bot.send_chat_action(message.chat.id, "typing")
+    answer = "Здесь ты можешь скрыть любое занятие\n" \
+             "Выбери день, когда есть это занятие:"
+    json_week_data = func.get_json_week_data(message.chat.id)
+    days = json_week_data["Days"]
+    days_keyboard = InlineKeyboardMarkup(True)
+    for day in days:
+        days_keyboard.row(
+            *[InlineKeyboardButton(text=name, callback_data=name)
+              for name in [day["DayString"].split(", ")[0].capitalize()]])
+    days_keyboard.row(
+        *[InlineKeyboardButton(text=name, callback_data=name)
+          for name in ["Отмена"]])
+    bot.send_message(message.chat.id, answer, reply_markup=days_keyboard)
 
 
-@bot.callback_query_handler(func=lambda call_back:
-                            call_back.data == "Подписаться")
-def sending_on_handler(call_back):
-    func.set_sending(call_back.message.chat.id, True)
-    answer = "{0} Рассылка <b>активирована</b>\nЖди рассылку в 21:00" \
-             "".format(emoji["mailbox_on"])
-    bot.edit_message_text(text=answer,
-                          chat_id=call_back.message.chat.id,
-                          message_id=call_back.message.message_id,
-                          parse_mode="HTML")
-
-
-@bot.callback_query_handler(func=lambda call_back:
-                            call_back.data == "Отписаться")
-def sending_off_handler(call_back):
-    func.set_sending(call_back.message.chat.id, False)
-    answer = "{0} Рассылка <b>отключена</b>".format(emoji["mailbox_off"])
-    bot.edit_message_text(text=answer,
-                          chat_id=call_back.message.chat.id,
-                          message_id=call_back.message.message_id,
-                          parse_mode="HTML")
-
-
-@bot.callback_query_handler(func=lambda call_back:
-                            call_back.data == "Обновить")
-def update_yandex_handler(call_back):
-    from_to_stations = call_back.message.text.split("\n\n")[0].split(" => ")
-    from_station_title = from_to_stations[0]
-    to_station_title = from_to_stations[1]
-    from_station = all_stations[from_station_title]
-    to_station = all_stations[to_station_title]
-
-    server_datetime = datetime.today() + server_timedelta
-    data = get_yandex_timetable_data(from_station, to_station, server_datetime)
-    answer = data["answer"]
-
-    update_keyboard = InlineKeyboardMarkup(True)
-    if data["is_OK"]:
-        if data["is_tomorrow"]:
-            inline_answer = emoji["warning"] + " На сегодня нет электричек"
-            bot.answer_callback_query(call_back.id, inline_answer,
-                                      show_alert=True)
-            update_keyboard.row(*[InlineKeyboardButton(
-                text=name, callback_data=name) for name in ["Все на завтра"]])
-        else:
-            update_keyboard.row(*[InlineKeyboardButton(
-                text=name, callback_data=name)
-                for name in ["Оставшиеся", "Обновить"]])
-
-    try:
-        bot.edit_message_text(text=answer,
-                              chat_id=call_back.message.chat.id,
-                              message_id=call_back.message.message_id,
-                              parse_mode="HTML",
-                              reply_markup=update_keyboard)
-    except ApiException:
-        pass
-    finally:
-        inline_answer = emoji["check_mark"] + " Обновлено"
-        bot.answer_callback_query(call_back.id, inline_answer, cache_time=1)
-
-
-@bot.callback_query_handler(func=lambda call_back:
-                            call_back.data == "Оставшиеся")
-def more_suburbans_handler(call_back):
-    from_to_stations = call_back.message.text.split("\n\n")[0].split(" => ")
-    from_station_title = from_to_stations[0]
-    to_station_title = from_to_stations[1]
-    from_station = all_stations[from_station_title]
-    to_station = all_stations[to_station_title]
-    server_datetime = datetime.today() + server_timedelta
-    data = get_yandex_timetable_data(from_station, to_station, server_datetime,
-                                     limit=100)
-    answer = data["answer"]
-
-    update_keyboard = InlineKeyboardMarkup(True)
-    if data["is_OK"]:
-        if data["is_tomorrow"]:
-            inline_answer = emoji["warning"] + " На сегодня нет электричек"
-            bot.answer_callback_query(call_back.id, inline_answer,
-                                      show_alert=True)
-            update_keyboard.row(*[InlineKeyboardButton(
-                text=name, callback_data=name) for name in ["Все на завтра"]])
-        else:
-            update_keyboard.row(*[InlineKeyboardButton(
-                text=name, callback_data=name)
-                for name in ["Ближайшие", "Обновить"]])
-
-    try:
-        bot.edit_message_text(text=answer,
-                              chat_id=call_back.message.chat.id,
-                              message_id=call_back.message.message_id,
-                              parse_mode="HTML",
-                              reply_markup=update_keyboard)
-    except ApiException:
-        pass
-
-
-@bot.callback_query_handler(func=lambda call_back:
-                            call_back.data == "Ближайшие")
-def less_suburbans_handler(call_back):
-    from_to_stations = call_back.message.text.split("\n\n")[0].split(" => ")
-    from_station_title = from_to_stations[0]
-    to_station_title = from_to_stations[1]
-    from_station = all_stations[from_station_title]
-    to_station = all_stations[to_station_title]
-    server_datetime = datetime.today() + server_timedelta
-    data = get_yandex_timetable_data(from_station, to_station, server_datetime)
-    answer = data["answer"]
-
-    update_keyboard = InlineKeyboardMarkup(True)
-    if data["is_OK"]:
-        if data["is_tomorrow"]:
-            inline_answer = emoji["warning"] + " На сегодня нет электричек"
-            bot.answer_callback_query(call_back.id, inline_answer,
-                                      show_alert=True)
-            update_keyboard.row(*[InlineKeyboardButton(
-                text=name, callback_data=name) for name in ["Все на завтра"]])
-        else:
-            update_keyboard.row(*[InlineKeyboardButton(
-                text=name, callback_data=name)
-                for name in ["Оставшиеся", "Обновить"]])
-
-    try:
-        bot.edit_message_text(text=answer,
-                              chat_id=call_back.message.chat.id,
-                              message_id=call_back.message.message_id,
-                              parse_mode="HTML",
-                              reply_markup=update_keyboard)
-    except ApiException:
-        pass
-
-
-@bot.callback_query_handler(func=lambda call_back:
-                            call_back.data == "Все на завтра")
-def all_tomorrow_suburbans_handler(call_back):
-    from_to_stations = call_back.message.text.split("\n\n")[0].split(" => ")
-    from_station_title = from_to_stations[0]
-    to_station_title = from_to_stations[1]
-    from_station = all_stations[from_station_title]
-    to_station = all_stations[to_station_title]
-
-    server_datetime = datetime.combine(
-        (datetime.today() + timedelta(days=1)).date(), time())
-
-    data = get_yandex_timetable_data(from_station, to_station, server_datetime,
-                                     limit=100)
-    answer = data["answer"]
-
-    update_keyboard = InlineKeyboardMarkup(True)
-    if data["is_OK"]:
-        update_keyboard.row(*[InlineKeyboardButton(
-            text=name, callback_data=name) for name in ["Самые ранние"]])
-
-    try:
-        bot.edit_message_text(text=answer,
-                              chat_id=call_back.message.chat.id,
-                              message_id=call_back.message.message_id,
-                              parse_mode="HTML",
-                              reply_markup=update_keyboard)
-    except ApiException:
-        pass
-
-
-@bot.callback_query_handler(func=lambda call_back:
-                            call_back.data == "Самые ранние")
-def early_tomorrow_suburbans_handler(call_back):
-    from_to_stations = call_back.message.text.split("\n\n")[0].split(" => ")
-    from_station_title = from_to_stations[0]
-    to_station_title = from_to_stations[1]
-    from_station = all_stations[from_station_title]
-    to_station = all_stations[to_station_title]
-
-    server_datetime = datetime.combine(
-        (datetime.today() + timedelta(days=1)).date(), time())
-
-    data = get_yandex_timetable_data(from_station, to_station, server_datetime,
-                                     limit=5)
-    answer = data["answer"]
-
-    update_keyboard = InlineKeyboardMarkup(True)
-    if data["is_OK"]:
-        update_keyboard.row(*[InlineKeyboardButton(
-            text=name, callback_data=name) for name in ["Все на завтра"]])
-
-    try:
-        bot.edit_message_text(text=answer,
-                              chat_id=call_back.message.chat.id,
-                              message_id=call_back.message.message_id,
-                              parse_mode="HTML",
-                              reply_markup=update_keyboard)
-    except ApiException:
-        pass
-
-
-@bot.callback_query_handler(func=lambda call_back: call_back.data == "Домой")
-@bot.callback_query_handler(func=lambda call_back: call_back.data == "В Универ")
-def to_home_or_univer_handler(call_back):
-    user_id = call_back.message.chat.id
-    if call_back.data == "В Универ":
-        from_station = func.get_station_code(user_id, is_home=True)
-        to_station = func.get_station_code(user_id, is_home=False)
-    else:
-        from_station = func.get_station_code(user_id, is_home=False)
-        to_station = func.get_station_code(user_id, is_home=True)
-
-    from_station_title = func.get_key_by_value(all_stations, from_station)
-    to_station_title = func.get_key_by_value(all_stations, to_station)
-
-    answer = "Начальная: <b>{0}</b>\nКончная: <b>{1}</b>\nВыбери день:".format(
-        from_station_title, to_station_title)
-    day_keyboard = InlineKeyboardMarkup(True)
-    day_keyboard.row(*[InlineKeyboardButton(
-        text=name, callback_data=name) for name in ["Сегодня", "Завтра"]])
-    bot.edit_message_text(text=answer,
-                          chat_id=call_back.message.chat.id,
-                          message_id=call_back.message.message_id,
-                          reply_markup=day_keyboard,
-                          parse_mode="HTML")
-
-
-@bot.callback_query_handler(func=lambda call_back:
-                            call_back.message.text == "Выбери начальную "
-                                                      "станцию:")
-def start_station_handler(call_back):
-    answer = "Начальная: <b>{0}</b>\nВыбери конечную станцию:".format(
-        call_back.data)
-    end_station_keyboard = InlineKeyboardMarkup(True)
-    for station_title in all_stations.keys():
-        if station_title == call_back.data:
-            continue
-        end_station_keyboard.row(*[InlineKeyboardButton(
-            text=name, callback_data=name) for name in [station_title]])
-    end_station_keyboard.row(*[InlineKeyboardButton(
-            text=name, callback_data=name) for name in ["Изменить начальную"]])
-    bot.edit_message_text(text=answer,
-                          chat_id=call_back.message.chat.id,
-                          message_id=call_back.message.message_id,
-                          reply_markup=end_station_keyboard,
-                          parse_mode="HTML")
-
-
-@bot.callback_query_handler(func=lambda call_back:
-                            call_back.data == "Изменить начальную")
-def change_start_station_handler(call_back):
-    answer = "Выбери начальную станцию:"
-    start_station_keyboard = InlineKeyboardMarkup(True)
-    for station_title in all_stations.keys():
-        start_station_keyboard.row(*[InlineKeyboardButton(
-            text=name, callback_data=name) for name in [station_title]])
-    bot.edit_message_text(text=answer,
-                          chat_id=call_back.message.chat.id,
-                          message_id=call_back.message.message_id,
-                          reply_markup=start_station_keyboard)
-
-
-@bot.callback_query_handler(func=lambda call_back: "Выбери конечную станцию:"
-                                                   in call_back.message.text)
-def end_station_handler(call_back):
-    from_station_title = call_back.message.text.split("\n")[0].split(": ")[-1]
-    to_station_title = call_back.data
-    answer = "Начальная: <b>{0}</b>\nКончная: <b>{1}</b>\nВыбери день:".format(
-        from_station_title, to_station_title)
-    day_keyboard = InlineKeyboardMarkup(True)
-    day_keyboard.row(*[InlineKeyboardButton(
-        text=name, callback_data=name) for name in ["Сегодня", "Завтра"]])
-    bot.edit_message_text(text=answer,
-                          chat_id=call_back.message.chat.id,
-                          message_id=call_back.message.message_id,
-                          reply_markup=day_keyboard,
-                          parse_mode="HTML")
-
-
-@bot.callback_query_handler(func=lambda call_back: "Выбери день:"
-                                                   in call_back.message.text)
-def build_trail_handler(call_back):
-    bot_msg = bot.edit_message_text(
-        text="{0}\U00002026".format(choice(loading_text["ya_timetable"])),
-        chat_id=call_back.message.chat.id,
-        message_id=call_back.message.message_id
-    )
-    from_station_title = call_back.message.text.split("\n")[0].split(": ")[-1]
-    to_station_title = call_back.message.text.split("\n")[1].split(": ")[-1]
-    from_station = all_stations[from_station_title]
-    to_station = all_stations[to_station_title]
-
-    if call_back.data == "Завтра":
-        server_datetime = datetime.combine(
-            (datetime.today() + timedelta(days=1)).date(), time())
-        limit = 7
-    else:
-        server_datetime = datetime.today() + server_timedelta
-        limit = 3
-
-    data = get_yandex_timetable_data(from_station, to_station, server_datetime,
-                                     limit)
-    answer = data["answer"]
-
-    update_keyboard = InlineKeyboardMarkup(True)
-    if data["is_OK"]:
-        if call_back.data == "Завтра" or data["is_tomorrow"]:
-            if data["is_tomorrow"]:
-                inline_answer = emoji["warning"] + " На сегодня нет электричек"
-                bot.answer_callback_query(call_back.id, inline_answer,
-                                          show_alert=True)
-            update_keyboard.row(*[InlineKeyboardButton(
-                text=name, callback_data=name) for name in ["Все на завтра"]])
-        else:
-            update_keyboard.row(*[InlineKeyboardButton(
-                text=name, callback_data=name)
-                for name in ["Оставшиеся", "Обновить"]])
-
-    bot.edit_message_text(text=answer,
-                          chat_id=call_back.message.chat.id,
-                          message_id=bot_msg.message_id,
-                          reply_markup=update_keyboard,
-                          parse_mode="HTML")
-
-
-@bot.callback_query_handler(func=lambda call_back:
-                            call_back.data == "Домашняя")
-@bot.callback_query_handler(func=lambda call_back:
-                            call_back.data == "Университетская")
-def home_station_handler(call_back):
-    if call_back.data == "Домашняя":
-        type_station = "домашнюю"
-    else:
-        type_station = "университетскую"
-    answer = "Выбери {} станцию:".format(type_station)
-    stations_keyboard = InlineKeyboardMarkup(True)
-    for item in all_stations.items():
-        stations_keyboard.row(*[InlineKeyboardButton(
-            text=item[0], callback_data=all_stations[item[0]])])
-    bot.edit_message_text(text=answer,
-                          chat_id=call_back.message.chat.id,
-                          message_id=call_back.message.message_id,
-                          reply_markup=stations_keyboard)
-
-
-@bot.callback_query_handler(func=lambda call_back:
-                            call_back.message.text == "Выбери домашнюю "
-                                                      "станцию:")
-@bot.callback_query_handler(func=lambda call_back:
-                            call_back.message.text == "Выбери университетскую "
-                                                      "станцию:")
-def change_home_station_handler(call_back):
-    if "домашнюю" in call_back.message.text:
-        type_station = "Домашняя"
-        is_home = True
-    else:
-        type_station = "Университетская"
-        is_home = False
-    current_station = func.get_station_code(call_back.message.chat.id, is_home)
-    current_another_station = func.get_station_code(call_back.message.chat.id,
-                                                    not is_home)
-    station_title = func.get_key_by_value(all_stations, call_back.data)
-    answer = "{0} станция изменена на <b>{1}</b>\n".format(type_station,
-                                                           station_title)
-    func.change_station(call_back.message.chat.id,
-                        call_back.data, is_home=is_home)
-    if call_back.data == current_another_station:
-        func.change_station(call_back.message.chat.id, current_station,
-                            is_home=not is_home)
-        inline_answer = "{0} Изменены обе станции!".format(emoji["warning"])
-        bot.answer_callback_query(callback_query_id=call_back.id,
-                                  text=inline_answer, show_alert=True)
-    bot.edit_message_text(text=answer,
-                          chat_id=call_back.message.chat.id,
-                          message_id=call_back.message.message_id,
-                          parse_mode="HTML")
+@bot.message_handler(func=lambda mess: mess.text.title() == "Вернуть",
+                     content_types=["text"])
+def chose_to_return(message):
+    bot.send_chat_action(message.chat.id, "typing")
+    answer = "Выбери, что ты хочешь вернуть:"
+    inline_keyboard = InlineKeyboardMarkup(True)
+    inline_keyboard.row(
+        *[InlineKeyboardButton(text=name, callback_data=name)
+          for name in ["Преподавателей", "Занятия"]])
+    inline_keyboard.row(
+        *[InlineKeyboardButton(text=name, callback_data=name)
+          for name in ["Полный сброс"]])
+    bot.send_message(message.chat.id, answer, reply_markup=inline_keyboard)
 
 
 @bot.callback_query_handler(func=lambda call_back:
@@ -529,17 +101,6 @@ def full_place_off_handler(call_back):
                           chat_id=call_back.message.chat.id,
                           message_id=call_back.message.message_id,
                           parse_mode="HTML")
-
-
-@bot.callback_query_handler(func=lambda call_back:
-                            call_back.data == "Отмена")
-def cancel_handler(call_back):
-    answer = "Отмена"
-    try:
-        bot.edit_message_text(text=answer, chat_id=call_back.message.chat.id,
-                              message_id=call_back.message.message_id)
-    except ApiException:
-        pass
 
 
 @bot.callback_query_handler(func=lambda call_back: call_back.data == "Занятие")
@@ -1297,223 +858,3 @@ def return_everything_handler(call_back):
     answer = "Все занятия и преподаватели возвращены"
     bot.edit_message_text(text=answer, chat_id=call_back.message.chat.id,
                           message_id=call_back.message.message_id)
-
-
-@bot.callback_query_handler(func=lambda call_back:
-                            call_back.data == "Статистика")
-def statistics_handler(call_back):
-    data = func.get_rate_statistics()
-    if data is None:
-        answer = "Пока что нет оценок."
-    else:
-        rate = emoji["star"] * int(round(data[0]))
-        answer = "Средняя оценка: {0}\n{1} ({2})".format(
-                                            round(data[0], 1), rate, data[1])
-    if call_back.message.chat.id in ids.values():
-        admin_data = func.get_statistics_for_admin()
-        admin_answer = "\n\nКолличество пользователей: {0}\n" \
-                       "Колличество групп: {1}\nКолличество пользователей с " \
-                       "активной рассылкой: {2}".format(
-                                    admin_data["count_of_users"],
-                                    admin_data["count_of_groups"],
-                                    admin_data["count_of_sending"])
-        bot.send_message(call_back.message.chat.id, admin_answer)
-    try:
-        bot.edit_message_text(text=answer,
-                              chat_id=call_back.message.chat.id,
-                              message_id=call_back.message.message_id,
-                              parse_mode="HTML")
-    except ApiException:
-        pass
-
-
-@bot.callback_query_handler(func=lambda call_back:
-                            call_back.data == "Связь")
-def feedback_handler(call_back):
-    markup = ForceReply(False)
-    try:
-        bot.edit_message_text(text="Обратная связь",
-                              chat_id=call_back.message.chat.id,
-                              message_id=call_back.message.message_id)
-    except ApiException:
-        pass
-    finally:
-        answer = "Напиши мне что-нибудь:"
-        bot.send_message(call_back.message.chat.id, answer,
-                         reply_markup=markup)
-
-
-@bot.callback_query_handler(func=lambda call_back:
-                            call_back.data == "Сохранить")
-def save_current_group_handler(call_back):
-    user_id = call_back.message.chat.id
-    group_data = func.get_current_group(user_id)
-    func.save_group(group_data[0], user_id)
-    answer = "Группа <b>{0}</b> сохранена".format(group_data[1])
-    bot.edit_message_text(text=answer,
-                          chat_id=user_id,
-                          message_id=call_back.message.message_id,
-                          parse_mode="HTML")
-
-
-@bot.callback_query_handler(func=lambda call_back:
-                            call_back.data == "Удалить")
-def delete_current_group_handler(call_back):
-    user_id = call_back.message.chat.id
-    group_data = func.get_current_group(user_id)
-    func.delete_group(group_data[0], user_id)
-    answer = "Группа <b>{0}</b> удалена".format(group_data[1])
-    bot.edit_message_text(text=answer,
-                          chat_id=user_id,
-                          message_id=call_back.message.message_id,
-                          parse_mode="HTML")
-
-
-@bot.callback_query_handler(func=lambda call_back:
-                            call_back.data == "Сменить группу")
-def change_group_handler(call_back):
-    answer = "{0}\nДля отмены используй /home".format(call_back.data)
-    bot.edit_message_text(text=answer,
-                          chat_id=call_back.message.chat.id,
-                          message_id=call_back.message.message_id,
-                          parse_mode="HTML")
-    call_back.message.text = call_back.data
-    start_handler(call_back.message)
-    return
-
-
-@bot.callback_query_handler(func=lambda call_back:
-                            "Выбери группу:" in call_back.message.text)
-def change_template_group_handler(call_back):
-    answer = "Группа успешно изменена на <b>{0}</b>"
-    chosen_group_id = int(call_back.data)
-    sql_con = func.get_connection()
-    cursor = sql_con.cursor()
-    cursor.execute("""SELECT title
-                      FROM groups_data
-                      WHERE id = %s""", (chosen_group_id, ))
-    group_title = cursor.fetchone()[0]
-    cursor.execute("""UPDATE user_data 
-                      SET group_id = %s
-                      WHERE id = %s""",
-                   (chosen_group_id, call_back.message.chat.id))
-    sql_con.commit()
-    cursor.close()
-    sql_con.close()
-    bot.edit_message_text(text=answer.format(group_title),
-                          chat_id=call_back.message.chat.id,
-                          message_id=call_back.message.message_id,
-                          parse_mode="HTML")
-
-
-@bot.callback_query_handler(func=lambda call_back: "Найденные преподаватели:"
-                                                   in call_back.message.text)
-def select_master_id_handler(call_back):
-    bot_msg = bot.edit_message_text(
-        text="{0}\U00002026".format(choice(loading_text["schedule"])),
-        chat_id=call_back.message.chat.id,
-        message_id=call_back.message.message_id
-    )
-    answer = "{0} Расписание преподавателя: <b>{1}</b>\n\n{2} {3}"
-    educator_schedule = spbu.get_educator_events(call_back.data)
-    answer = answer.format(emoji["bust_in_silhouette"],
-                           educator_schedule["EducatorLongDisplayText"],
-                           emoji["calendar"],
-                           educator_schedule["DateRangeDisplayText"])
-    if not educator_schedule["HasEvents"]:
-        answer += "\n\n<i>Нет событий</i>"
-        bot.edit_message_text(text=answer,
-                              chat_id=call_back.message.chat.id,
-                              message_id=bot_msg.message_id,
-                              parse_mode="HTML")
-    else:
-        bot.edit_message_text(text=answer,
-                              chat_id=call_back.message.chat.id,
-                              message_id=bot_msg.message_id,
-                              parse_mode="HTML")
-        days = [day for day in educator_schedule["EducatorEventsDays"]
-                if day["DayStudyEventsCount"]]
-        for day in days:
-            answer = func.create_master_schedule_answer(day)
-            func.send_long_message(bot, answer, call_back.message.chat.id)
-
-
-@bot.callback_query_handler(func=lambda call_back:
-                            "Выбери месяц" in call_back.message.text)
-def select_months_att_handler(call_back):
-    bot_msg = bot.edit_message_text(
-        text="{0}\U00002026".format(choice(loading_text["schedule"])),
-        chat_id=call_back.message.chat.id,
-        message_id=call_back.message.message_id
-    )
-    json_attestation = func.get_json_attestation(call_back.message.chat.id)
-    answers = []
-    is_full_place = func.is_full_place(call_back.message.chat.id)
-
-    if call_back.message.text == "Выбери месяц:":
-        schedule_variations = [(True, True), (False, True)]
-    else:
-        schedule_variations = [(True, False), (False, False)]
-
-    for personal, only_exams in schedule_variations:
-        answers += func.create_session_answers(json_attestation, call_back.data,
-                                               call_back.message.chat.id,
-                                               is_full_place, personal,
-                                               only_exams)
-        if answers:
-            break
-    if not answers:
-        answers.append("<i>Нет событий</i>")
-    try:
-        bot.edit_message_text(text=answers[0],
-                              chat_id=call_back.message.chat.id,
-                              message_id=bot_msg.message_id,
-                              parse_mode="HTML")
-    except ApiException:
-        func.send_long_message(bot, answers[0], call_back.message.chat.id)
-    finally:
-        for answer in answers[1:]:
-            func.send_long_message(bot, answer, call_back.message.chat.id)
-
-
-@bot.callback_query_handler(func=lambda call_back:
-                            call_back.data in ["1", "2", "3", "4", "5"])
-def set_rate_handler(call_back):
-    rate = call_back.data
-    answer = ""
-    func.set_rate(call_back.message.chat.id, rate)
-    if rate == "5":
-        answer += "{0} Пятёрка! Супер! Спасибо большое!".format(emoji["smile"])
-    elif rate == "4":
-        answer += "{0} Стабильная четверочка. Спасибо!".format(emoji["halo"])
-    elif rate == "3":
-        answer += "{0} Удовлетворительно? Ничего... тоже оценка. " \
-                  "Буду стараться лучше.".format(emoji["cold_sweat"])
-    elif rate == "2":
-        answer += "{0} Двойка? Быть может, я могу что-то исправить? " \
-                  "Сделать лучше?\n\nОпиши проблему " \
-                  "<a href='https://t.me/eeonedown'>разработчику</a>, " \
-                  "и вместе мы ее решим!".format(emoji["disappointed"])
-    elif rate == "1":
-        answer += "{0} Единица? Быть может, я могу что-то исправить? " \
-                  "Сделать лучше?\n\nОпиши проблему " \
-                  "<a href='https://t.me/eeonedown'>разработчику</a>, " \
-                  "и вместе мы ее решим!".format(emoji["disappointed"])
-    user_rate = func.get_user_rate(call_back.message.chat.id)
-    rate_keyboard = InlineKeyboardMarkup(row_width=5)
-    rate_keyboard.add(*[InlineKeyboardButton(
-        text=emoji["star2"] if user_rate < count_of_stars else emoji["star"],
-        callback_data=str(count_of_stars))
-        for count_of_stars in (1, 2, 3, 4, 5)])
-    rate_keyboard.add(
-        *[InlineKeyboardButton(text=name, callback_data=name)
-          for name in ["Связь", "Статистика"]])
-    try:
-        bot.edit_message_text(text=answer,
-                              chat_id=call_back.message.chat.id,
-                              message_id=call_back.message.message_id,
-                              parse_mode="HTML",
-                              reply_markup=rate_keyboard,
-                              disable_web_page_preview=True)
-    except ApiException:
-        pass

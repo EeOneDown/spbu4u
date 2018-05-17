@@ -1,12 +1,15 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-import json
+from json import loads, dumps
 
-import spbu
-import telebot
+from spbu import get_program_levels, get_groups
+from telebot.types import ReplyKeyboardMarkup
 
-from bot import functions
+from bot import bot, functions
+from bot.constants import emoji
+from bot.handlers.check_first import start_handler
+from bot.keyboards import main_keyboard
 
 
 def set_next_step(user_id, next_step):
@@ -37,8 +40,6 @@ def get_step(user_id):
 
 
 def select_division(message):
-    from bot import bot
-
     answer = ""
 
     sql_con = functions.get_connection()
@@ -50,22 +51,22 @@ def select_division(message):
     cursor.close()
     sql_con.close()
 
-    divisions = json.loads(data[0])
+    divisions = loads(data[0])
     division_names = [division["Name"].strip() for division in divisions]
     aliases = [division["Alias"].strip() for division in divisions]
     if message.text in division_names:
         answer += "Выбери ступень:"
-        study_programs_keyboard = telebot.types.ReplyKeyboardMarkup(
+        study_programs_keyboard = ReplyKeyboardMarkup(
             resize_keyboard=True, one_time_keyboard=False
         )
         index = division_names.index(message.text)
         alias = aliases[index]
-        study_programs = spbu.get_program_levels(alias)
+        study_programs = get_program_levels(alias)
         for study_program in study_programs:
             study_programs_keyboard.row(study_program["StudyLevelName"])
         study_programs_keyboard.row("Другое направление")
 
-        data = json.dumps(study_programs)
+        data = dumps(study_programs)
         sql_con = functions.get_connection()
         cursor = sql_con.cursor()
         cursor.execute("""UPDATE user_choice 
@@ -87,9 +88,6 @@ def select_division(message):
 
 
 def select_study_level(message):
-    from bot import bot
-    from bot.message_handlers import start_handler
-
     answer = ""
 
     sql_con = functions.get_connection()
@@ -101,14 +99,14 @@ def select_study_level(message):
     cursor.close()
     sql_con.close()
 
-    study_programs = json.loads(data)
+    study_programs = loads(data)
 
     study_level_names = []
     for study_program in study_programs:
         study_level_names.append(study_program["StudyLevelName"].strip())
     if message.text in study_level_names:
         answer += "Укажи программу:"
-        study_program_combinations_keyboard = telebot.types.ReplyKeyboardMarkup(
+        study_program_combinations_keyboard = ReplyKeyboardMarkup(
             resize_keyboard=True, one_time_keyboard=False
         )
         index = study_level_names.index(message.text)
@@ -142,8 +140,6 @@ def select_study_level(message):
 
 
 def select_study_program_combination(message):
-    from bot import bot
-
     answer = ""
 
     sql_con = functions.get_connection()
@@ -155,7 +151,7 @@ def select_study_program_combination(message):
     cursor.close()
     sql_con.close()
 
-    study_level_name, study_programs = data[0], json.loads(data[1])
+    study_level_name, study_programs = data[0], loads(data[1])
     study_level_names = []
     for study_program in study_programs:
         study_level_names.append(study_program["StudyLevelName"])
@@ -168,7 +164,7 @@ def select_study_program_combination(message):
             study_program_combination["Name"].strip())
     if message.text in study_program_combination_names:
         answer += "Укажи год поступления:"
-        admission_years_keyboard = telebot.types.ReplyKeyboardMarkup(
+        admission_years_keyboard = ReplyKeyboardMarkup(
             resize_keyboard=True, one_time_keyboard=False
         )
         index = study_program_combination_names.index(message.text)
@@ -210,8 +206,6 @@ def select_study_program_combination(message):
 
 
 def select_admission_year(message):
-    from bot import bot
-
     answer = ""
 
     sql_con = functions.get_connection()
@@ -224,7 +218,7 @@ def select_admission_year(message):
     cursor.close()
     sql_con.close()
 
-    study_programs = json.loads(data[0])
+    study_programs = loads(data[0])
     study_level_name = data[1]
     study_program_combination_name = data[2]
     study_level_names = []
@@ -247,17 +241,17 @@ def select_admission_year(message):
         answer += "Укажи группу:"
         index = admission_year_names.index(message.text)
         study_program_id = admission_years[index]["StudyProgramId"]
-        student_groups = spbu.get_groups(study_program_id)
+        student_groups = get_groups(study_program_id)
         student_group_names = []
         for student_group in student_groups["Groups"]:
             student_group_names.append(student_group["StudentGroupName"])
-        student_groups_keyboard = telebot.types.ReplyKeyboardMarkup(
+        student_groups_keyboard = ReplyKeyboardMarkup(
             resize_keyboard=True, one_time_keyboard=False
         )
         for student_group_name in student_group_names:
             student_groups_keyboard.row(student_group_name)
         student_groups_keyboard.row("Другой год")
-        data = json.dumps(student_groups)
+        data = dumps(student_groups)
 
         sql_con = functions.get_connection()
         cursor = sql_con.cursor()
@@ -293,8 +287,6 @@ def select_admission_year(message):
 
 
 def select_student_group(message):
-    from bot import bot
-
     answer = ""
 
     sql_con = functions.get_connection()
@@ -306,7 +298,7 @@ def select_student_group(message):
     cursor.close()
     sql_con.close()
 
-    student_groups = json.loads(data)
+    student_groups = loads(data)
     student_group_names = []
     for student_group in student_groups["Groups"]:
         student_group_names.append(student_group["StudentGroupName"].strip())
@@ -333,7 +325,7 @@ def select_student_group(message):
 
         text = ">> " + "\n>> ".join(data)
         answer += "Подтверди выбор:\n" + "<b>" + text + "</b>"
-        choice_keyboard = telebot.types.ReplyKeyboardMarkup(
+        choice_keyboard = ReplyKeyboardMarkup(
             resize_keyboard=True, one_time_keyboard=False
         )
         buttons = ["Все верно", "Другая группа", "Другой год",
@@ -363,11 +355,6 @@ def select_student_group(message):
 
 
 def confirm_choice(message):
-    from bot import bot
-    from bot import main_keyboard
-    from bot.message_handlers import start_handler
-    from bot.constants import emoji
-
     if message.text == "Все верно":
         sql_con = functions.get_connection()
         cursor = sql_con.cursor()
@@ -388,11 +375,10 @@ def confirm_choice(message):
                  "{2} - настройки\n" \
                  "{3} - электрички\n" \
                  "{4} - <b>редактор расписания</b>\n" \
-                 "@Spbu4u_news - новости бота".format(emoji["info"],
-                                                      emoji["star"],
-                                                      emoji["settings"],
-                                                      emoji["suburban"],
-                                                      emoji["editor"])
+                 "@Spbu4u_news - новости бота".format(
+            emoji["info"], emoji["star"], emoji["settings"], emoji["suburban"],
+            emoji["editor"]
+        )
         bot.send_message(message.chat.id, answer, reply_markup=main_keyboard,
                          parse_mode="HTML")
     elif message.text == "Другая группа":

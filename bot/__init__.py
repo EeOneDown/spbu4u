@@ -13,4 +13,4 @@ bot = TeleBot(release_token, threaded=False)
 logger.setLevel(logging.INFO)
 
 
-from bot import message_handlers, callback_query_handlers, inline_handlers
+from bot import handlers

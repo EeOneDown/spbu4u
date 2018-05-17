@@ -8,7 +8,6 @@ from telebot.types import ReplyKeyboardMarkup
 
 from bot import bot, functions
 from bot.constants import emoji
-from bot.handlers.check_first import start_handler
 from bot.keyboards import main_keyboard
 
 
@@ -88,6 +87,8 @@ def select_division(message):
 
 
 def select_study_level(message):
+    from bot.handlers.check_first import start_handler
+
     answer = ""
 
     sql_con = functions.get_connection()
@@ -355,6 +356,8 @@ def select_student_group(message):
 
 
 def confirm_choice(message):
+    from bot.handlers.check_first import start_handler
+
     if message.text == "Все верно":
         sql_con = functions.get_connection()
         cursor = sql_con.cursor()

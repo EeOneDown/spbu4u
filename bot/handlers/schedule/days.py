@@ -8,41 +8,57 @@ from bot import bot
 from bot.constants import server_timedelta, week_day_titles, emoji
 
 
-# Today schedule message
+# Today or tomorrow schedule message
 @bot.message_handler(func=lambda mess: mess.text.capitalize() == "Сегодня",
+                     content_types=["text"])
+@bot.message_handler(func=lambda mess: mess.text.capitalize() == "Завтра",
                      content_types=["text"])
 def today_schedule_handler(message):
     bot.send_chat_action(message.chat.id, "typing")
-    today_moscow_datetime = datetime.today() + server_timedelta
-    today_moscow_date = today_moscow_datetime.date()
-    json_day = func.get_json_day_data(message.chat.id, today_moscow_date)
+
+    for_date = datetime.today().date() + server_timedelta
+    if message.text.capitalize() == "Завтра":
+        for_date += timedelta(days=1)
+
+    json_day = func.get_json_day_data(message.chat.id, for_date)
     full_place = func.is_full_place(message.chat.id)
     answer = func.create_schedule_answer(json_day, full_place, message.chat.id)
-    func.send_long_message(bot, answer, message.chat.id)
 
-
-# Tomorrow schedule message
-@bot.message_handler(func=lambda mess: mess.text.capitalize() == "Завтра",
-                     content_types=["text"])
-def tomorrow_schedule_handler(message):
-    bot.send_chat_action(message.chat.id, "typing")
-    tomorrow_moscow_datetime = datetime.today() + server_timedelta + \
-        timedelta(days=1)
-    tomorrow_moscow_date = tomorrow_moscow_datetime.date()
-    json_day = func.get_json_day_data(message.chat.id, tomorrow_moscow_date)
-    full_place = func.is_full_place(message.chat.id)
-    answer = func.create_schedule_answer(json_day, full_place, message.chat.id)
     func.send_long_message(bot, answer, message.chat.id)
 
 
 # Now lesson message
-@bot.message_handler(func=lambda mess: mess.text.title() == "Сейчас",
-                     content_types=["text"])
-@bot.message_handler(func=lambda mess:
-                     mess.text.capitalize() == "Что сейчас?",
+@bot.message_handler(func=lambda mess: "Сейчас" in mess.text.title(),
                      content_types=["text"])
 def now_lesson_handler(message):
-    answer = "Наверно, какая-то пара #пасхалочка"
+    bot.send_chat_action(message.chat.id, "typing")
+
+    today = datetime.today() + server_timedelta
+    json_day = func.get_json_day_data(message.chat.id, today.date())
+    full_place = func.is_full_place(message.chat.id)
+    answer = func.create_schedule_answer(json_day, full_place, message.chat.id)
+
+    if "Выходной" in answer:
+        func.send_long_message(bot, answer, message.chat.id)
+    else:
+        lessons = answer.strip().split("\n\n")[1:]
+        for lesson in lessons:
+            times = []
+            for st in lesson.split("\n")[0].split(" ")[-1].split(
+                    emoji["en_dash"]):
+                times.append(func.string_to_time(st))
+            if times[0] <= today.time() <= times[1]:
+                answer = "{0} <b>Пара:</b>\n{1}".format(emoji["books"], lesson)
+                func.send_long_message(bot, answer, message.chat.id)
+                return
+            elif today.time() <= times[0] and today.time() <= times[1]:
+                answer = "{0} <b>Перерыв</b>\n\nСледующая:\n{1}".format(
+                    emoji["couch_and_lamp"], lesson
+                )
+                func.send_long_message(bot, answer, message.chat.id)
+                return
+
+    answer = "{0} Пары уже закончились".format(emoji["sleep"])
     func.send_long_message(bot, answer, message.chat.id)
 
 

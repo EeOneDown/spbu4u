@@ -51,7 +51,8 @@ emoji = {"info": "\U00002139", "star": "\U00002B50",
          "next_block": "\U000027A1", "Отмена": "Отмена",
          "heavy_check_mark": "\U00002705", "ruble_sign": "\U000020BD",
          "train": "\U0001F683", "express": "\U0001F684",
-         "en_dash": "\U00002013"}
+         "en_dash": "\U00002013", "couch_and_lamp": "\U0001F6CB",
+         "books": "\U0001F4DA"}
 
 week_day_number = OrderedDict([
     ("Пн", 1), ("Вт", 2), ("Ср", 3), ("Чт", 4), ("Пт", 5), ("Сб", 6)

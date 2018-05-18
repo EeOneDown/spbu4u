@@ -1043,8 +1043,12 @@ def text_to_interval(string):
         return False
 
 
-def datetime_to_string(date_value: date):
+def datetime_to_string(date_value):
     return "{day} {month_title} {year}".format(
         day=date_value.day,
         month_title=get_key_by_value(months, date_value.month),
         year=date_value.year)
+
+
+def string_to_time(time_str):
+    return datetime.strptime(time_str, "%H:%M").time()

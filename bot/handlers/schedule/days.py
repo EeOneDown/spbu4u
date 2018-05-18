@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 
 import bot.functions as func
 from bot import bot
-from bot.constants import server_timedelta, week_day_titles
+from bot.constants import server_timedelta, week_day_titles, emoji
 
 
 # Today schedule message
@@ -83,3 +83,39 @@ def schedule_for_weekday(message):
     answer = func.create_schedule_answer(json_day, full_place,
                                          message.chat.id)
     func.send_long_message(bot, answer, message.chat.id)
+
+
+# Schedule for interval message
+@bot.message_handler(func=lambda mess: func.text_to_interval(mess.text.lower()),
+                     content_types=["text"])
+def schedule_for_interval(message):
+    bot.send_chat_action(message.chat.id, "typing")
+    from_date, to_date = func.text_to_interval(message.text.lower())
+    json_data = func.get_json_interval_data(message.chat.id,
+                                            from_date=from_date,
+                                            to_date=to_date + timedelta(days=1))
+    is_send = False
+    full_place = func.is_full_place(message.chat.id)
+    if len(json_data["Days"]) > 10:
+        answer = "{0} Превышен интервал в <b>10 дней</b>".format(
+            emoji["warning"]
+        )
+        bot.send_message(text=answer, chat_id=message.chat.id,
+                         parse_mode="HTML")
+        return
+    elif len(json_data["Days"]):
+        for day_info in json_data["Days"]:
+            answer = func.create_schedule_answer(day_info, full_place,
+                                                 message.chat.id)
+            if "Выходной" in answer:
+                continue
+            func.send_long_message(bot, answer, message.chat.id)
+            is_send = True
+
+    if not is_send or not len(json_data["Days"]):
+        answer = "{0} С <i>{1}</i> по <i>{2}</i> занятий нет".format(
+            emoji["sleep"], func.datetime_to_string(from_date),
+            func.datetime_to_string(to_date)
+        )
+        bot.send_message(text=answer, chat_id=message.chat.id,
+                         parse_mode="HTML")

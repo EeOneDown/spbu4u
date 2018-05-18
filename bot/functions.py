@@ -284,6 +284,22 @@ def get_json_week_data(user_id, next_week=False, for_day=None):
     return delete_symbols(json_week_data)
 
 
+def get_json_interval_data(user_id, from_date, to_date):
+    sql_con = get_connection()
+    cursor = sql_con.cursor()
+    cursor.execute("""SELECT group_id
+                          FROM user_data 
+                          WHERE  id= %s""", (user_id,))
+    group_id = cursor.fetchone()[0]
+    cursor.close()
+    sql_con.close()
+
+    json_week_data = get_group_events(group_id=group_id,
+                                      from_date=from_date,
+                                      to_date=to_date)
+    return delete_symbols(json_week_data)
+
+
 def delete_symbols(json_obj):
     return json.loads(
         json.dumps(json_obj).replace("<", "").replace(">", "").replace("&", "")
@@ -1014,3 +1030,21 @@ def get_day_date_by_weekday_title(week_day):
         iso_day_date[1] += 1
     iso_day_date[2] = week_day_number[week_day]
     return date_from_iso(iso_day_date)
+
+
+def text_to_interval(string):
+    if len(string.split("-")) == 2:
+        date1, date2 = [text_to_date(s) for s in string.split("-")]
+        if date1 and date2 and date1 < date2:
+            return date1, date2
+        else:
+            return False
+    else:
+        return False
+
+
+def datetime_to_string(date_value: date):
+    return "{day} {month_title} {year}".format(
+        day=date_value.day,
+        month_title=get_key_by_value(months, date_value.month),
+        year=date_value.year)

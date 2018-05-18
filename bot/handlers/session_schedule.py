@@ -7,7 +7,7 @@ from telebot.apihelper import ApiException
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 from bot import bot, functions as func
-from bot.constants import loading_text, emoji
+from bot.constants import loading_text
 
 
 # Session message
@@ -29,9 +29,56 @@ def attestation_handler(message):
         )
     if message.text == "Сессия":
         answer = "Выбери месяц:"
+        switch_button = "Допса"
     else:
-        answer = "Выбери месяц для Допсы:"
-    bot.send_message(message.chat.id, answer, reply_markup=inline_keyboard)
+        answer = "Выбери месяц для <b>допсы</b>:"
+        switch_button = "Сессия"
+
+    inline_keyboard.row(
+        *[InlineKeyboardButton(text=switch_button, callback_data=switch_button)]
+    )
+
+    bot.send_message(message.chat.id, answer, reply_markup=inline_keyboard,
+                     parse_mode="HTML")
+
+
+# Switch callbacks
+@bot.callback_query_handler(func=lambda call_back:
+                            call_back.data == "Допса")
+@bot.callback_query_handler(func=lambda call_back:
+                            call_back.data == "Сессия")
+def switch_session_type_handler(call_back):
+    bot_msg = bot.edit_message_text(
+        text="{0}\U00002026".format(choice(loading_text["schedule"])),
+        chat_id=call_back.message.chat.id,
+        message_id=call_back.message.message_id
+    )
+    month = func.get_available_months(call_back.message.chat.id)
+    if len(month) == 0:
+        bot.send_message(call_back.message.chat.id, "<i>Нет событий</i>",
+                         parse_mode="HTML")
+        return
+    inline_keyboard = InlineKeyboardMarkup()
+    for key in month.keys():
+        inline_keyboard.row(
+            *[InlineKeyboardButton(text=month[key], callback_data=str(key))]
+        )
+    if call_back.data == "Сессия":
+        answer = "Выбери месяц:"
+        switch_button = "Допса"
+    else:
+        answer = "Выбери месяц для <b>допсы</b>:"
+        switch_button = "Сессия"
+
+    inline_keyboard.row(
+        *[InlineKeyboardButton(text=switch_button, callback_data=switch_button)]
+    )
+
+    bot.edit_message_text(text=answer,
+                          chat_id=call_back.message.chat.id,
+                          message_id=bot_msg.message_id,
+                          parse_mode="HTML",
+                          reply_markup=inline_keyboard)
 
 
 # Month callback
@@ -60,9 +107,7 @@ def select_months_att_handler(call_back):
         if answers:
             break
     if not answers:
-        answers.append("<i>Нет событий</i>\n\n"
-                       "{0} Для просмотра пересдач и комиссий напиши боту "
-                       "<b>Допса</b>".format(emoji["warning"]))
+        answers.append("<i>Нет событий</i>")
     try:
         bot.edit_message_text(text=answers[0],
                               chat_id=call_back.message.chat.id,

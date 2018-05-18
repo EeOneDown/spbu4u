@@ -6,7 +6,7 @@ import logging
 from datetime import datetime, date, timedelta
 
 import pymysql
-import spbu
+from spbu import get_group_events
 from telebot.apihelper import ApiException
 
 from bot.bots_constants import db_name, user_name, slq_password, db_host
@@ -19,7 +19,7 @@ def add_new_user(user_id, group_id, group_title=None):
     sql_con = get_connection()
     cursor = sql_con.cursor()
     if group_title is None:
-        group_title = spbu.get_group_events(group_id)[
+        group_title = get_group_events(group_id)[
                           "StudentGroupDisplayName"][7:]
     try:
         cursor.execute("""INSERT INTO groups_data 
@@ -279,8 +279,8 @@ def get_json_week_data(user_id, next_week=False, for_day=None):
     else:
         monday_date = get_current_monday_date()
 
-    json_week_data = spbu.get_group_events(group_id=group_id,
-                                           from_date=monday_date)
+    json_week_data = get_group_events(group_id=group_id,
+                                      from_date=monday_date)
     return delete_symbols(json_week_data)
 
 
@@ -731,10 +731,10 @@ def get_semester_dates():
 def get_json_attestation(user_id):
     sem_dates = get_semester_dates()
     group_id = get_current_group(user_id)[0]
-    req = spbu.get_group_events(group_id=group_id,
-                                from_date=sem_dates[0],
-                                to_date=sem_dates[1],
-                                lessons_type="Attestation")
+    req = get_group_events(group_id=group_id,
+                           from_date=sem_dates[0],
+                           to_date=sem_dates[1],
+                           lessons_type="Attestation")
     return req
 
 

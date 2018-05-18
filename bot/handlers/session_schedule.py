@@ -100,10 +100,10 @@ def select_months_att_handler(call_back):
         schedule_variations = [(True, False, True), (False, False, True)]
 
     for personal, session, only_resit in schedule_variations:
-        answers += func.create_session_answers(json_attestation, call_back.data,
-                                               call_back.message.chat.id,
-                                               is_full_place, personal,
-                                               session, only_resit)
+        answers = func.create_session_answers(json_attestation, call_back.data,
+                                              call_back.message.chat.id,
+                                              is_full_place, personal,
+                                              session, only_resit)
         if answers:
             break
     if not answers:

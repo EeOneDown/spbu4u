@@ -3,58 +3,65 @@ from __future__ import unicode_literals
 
 import json
 import logging
-import sqlite3
 from datetime import datetime, date, timedelta
 
-import spbu
+import pymysql
+from spbu import get_group_events
 from telebot.apihelper import ApiException
 
-from constants import emoji, subject_short_type, months, months_date, \
+from bot.bots_constants import db_name, user_name, slq_password, db_host
+from bot.constants import emoji, subject_short_type, months, months_date, \
     week_day_number, week_day_titles, max_inline_button_text_len, \
     server_timedelta
 
 
 def add_new_user(user_id, group_id, group_title=None):
-    sql_con = sqlite3.connect("Bot.db")
+    sql_con = get_connection()
     cursor = sql_con.cursor()
     if group_title is None:
-        group_title = spbu.get_group_events(group_id)[
+        group_title = get_group_events(group_id)[
                           "StudentGroupDisplayName"][7:]
     try:
         cursor.execute("""INSERT INTO groups_data 
                           (id, title)
-                          VALUES (?, ?)""",
+                          VALUES (%s, %s)""",
                        (group_id, group_title))
-    except sqlite3.IntegrityError:
+    except pymysql.IntegrityError:
         sql_con.rollback()
     finally:
-        json_week = json.dumps(spbu.get_group_events(group_id))
-        cursor.execute("""UPDATE groups_data
-                          SET json_week_data = ?
-                          WHERE id = ?""",
-                       (json_week, group_id))
         sql_con.commit()
     try:
         cursor.execute("""INSERT INTO user_data (id, group_id)
-                          VALUES (?, ?)""",
+                          VALUES (%s, %s)""",
                        (user_id, group_id))
-    except sqlite3.IntegrityError:
+    except pymysql.IntegrityError:
         sql_con.rollback()
         cursor.execute("""UPDATE user_data 
-                          SET group_id = ?
-                          WHERE id = ?""",
+                          SET group_id = %s
+                          WHERE id = %s""",
                        (group_id, user_id))
     finally:
         sql_con.commit()
-        cursor.execute("""DELETE FROM user_choice WHERE user_id = ?""",
+        cursor.execute("""DELETE FROM user_choice WHERE user_id = %s""",
                        (user_id,))
         sql_con.commit()
         cursor.close()
         sql_con.close()
 
 
+def datetime_from_string(dt_string):
+    return datetime.strptime(dt_string, "%Y-%m-%dT%H:%M:%S")
+
+
 def parse_event_time(event):
-    return "{0} {1}".format(emoji["clock"], event["TimeIntervalString"])
+    return "{0} {1:0>2}:{2:0>2}{3}{4:0>2}:{5:0>2}".format(
+        emoji["clock"],
+        datetime_from_string(event["Start"]).time().hour,
+        datetime_from_string(event["Start"]).time().minute,
+        emoji["en_dash"],
+        datetime_from_string(event["End"]).time().hour,
+        datetime_from_string(event["End"]).time().minute
+    )
 
 
 def parse_event_subject(event):
@@ -72,10 +79,16 @@ def parse_event_subject(event):
     return answer
 
 
-def parse_event_location(location, full_place=True):
+def parse_event_location(location, full_place=True, have_chosen_educator=False,
+                         chosen_educator=None):
     answer = ""
 
     if location["IsEmpty"]:
+        return answer
+
+    if have_chosen_educator and not chosen_educator.issuperset(
+            {edu["Item2"].split(", ")[0] for edu in location["EducatorIds"]}
+    ):
         return answer
 
     if full_place:
@@ -97,44 +110,44 @@ def parse_event_location(location, full_place=True):
 
 def insert_skip(event_name, types, event_day, event_time,
                 educators, user_id, is_choose_educator=False):
-    sql_con = sqlite3.connect("Bot.db")
+    sql_con = get_connection()
     cursor = sql_con.cursor()
     try:
         cursor.execute("""INSERT INTO lessons 
                           (name, types, day, time, educators) 
-                              VALUES (?, ?, ?, ?, ?)""",
+                              VALUES (%s, %s, %s, %s, %s)""",
                        (event_name, types, event_day, event_time, educators))
         sql_con.commit()
-    except sqlite3.IntegrityError:
+    except pymysql.IntegrityError:
         sql_con.rollback()
     finally:
         cursor.execute("""SELECT id 
                           FROM lessons 
-                          WHERE name = ? 
-                            AND types = ? 
-                            AND day = ? 
-                            AND time = ?
-                            AND educators = ?""",
+                          WHERE name = %s 
+                            AND types = %s 
+                            AND day = %s 
+                            AND time = %s
+                            AND educators = %s""",
                        (event_name, types, event_day, event_time, educators))
         lesson_id = cursor.fetchone()[0]
     try:
         if is_choose_educator:
-            cursor.execute("""INSERT INTO user_educators VALUES (?, ?)""",
+            cursor.execute("""INSERT INTO user_educators VALUES (%s, %s)""",
                            (user_id, lesson_id))
         else:
-            cursor.execute("""INSERT INTO skips VALUES (?, ?)""",
+            cursor.execute("""INSERT INTO skips VALUES (%s, %s)""",
                            (lesson_id, user_id))
         sql_con.commit()
-    except sqlite3.IntegrityError:
+    except pymysql.IntegrityError:
         sql_con.rollback()
     finally:
         cursor.close()
         sql_con.close()
 
 
-def get_hide_lessons_data(user_id, db_path="Bot.db", week_day=None,
+def get_hide_lessons_data(user_id, week_day=None,
                           is_educator=False):
-    sql_con = sqlite3.connect(db_path)
+    sql_con = get_connection()
     cursor = sql_con.cursor()
     sql_req = """SELECT
                    s.lesson_id,
@@ -154,10 +167,10 @@ def get_hide_lessons_data(user_id, db_path="Bot.db", week_day=None,
                         JOIN lessons AS l
                           ON l.id = s.lesson_id
                    """
-    sql_req += """WHERE user_id = ?"""
+    sql_req += """WHERE user_id = %s"""
     req_param = (user_id,)
     if week_day:
-        sql_req += "  AND (day = 'all' OR day = ?)"
+        sql_req += "  AND (day = 'all' OR day = %s)"
         req_param += (week_day, )
     cursor.execute(sql_req, req_param)
     data = cursor.fetchall()
@@ -166,8 +179,8 @@ def get_hide_lessons_data(user_id, db_path="Bot.db", week_day=None,
     return data
 
 
-def get_chosen_educators(user_id, dp_path="Bot.db"):
-    sql_con = sqlite3.connect(dp_path)
+def get_chosen_educators(user_id):
+    sql_con = get_connection()
     cursor = sql_con.cursor()
     data = {}
     sql_req = """SELECT
@@ -176,8 +189,9 @@ def get_chosen_educators(user_id, dp_path="Bot.db"):
                  FROM user_educators
                    JOIN lessons
                      ON user_educators.lesson_id = lessons.id
-                 WHERE user_educators.user_id = ?"""
-    for row in cursor.execute(sql_req, (user_id,)):
+                 WHERE user_educators.user_id = %s"""
+    cursor.execute(sql_req, (user_id,))
+    for row in cursor.fetchall():
         if row[0] in data.keys():
             data[row[0]].add(row[1])
         else:
@@ -186,20 +200,26 @@ def get_chosen_educators(user_id, dp_path="Bot.db"):
 
 
 def delete_user(user_id, only_choice=False):
-    sql_con = sqlite3.connect("Bot.db")
+    sql_con = get_connection()
     cursor = sql_con.cursor()
     cursor.execute("""DELETE FROM user_choice 
-                      WHERE user_id = ?""", (user_id,))
+                      WHERE user_id = %s""", (user_id,))
     sql_con.commit()
     if not only_choice:
         cursor.execute("""DELETE FROM user_groups 
-                          WHERE user_id = ?""", (user_id,))
+                          WHERE user_id = %s""", (user_id,))
         sql_con.commit()
         cursor.execute("""DELETE FROM skips 
-                          WHERE user_id = ?""", (user_id,))
+                          WHERE user_id = %s""", (user_id,))
+        sql_con.commit()
+        cursor.execute("""DELETE FROM user_educators 
+                          WHERE user_id = %s""", (user_id,))
+        sql_con.commit()
+        cursor.execute("""DELETE FROM user_lessons 
+                          WHERE user_id = %s""", (user_id,))
         sql_con.commit()
         cursor.execute("""DELETE FROM user_data 
-                          WHERE id = ?""", (user_id,))
+                          WHERE id = %s""", (user_id,))
         sql_con.commit()
     cursor.close()
     sql_con.close()
@@ -219,19 +239,19 @@ def get_current_monday_date():
     return monday_date
 
 
-def get_json_week_data(user_id, next_week=False, for_day=None):
+def get_json_week_data_db(user_id, next_week=False, for_day=None):
     if next_week:
-        return get_json_week_data_api(user_id, next_week=next_week)
+        return get_json_week_data(user_id, next_week=next_week)
     if for_day:
-        return get_json_week_data_api(user_id, for_day=for_day)
+        return get_json_week_data(user_id, for_day=for_day)
     else:
-        sql_con = sqlite3.connect("Bot.db")
+        sql_con = get_connection()
         cursor = sql_con.cursor()
         cursor.execute("""SELECT json_week_data
                           FROM groups_data
                             JOIN user_data
                               ON groups_data.id = user_data.group_id
-                          WHERE  user_data.id= ?""", (user_id, ))
+                          WHERE  user_data.id= %s""", (user_id, ))
         data = cursor.fetchone()
 
         json_week_data = json.loads(data[0])
@@ -241,12 +261,12 @@ def get_json_week_data(user_id, next_week=False, for_day=None):
     return delete_symbols(json_week_data)
 
 
-def get_json_week_data_api(user_id, next_week=False, for_day=None):
-    sql_con = sqlite3.connect("Bot.db")
+def get_json_week_data(user_id, next_week=False, for_day=None):
+    sql_con = get_connection()
     cursor = sql_con.cursor()
     cursor.execute("""SELECT group_id
                       FROM user_data 
-                      WHERE  id= ?""", (user_id,))
+                      WHERE  id= %s""", (user_id,))
     group_id = cursor.fetchone()[0]
     cursor.close()
     sql_con.close()
@@ -259,8 +279,24 @@ def get_json_week_data_api(user_id, next_week=False, for_day=None):
     else:
         monday_date = get_current_monday_date()
 
-    json_week_data = spbu.get_group_events(group_id=group_id,
-                                           from_date=monday_date)
+    json_week_data = get_group_events(group_id=group_id,
+                                      from_date=monday_date)
+    return delete_symbols(json_week_data)
+
+
+def get_json_interval_data(user_id, from_date, to_date):
+    sql_con = get_connection()
+    cursor = sql_con.cursor()
+    cursor.execute("""SELECT group_id
+                          FROM user_data 
+                          WHERE  id= %s""", (user_id,))
+    group_id = cursor.fetchone()[0]
+    cursor.close()
+    sql_con.close()
+
+    json_week_data = get_group_events(group_id=group_id,
+                                      from_date=from_date,
+                                      to_date=to_date)
     return delete_symbols(json_week_data)
 
 
@@ -274,8 +310,7 @@ def get_json_day_data(user_id, day_date, json_week_data=None, next_week=False):
     if json_week_data is None:
         json_week_data = get_json_week_data(user_id, next_week)
     for day_info in json_week_data["Days"]:
-        if datetime.strptime(day_info["Day"],
-                             "%Y-%m-%dT%H:%M:%S").date() == day_date:
+        if datetime_from_string(day_info["Day"]).date() == day_date:
             return day_info
     return None
 
@@ -295,15 +330,20 @@ def is_event_in_skips(event, skips, week_day_string):
                 (skip_lesson[3] == "all" or
                  skip_lesson[3] == week_day_string) and \
                 (skip_lesson[4] == "all" or
-                 skip_lesson[4] == event["TimeIntervalString"]) and \
+                 skip_lesson[4] == parse_event_time(event)) and \
                 (skip_lesson[5] == "all" or
                  event_educators.issubset(skip_educators)):
             return True
     return False
 
 
+def is_resit(event):
+    return "пересдача" in event["Subject"] or "консультация" in event[
+        "Subject"] or "комиссия" in event["Subject"]
+
+
 def create_schedule_answer(day_info, full_place, user_id=None, personal=True,
-                           db_path="Bot.db", only_exams=False):
+                           session=False, only_resit=False):
     if day_info is None:
         return emoji["sleep"] + " Выходной"
 
@@ -312,7 +352,7 @@ def create_schedule_answer(day_info, full_place, user_id=None, personal=True,
     day_study_events = day_info["DayStudyEvents"]
 
     if personal:
-        skips = get_hide_lessons_data(user_id, db_path,
+        skips = get_hide_lessons_data(user_id,
                                       day_info["DayString"].split(", ")[0])
         chosen_educators = get_chosen_educators(user_id)
     else:
@@ -320,55 +360,52 @@ def create_schedule_answer(day_info, full_place, user_id=None, personal=True,
         chosen_educators = {}
 
     for event in day_study_events:
-        if event["IsCancelled"] or \
-                (only_exams and "пересдача" in event["Subject"]) or \
-                (only_exams and "консультация" in event["Subject"]) or \
-                (only_exams and "комиссия" in event["Subject"]) or \
-                is_event_in_skips(event, skips,
-                                  day_info["DayString"].split(", ")[0]):
+        if event["IsCancelled"] or is_event_in_skips(
+                event, skips, day_info["DayString"].split(", ")[0]
+        ):
             continue
+
+        if session and is_resit(event):
+            continue
+
+        if only_resit and not is_resit(event):
+            continue
+
         if event["IsAssigned"]:
             answer += emoji["new"] + " "
-        answer += emoji["clock"] + " " + event["TimeIntervalString"]
+        answer += parse_event_time(event)
         if event["TimeWasChanged"]:
             answer += " " + emoji["warning"]
-        answer += "\n<b>"
+
+        answer += "\n<b>" + parse_event_subject(event) + "</b>\n"
         subject_name = ", ".join(event["Subject"].split(", ")[:-1])
-        subject_type = event["Subject"].split(", ")[-1]
-        stripped_subject_type = " ".join(subject_type.split()[:2])
-        if stripped_subject_type in subject_short_type.keys():
-            answer += subject_short_type[stripped_subject_type] + " - "
-        else:
-            answer += subject_type.upper() + " - "
-        answer += subject_name + "</b>\n"
+
+        # is chosen_educator in event's educators
         have_chosen_educator = False
         if subject_name in chosen_educators.keys() and \
-                any(ch_edu in [edu["Item2"].split(", ")[0] for edu in
-                               event["EducatorIds"]] for ch_edu in
-                    chosen_educators[subject_name]):
+                any(
+                    ch_edu in [
+                        edu["Item2"].split(", ")[0]
+                        for edu in event["EducatorIds"]
+                    ]
+                    for ch_edu in chosen_educators[subject_name]
+                ):
             have_chosen_educator = True
-        for location in event["EventLocations"]:
-            if location["IsEmpty"]:
-                continue
 
-            if have_chosen_educator and not chosen_educators[
-                subject_name].issuperset({edu["Item2"].split(", ")[0] for edu in
-                                          location["EducatorIds"]}):
-                continue
-            if full_place:
-                location_name = location["DisplayName"].strip(", ").strip()
-            else:
-                location_name = location["DisplayName"].split(", ")[-1].strip()
-            answer += location_name
-            if location["HasEducators"]:
-                educators = [educator["Item2"].split(", ")[0] for educator in
-                             location["EducatorIds"]]
-                if len(educators):
-                    answer += " <i>({0})</i>".format("; ".join(educators))
-            if event["LocationsWereChanged"] or \
-                    event["EducatorsWereReassigned"]:
-                answer += " " + emoji["warning"]
-            answer += "\n"
+        for location in event["EventLocations"]:
+            loc_answer = parse_event_location(
+                location, full_place, have_chosen_educator,
+                chosen_educators[subject_name] if have_chosen_educator else None
+            )
+            answer += loc_answer
+
+            if loc_answer:
+                if event["LocationsWereChanged"] or \
+                        event["EducatorsWereReassigned"]:
+                    answer += " " + emoji["warning"]
+
+                answer += "\n"
+
         answer += "\n"
 
     if len(answer.strip().split("\n\n")) == 1:
@@ -402,11 +439,11 @@ def create_master_schedule_answer(day_info):
 
 
 def is_user_exist(user_id):
-    sql_con = sqlite3.connect("Bot.db")
+    sql_con = get_connection()
     cursor = sql_con.cursor()
     cursor.execute("""SELECT count(id) 
                       FROM user_data
-                      WHERE id = ?""", (user_id,))
+                      WHERE id = %s""", (user_id,))
     data = cursor.fetchone()
     cursor.close()
     sql_con.close()
@@ -414,11 +451,11 @@ def is_user_exist(user_id):
 
 
 def is_sending_on(user_id):
-    sql_con = sqlite3.connect("Bot.db")
+    sql_con = get_connection()
     cursor = sql_con.cursor()
     cursor.execute("""SELECT sending 
                       FROM user_data
-                      WHERE id = ?""", (user_id,))
+                      WHERE id = %s""", (user_id,))
     data = cursor.fetchone()
     cursor.close()
     sql_con.close()
@@ -426,11 +463,11 @@ def is_sending_on(user_id):
 
 
 def set_sending(user_id, on=True):
-    sql_con = sqlite3.connect("Bot.db")
+    sql_con = get_connection()
     cursor = sql_con.cursor()
     cursor.execute("""UPDATE user_data
-                      SET sending = ?
-                      WHERE id = ?""",
+                      SET sending = %s
+                      WHERE id = %s""",
                    (int(on), user_id))
     sql_con.commit()
     cursor.close()
@@ -438,7 +475,7 @@ def set_sending(user_id, on=True):
 
 
 def select_all_users():
-    sql_con = sqlite3.connect("Bot.db")
+    sql_con = get_connection()
     cursor = sql_con.cursor()
     cursor.execute("""SELECT id 
                       FROM user_data""")
@@ -448,12 +485,12 @@ def select_all_users():
     return ids
 
 
-def is_full_place(user_id, db_path="Bot.db"):
-    sql_con = sqlite3.connect(db_path)
+def is_full_place(user_id):
+    sql_con = get_connection()
     cursor = sql_con.cursor()
     cursor.execute("""SELECT full_place 
                       FROM user_data
-                      WHERE id = ?""", (user_id,))
+                      WHERE id = %s""", (user_id,))
     data = cursor.fetchone()
     cursor.close()
     sql_con.close()
@@ -461,11 +498,11 @@ def is_full_place(user_id, db_path="Bot.db"):
 
 
 def set_full_place(user_id, on=True):
-    sql_con = sqlite3.connect("Bot.db")
+    sql_con = get_connection()
     cursor = sql_con.cursor()
     cursor.execute("""UPDATE user_data
-                      SET full_place = ?
-                      WHERE id = ?""",
+                      SET full_place = %s
+                      WHERE id = %s""",
                    (int(on), user_id))
     sql_con.commit()
     cursor.close()
@@ -473,7 +510,7 @@ def set_full_place(user_id, on=True):
 
 
 def get_rate_statistics():
-    sql_con = sqlite3.connect("Bot.db")
+    sql_con = get_connection()
     cursor = sql_con.cursor()
     cursor.execute("""SELECT sum(rate), count(id) 
                       FROM user_data
@@ -488,11 +525,11 @@ def get_rate_statistics():
 
 
 def set_rate(user_id, count_of_stars):
-    sql_con = sqlite3.connect("Bot.db")
+    sql_con = get_connection()
     cursor = sql_con.cursor()
     cursor.execute("""UPDATE user_data
-                      SET rate = ?
-                      WHERE id = ?""",
+                      SET rate = %s
+                      WHERE id = %s""",
                    (int(count_of_stars), user_id))
     sql_con.commit()
     cursor.close()
@@ -517,13 +554,13 @@ def write_log(update, work_time, was_error=False):
 
 
 def get_templates(user_id):
-    sql_con = sqlite3.connect("Bot.db")
+    sql_con = get_connection()
     cursor = sql_con.cursor()
     cursor.execute("""SELECT gd.id, gd.title
                       FROM user_groups AS ug
                         JOIN groups_data AS gd
                           ON ug.group_id = gd.id
-                      WHERE ug.user_id = ?;""", (user_id,))
+                      WHERE ug.user_id = %s;""", (user_id,))
     data = cursor.fetchall()
     cursor.close()
     sql_con.close()
@@ -534,24 +571,24 @@ def get_templates(user_id):
 
 
 def get_current_group(user_id):
-    sql_con = sqlite3.connect("Bot.db")
+    sql_con = get_connection()
     cursor = sql_con.cursor()
     cursor.execute("""SELECT groups_data.id, groups_data.title
                       FROM groups_data
                         JOIN user_data u ON groups_data.id = u.group_id
-                      WHERE u.id = ?""", (user_id, ))
+                      WHERE u.id = %s""", (user_id, ))
     group_data = cursor.fetchone()
     return group_data
 
 
 def save_group(group_id, user_id):
-    sql_con = sqlite3.connect("Bot.db")
+    sql_con = get_connection()
     cursor = sql_con.cursor()
     try:
-        cursor.execute("""INSERT INTO user_groups VALUES (?, ?)""",
+        cursor.execute("""INSERT INTO user_groups VALUES (%s, %s)""",
                        (group_id, user_id))
         sql_con.commit()
-    except sqlite3.IntegrityError:
+    except pymysql.IntegrityError:
         sql_con.rollback()
     finally:
         cursor.close()
@@ -559,15 +596,15 @@ def save_group(group_id, user_id):
 
 
 def delete_group(group_id, user_id):
-    sql_con = sqlite3.connect("Bot.db")
+    sql_con = get_connection()
     cursor = sql_con.cursor()
     try:
         cursor.execute("""DELETE FROM user_groups 
-                          WHERE group_id = ? 
-                            AND user_id = ?""",
+                          WHERE group_id = %s 
+                            AND user_id = %s""",
                        (group_id, user_id))
         sql_con.commit()
-    except sqlite3.IntegrityError:
+    except pymysql.IntegrityError:
         sql_con.rollback()
     finally:
         cursor.close()
@@ -576,7 +613,7 @@ def delete_group(group_id, user_id):
 
 def get_statistics_for_admin():
     data = {}
-    sql_con = sqlite3.connect("Bot.db")
+    sql_con = get_connection()
     cursor = sql_con.cursor()
 
     cursor.execute("""SELECT count(id)
@@ -600,16 +637,16 @@ def get_statistics_for_admin():
 
 
 def get_station_code(user_id, is_home):
-    sql_con = sqlite3.connect("Bot.db")
+    sql_con = get_connection()
     cursor = sql_con.cursor()
     if is_home:
         cursor.execute("""SELECT home_station_code
                           FROM user_data
-                          WHERE id = ?""", (user_id,))
+                          WHERE id = %s""", (user_id,))
     else:
         cursor.execute("""SELECT univer_station_code
                           FROM user_data
-                          WHERE id = ?""", (user_id,))
+                          WHERE id = %s""", (user_id,))
     station_code = cursor.fetchone()[0]
     cursor.close()
     sql_con.close()
@@ -617,17 +654,17 @@ def get_station_code(user_id, is_home):
 
 
 def change_station(user_id, station_code, is_home):
-    sql_con = sqlite3.connect("Bot.db")
+    sql_con = get_connection()
     cursor = sql_con.cursor()
     if is_home:
         cursor.execute("""UPDATE user_data
-                          SET home_station_code = ?
-                          WHERE id = ?""",
+                          SET home_station_code = %s
+                          WHERE id = %s""",
                        (station_code, user_id))
     else:
         cursor.execute("""UPDATE user_data
-                          SET univer_station_code = ?
-                          WHERE id = ?""",
+                          SET univer_station_code = %s
+                          WHERE id = %s""",
                        (station_code, user_id))
     sql_con.commit()
     cursor.close()
@@ -648,11 +685,11 @@ def send_long_message(bot, text, user_id, split="\n\n"):
 
 
 def get_user_rate(user_id):
-    sql_con = sqlite3.connect("Bot.db")
+    sql_con = get_connection()
     cursor = sql_con.cursor()
     cursor.execute("""SELECT rate
                       FROM user_data
-                      WHERE id = ?""", (user_id,))
+                      WHERE id = %s""", (user_id,))
     rate = cursor.fetchone()[0]
     cursor.close()
     sql_con.close()
@@ -710,10 +747,10 @@ def get_semester_dates():
 def get_json_attestation(user_id):
     sem_dates = get_semester_dates()
     group_id = get_current_group(user_id)[0]
-    req = spbu.get_group_events(group_id=group_id,
-                                from_date=sem_dates[0],
-                                to_date=sem_dates[1],
-                                lessons_type="Attestation")
+    req = get_group_events(group_id=group_id,
+                           from_date=sem_dates[0],
+                           to_date=sem_dates[1],
+                           lessons_type="Attestation")
     return req
 
 
@@ -919,18 +956,18 @@ def get_lessons_with_educators(user_id, day_date):
     return data
 
 
-def create_session_answer(json_attestation, month, user_id, full_place,
-                          personal, only_exams):
-    answer = ""
+def create_session_answers(json_attestation, month, user_id, full_place,
+                           personal, session, only_resit):
+    answers = []
     for day_data in json_attestation["Days"]:
         event_date = datetime.strptime(day_data["Day"], "%Y-%m-%dT%H:%M:%S")
         if month == str(event_date.month):
             cur_answer = create_schedule_answer(
                 day_data, full_place, user_id=user_id, personal=personal,
-                only_exams=only_exams)
+                session=session, only_resit=only_resit)
             if "Выходной" not in cur_answer:
-                answer += cur_answer.replace("\n\n", "\n") + "\n"
-    return answer
+                answers.append(cur_answer)
+    return answers
 
 
 def get_key_by_value(dct, val):
@@ -938,7 +975,7 @@ def get_key_by_value(dct, val):
 
 
 def get_random_group_id():
-    sql_con = sqlite3.connect("Bot.db")
+    sql_con = get_connection()
     cursor = sql_con.cursor()
     cursor.execute("""SELECT group_id
                       FROM user_data
@@ -957,18 +994,61 @@ def delete_all_hides(user_id, hide_type=0):
     :param hide_type: 0 - all, 1 - lessons, 2 - educators
     :return:
     """
-    sql_con = sqlite3.connect("Bot.db")
+    sql_con = get_connection()
     cursor = sql_con.cursor()
     if hide_type == 0 or hide_type == 1:
         cursor.execute("""DELETE FROM skips 
-                          WHERE user_id = ?""",
+                          WHERE user_id = %s""",
                        (user_id,))
         sql_con.commit()
 
     if hide_type == 0 or hide_type == 2:
         cursor.execute("""DELETE FROM user_educators 
-                          WHERE user_id = ?""", (user_id,))
+                          WHERE user_id = %s""", (user_id,))
         sql_con.commit()
 
     cursor.close()
     sql_con.close()
+
+
+def get_connection():
+    con = pymysql.connect(
+        host=db_host,
+        user=user_name,
+        password=slq_password,
+        db=db_name,
+        charset="utf8",
+        cursorclass=pymysql.cursors.Cursor
+    )
+
+    return con
+
+
+def get_day_date_by_weekday_title(week_day):
+    iso_day_date = list((datetime.today() + server_timedelta).isocalendar())
+    if iso_day_date[2] == 7:
+        iso_day_date[1] += 1
+    iso_day_date[2] = week_day_number[week_day]
+    return date_from_iso(iso_day_date)
+
+
+def text_to_interval(string):
+    if len(string.split("-")) == 2:
+        date1, date2 = [text_to_date(s) for s in string.split("-")]
+        if date1 and date2 and date1 < date2:
+            return date1, date2
+        else:
+            return False
+    else:
+        return False
+
+
+def datetime_to_string(date_value):
+    return "{day} {month_title} {year}".format(
+        day=date_value.day,
+        month_title=get_key_by_value(months, date_value.month),
+        year=date_value.year)
+
+
+def string_to_time(time_str):
+    return datetime.strptime(time_str, "%H:%M").time()

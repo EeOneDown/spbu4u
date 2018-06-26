@@ -6,7 +6,7 @@ from collections import OrderedDict
 from datetime import timedelta
 from hashlib import sha256
 
-from bots_constants import secret_key, test_token, user_name
+from bot.bots_constants import secret_key, test_token
 
 sha_string = hmac.new(bytearray(secret_key, "utf-8"),
                       bytearray(test_token, "utf-8"),
@@ -17,14 +17,14 @@ ids = {
     "ks": 71591548
 }
 
-webhook_host = "{0}.pythonanywhere.com".format(user_name)
+webhook_host = ""
 webhook_port = 443
 webhook_url_base = "https://{0}:{1}".format(webhook_host, webhook_port)
 webhook_url_path = "/{0}/".format(sha_string)
 
 max_inline_button_text_len = 32
 
-server_timedelta = timedelta(hours=3)
+server_timedelta = timedelta(hours=0)
 
 urls = {
     "ya_search": "https://api.rasp.yandex.net/v3.0/search/"
@@ -50,7 +50,9 @@ emoji = {"info": "\U00002139", "star": "\U00002B50",
          "new": "\U0001F195", "prev_block": "\U00002B05",
          "next_block": "\U000027A1", "Отмена": "Отмена",
          "heavy_check_mark": "\U00002705", "ruble_sign": "\U000020BD",
-         "train": "\U0001F683", "express": "\U0001F684"}
+         "train": "\U0001F683", "express": "\U0001F684",
+         "en_dash": "\U00002013", "couch_and_lamp": "\U0001F6CB",
+         "books": "\U0001F4DA"}
 
 week_day_number = OrderedDict([
     ("Пн", 1), ("Вт", 2), ("Ср", 3), ("Чт", 4), ("Пт", 5), ("Сб", 6)

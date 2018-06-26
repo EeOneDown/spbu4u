@@ -1,6 +1,8 @@
 pymysql
 requests
 Flask
+flask-sqlalchemy
+flask-migrate
 pyTelegramBotAPI
 flask_sslify
 spbuTimetableAPI>=1.0.1

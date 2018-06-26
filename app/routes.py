@@ -12,7 +12,7 @@ from telebot.types import Update
 from app import app
 from bot import bot
 from bot.constants import webhook_url_base, webhook_url_path, ids
-from bot.functions import delete_user, write_log
+from bot.functions import delete_user, write_log, create_schedule_answer, get_json_interval_data
 
 
 @app.route("/")
@@ -86,3 +86,21 @@ def test_route():
     update = Update.de_json(json_string)
     bot.process_new_updates([update])
     return "OK", 200
+
+
+@app.route("/<tid>")
+def schedule(tid):
+    from datetime import date
+
+    user_id = tid
+
+    json_week = get_json_interval_data(user_id, from_date=date(2018, 5, 2),
+                                       to_date=date(2018, 5, 20))
+
+    answers = []
+    for day in json_week["Days"]:
+        answers.append(
+            create_schedule_answer(day, full_place=False, user_id=user_id)
+        )
+
+    return render_template("schedule.html", answers=answers)

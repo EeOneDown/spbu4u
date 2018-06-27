@@ -19,10 +19,9 @@ from bot.functions import delete_user, write_log
 @app.route("/index")
 def main_page():
     from requests import get
-    from bot.bots_constants import yandex_key
 
     url = "https://api.rasp.yandex.net/v3.0/copyright/"
-    params = {"apikey": yandex_key, "format": "json"}
+    params = {"apikey": app.config['YANDEX_API_KEY'], "format": "json"}
 
     data = get(url, params=params).json()["copyright"]
 

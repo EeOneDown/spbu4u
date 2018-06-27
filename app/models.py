@@ -1,4 +1,10 @@
+# -*- coding: utf-8 -*-
+from __future__ import unicode_literals
+
 from app import db
+import spbu
+from bot import functions as f
+from datetime import timedelta
 
 
 users_groups = db.Table(
@@ -58,6 +64,18 @@ class User(db.Model):
     chosen_educators = db.relationship("Lesson",
                                        secondary=users_chosen_educators,
                                        lazy="dynamic")
+    current_group = db.relationship("Group")
+
+    def create_day_schedule_answer(self, date):
+        schedule_data = self.current_group.get_events(
+            from_date=date, to_date=date + timedelta(days=1)
+        )['Days']
+        if len(schedule_data):
+            answer = f.create_schedule_answer(schedule_data[0],
+                                              self.is_full_place)
+        else:
+            answer = "Выходной"
+        return answer
 
 
 class Group(db.Model):
@@ -67,6 +85,9 @@ class Group(db.Model):
     title = db.Column(db.String(128))
     members = db.relationship("User", secondary=users_groups,
                               back_populates="groups", lazy="dynamic")
+
+    def get_events(self, from_date=None, to_date=None, lessons_type=None):
+        return spbu.get_group_events(self.id, from_date, to_date, lessons_type)
 
 
 class Lesson(db.Model):

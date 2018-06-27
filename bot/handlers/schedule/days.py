@@ -6,6 +6,7 @@ from datetime import datetime, timedelta
 import bot.functions as func
 from bot import bot
 from bot.constants import server_timedelta, week_day_titles, emoji
+from app.models import User
 
 
 # Today or tomorrow schedule message
@@ -16,21 +17,23 @@ from bot.constants import server_timedelta, week_day_titles, emoji
 def today_schedule_handler(message):
     bot.send_chat_action(message.chat.id, "typing")
 
+    user = User.query.filter_by(telegram_id=message.chat.id)
+
     for_date = datetime.today().date() + server_timedelta
     if message.text.capitalize() == "Завтра":
         for_date += timedelta(days=1)
 
     json_day = func.get_json_day_data(message.chat.id, for_date)
-    full_place = func.is_full_place(message.chat.id)
-    answer = func.create_schedule_answer(json_day, full_place, message.chat.id)
+    answer = func.create_schedule_answer(json_day, user.is_full_place,
+                                         message.chat.id)
 
     func.send_long_message(bot, answer, message.chat.id)
 
 
-# Now lesson message
+# Current lesson message
 @bot.message_handler(func=lambda mess: "Сейчас" in mess.text.title(),
                      content_types=["text"])
-def now_lesson_handler(message):
+def current_lesson_handler(message):
     bot.send_chat_action(message.chat.id, "typing")
 
     today = datetime.today() + server_timedelta
@@ -65,7 +68,7 @@ def now_lesson_handler(message):
 # Schedule for date message
 @bot.message_handler(func=lambda mess: func.text_to_date(mess.text.lower()),
                      content_types=["text"])
-def schedule_for_day(message):
+def schedule_for_date(message):
     bot.send_chat_action(message.chat.id, "typing")
     day = func.text_to_date(message.text.lower())
     json_week = func.get_json_week_data(message.chat.id, for_day=day)
@@ -78,7 +81,7 @@ def schedule_for_day(message):
     func.send_long_message(bot, answer, message.chat.id)
 
 
-# Schedule for week title message
+# Schedule for weekday title message
 @bot.message_handler(func=lambda mess:
                      mess.text.title() in week_day_titles.keys(),
                      content_types=["text"])

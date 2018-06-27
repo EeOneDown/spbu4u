@@ -8,10 +8,11 @@ from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton, ForceReply
 
 import bot.functions as func
 from bot import bot
-from bot.bots_constants import bot_name
 from bot.constants import emoji, loading_text
 from bot.keyboards import schedule_keyboard
 
+
+bot_name = "tt202_bot"
 
 # Educator search message
 @bot.message_handler(func=lambda mess: mess.text == emoji["bust_in_silhouette"],

@@ -9,10 +9,11 @@ from telebot.types import ReplyKeyboardMarkup, ReplyKeyboardRemove
 import bot.functions as func
 import bot.registration_functions as reg_func
 from bot import bot
-from bot.bots_constants import bot_name
 from bot.constants import ids, emoji
 from bot.keyboards import main_keyboard
 
+
+bot_name = "tt202_bot"
 
 # Start message
 @bot.message_handler(commands=["start"])

@@ -8,9 +8,12 @@ from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
 # from flask_sslify import SSLify
 
+from config import Config
+
 basedir = path.abspath(path.dirname(__file__))
 
 app = flask.Flask(__name__)
+app.config.from_object(Config)
 app.config.update(
     dict(
         SECRET_KEY="powerful-secretkey",
@@ -26,4 +29,3 @@ migrate = Migrate(app, db)
 
 
 from app import routes
-

@@ -5,10 +5,11 @@ from telebot.apihelper import ApiException
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton, ForceReply
 
 from bot import bot, functions as func
-from bot.bots_constants import bot_name
 from bot.constants import emoji, ids
 from bot.keyboards import main_keyboard
 
+
+bot_name = "tt202_bot"
 
 # Feedback text message
 @bot.message_handler(

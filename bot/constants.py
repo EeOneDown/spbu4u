@@ -6,10 +6,10 @@ from collections import OrderedDict
 from datetime import timedelta
 from hashlib import sha256
 
-from bot.bots_constants import secret_key, test_token
+from app import app
 
-sha_string = hmac.new(bytearray(secret_key, "utf-8"),
-                      bytearray(test_token, "utf-8"),
+sha_string = hmac.new(bytearray(app.config['SECRET_KEY'], "utf-8"),
+                      bytearray(app.config['OTHER_SECRET_KEY'], "utf-8"),
                       sha256).hexdigest()
 
 ids = {

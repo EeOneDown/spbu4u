@@ -9,7 +9,7 @@ import pymysql
 from spbu import get_group_events
 from telebot.apihelper import ApiException
 
-from bot.bots_constants import db_name, user_name, slq_password, db_host
+from app import app
 from bot.constants import emoji, subject_short_type, months, months_date, \
     week_day_number, week_day_titles, max_inline_button_text_len, \
     server_timedelta
@@ -1009,19 +1009,6 @@ def delete_all_hides(user_id, hide_type=0):
 
     cursor.close()
     sql_con.close()
-
-
-def get_connection():
-    con = pymysql.connect(
-        host=db_host,
-        user=user_name,
-        password=slq_password,
-        db=db_name,
-        charset="utf8",
-        cursorclass=pymysql.cursors.Cursor
-    )
-
-    return con
 
 
 def get_day_date_by_weekday_title(week_day):

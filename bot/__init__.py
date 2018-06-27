@@ -5,10 +5,10 @@ import logging
 
 from telebot import TeleBot, logger
 
-from bot.bots_constants import release_token
+from app import app
 
 
-bot = TeleBot(release_token, threaded=False)
+bot = TeleBot(app.config['TELEGRAM_BOT_RELEASE_TOKEN'], threaded=False)
 
 logger.setLevel(logging.INFO)
 

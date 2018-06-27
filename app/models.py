@@ -88,8 +88,8 @@ class Lesson(db.Model):
         Будет возвращен либо новый объект, либо уже существующий."""
 
         lesson = Lesson.query.filter_by(name=name, types=types, days=days,
-                                   times=times, educators=educators,
-                                   places=places).one_or_none()
+                                        times=times, educators=educators,
+                                        places=places).one_or_none()
         if not lesson:
             lesson = Lesson(name=name, types=types, days=days, times=times,
                             educators=educators, places=places)

@@ -16,7 +16,7 @@ app.config.update(
         SECRET_KEY="powerful-secretkey",
         WTF_CSRF_SECRET_KEY="a-csrf-secret-key",
         SQLALCHEMY_TRACK_MODIFICATIONS=False,
-        SQLALCHEMY_DATABASE_URI="sqlite:///" + path.join(basedir, "app.db")
+        SQLALCHEMY_DATABASE_URI="mysql+pymysql://<user>:<password>@<host>:<port>/<db_name>"
     )
 )
 

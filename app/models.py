@@ -44,7 +44,7 @@ class User(db.Model):
     telegram_id = db.Column(db.Integer, index=True, unique=True, nullable=False)
     is_educator = db.Column(db.Boolean, default=False, nullable=False)
     is_full_place = db.Column(db.Boolean, default=True, nullable=False)
-    is_subscribed = db.Column(db.Boolean,default=False, nullable=False)
+    is_subscribed = db.Column(db.Boolean, default=False, nullable=False)
     home_station_code = db.Column(db.String(10), default="c2", nullable=False)
     univer_station_code = db.Column(db.String(10), default="s9603770",
                                     nullable=False)
@@ -74,9 +74,23 @@ class Lesson(db.Model):
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     name = db.Column(db.String(128))
-    types = db.Column(db.String)        # mb JSON/ARRAY?
-    days = db.Column(db.String)         # mb JSON/ARRAY?
-    times = db.Column(db.String)        # mb JSON/ARRAY?
-    educators = db.Column(db.String)    # mb JSON/ARRAY?
-    __table_args__ = (db.UniqueConstraint("name", "types", "days", "times",
-                                          "educators"), )
+    types = db.Column(db.JSON)
+    days = db.Column(db.JSON)
+    times = db.Column(db.JSON)
+    educators = db.Column(db.JSON)
+    places = db.Column(db.JSON)
+
+    @staticmethod
+    def add_or_get(name, types, days, times, educators, places):
+        """
+        Так как из полей типа JSON сделать уникальный индекс нельзя, то
+        приходится проверять наличие элемента в базе перед добавлением.
+        Будет возвращен либо новый объект, либо уже существующий."""
+
+        lesson = Lesson.query.filter_by(name=name, types=types, days=days,
+                                   times=times, educators=educators,
+                                   places=places).one_or_none()
+        if not lesson:
+            lesson = Lesson(name=name, types=types, days=days, times=times,
+                            educators=educators, places=places)
+        return lesson

@@ -14,6 +14,16 @@ from app.models import User
                      content_types=["text"])
 @bot.message_handler(func=lambda mess: mess.text.capitalize() == "Завтра",
                      content_types=["text"])
+# Schedule for weekday title message
+@bot.message_handler(func=lambda mess:
+                     mess.text.title() in week_day_titles.keys(),
+                     content_types=["text"])
+@bot.message_handler(func=lambda mess:
+                     mess.text.title() in week_day_titles.values(),
+                     content_types=["text"])
+# Schedule for date message
+@bot.message_handler(func=lambda mess: func.text_to_date(mess.text.lower()),
+                     content_types=["text"])
 def today_schedule_handler(message):
     bot.send_chat_action(message.chat.id, "typing")
 

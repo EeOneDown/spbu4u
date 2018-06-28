@@ -135,3 +135,5 @@ special_thanks = \
     '<a href="https://it.spbu.ru">УСИТ СПбГУ</a> - предоставление ' \
     '<a href="https://timetable.spbu.ru/help">API</a> для доступа к ' \
     '<a href="https://timetable.spbu.ru">расписаниям занятий СПбГУ</a>\n'
+
+weekend_answer = emoji["sleep"] + " Выходной"

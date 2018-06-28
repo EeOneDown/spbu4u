@@ -3,8 +3,9 @@ from __future__ import unicode_literals
 
 from app import db
 import spbu
-from bot import functions as f
+from bot import new_functions as f
 from datetime import timedelta
+from bot.constants import weekend_answer, emoji
 
 
 users_groups = db.Table(
@@ -66,15 +67,52 @@ class User(db.Model):
                                        lazy="dynamic")
     current_group = db.relationship("Group")
 
-    def create_day_schedule_answer(self, date):
-        schedule_data = self.current_group.get_events(
-            from_date=date, to_date=date + timedelta(days=1)
-        )['Days']
-        if len(schedule_data):
-            answer = f.create_schedule_answer(schedule_data[0],
-                                              self.is_full_place)
+    def _parse_event(self, json_event):
+        pass
+
+    def _parse_day_events(self, json_day_events):
+        """
+        This method parses the events data from SPBU API
+        :param json_day_events: an element of `DayStudyEvents`
+        :type json_day_events: dict
+        :return: html safe string
+        :rtype: str
+        """
+        answer = "{0} {1}\n\n".format(
+            emoji["calendar"], json_day_events["DayString"].capitalize()
+        )
+
+        events = f.create_events_blocks(
+            f.delete_cancelled_events(json_day_events["DayStudyEvents"])
+        )
+        return answer + str(events)
+
+    def get_events_for_date(self, date):
+        """
+        This method gets the schedule for date and parses it
+        :param date: date for schedule
+        :type date: datetime.date
+        :return: html safe string
+        :rtype: str
+        """
+        if self.is_educator:
+            """
+            In future:
+            json_day_events = spbu.get_educator_events(
+                from_date=date, to_date=date + timedelta(days=1)  
+            )["Days"]
+            """
+            json_day_events = []
         else:
-            answer = "Выходной"
+            json_day_events = self.current_group.get_events(
+                from_date=date, to_date=date + timedelta(days=1)
+            )["Days"]
+
+        if len(json_day_events):
+            answer = self._parse_day_events(json_day_events)
+        else:
+            answer = weekend_answer
+
         return answer
 
 
@@ -106,8 +144,8 @@ class Lesson(db.Model):
         """
         Так как из полей типа JSON сделать уникальный индекс нельзя, то
         приходится проверять наличие элемента в базе перед добавлением.
-        Будет возвращен либо новый объект, либо уже существующий."""
-
+        Будет возвращен либо новый объект, либо уже существующий.
+        """
         lesson = Lesson.query.filter_by(name=name, types=types, days=days,
                                         times=times, educators=educators,
                                         places=places).one_or_none()

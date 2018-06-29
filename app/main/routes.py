@@ -13,6 +13,7 @@ from bot import bot
 from app.constants import webhook_url_base, webhook_url_path, ids
 from bot.functions import delete_user, write_log
 from app.main import bp
+from app.models import User
 
 
 @bp.route("/")
@@ -85,3 +86,13 @@ def test_route():
     update = Update.de_json(json_string)
     bot.process_new_updates([update])
     return "OK", 200
+
+
+@bp.route("/<tid>/<idate>/<n>")
+def schedule(tid, idate, n):
+    from datetime import date
+    user = User.query.filter_by(telegram_id=tid).first()
+    answers = user.create_answers_for_interval(
+        from_date=date(2018, 6, int(idate)),
+        to_date=date(2018, 6, int(idate) + int(n)))
+    return render_template("schedule.html", answers=answers)

@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+
+{% block app_content %}
+    <div class="row align-items-start">
+        {% for answer in answers %}
+            <div class="col-md-3">
+                <pre>{{ answer|safe }}</pre>
+            </div>
+        {% endfor %}
+    </div>
+{% endblock %}

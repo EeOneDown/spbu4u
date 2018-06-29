@@ -135,4 +135,5 @@ special_thanks = \
     '<a href="https://timetable.spbu.ru/help">API</a> для доступа к ' \
     '<a href="https://timetable.spbu.ru">расписаниям занятий СПбГУ</a>\n'
 
-weekend_answer = emoji["sleep"] + " Выходной"
+weekend_answer = "{0} Выходной".format(emoji["sleep"])
+week_off_answer = "{0} Выходная неделя".format(emoji["sleep"])

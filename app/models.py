@@ -4,7 +4,7 @@ from __future__ import unicode_literals
 from app import db, new_functions as f
 import spbu
 from datetime import timedelta
-from app.constants import weekend_answer, emoji
+from app.constants import week_off_answer, weekend_answer, emoji
 
 
 users_groups = db.Table(
@@ -115,6 +115,39 @@ class User(db.Model):
             answer = weekend_answer
 
         return answer
+
+    def create_answers_for_interval(self, from_date, to_date):
+        """
+        Method to create answers for interval
+        :param from_date: the datetime the events start from
+        :type from_date: datetime.date
+        :param to_date: the datetime the events ends
+        :type to_date: datetime.date
+        :return: list of schedule answers
+        :rtype: list of str
+        """
+        answers = []
+
+        if self.is_educator:
+            """
+            In future:
+            json_day_events = spbu.get_educator_events(self.current_group_id
+                from_date=from_date, to_date=to_date  
+            )["Days"]
+            """
+            json_day_events = []
+        else:
+            json_day_events = self.__current_group.get_events(
+                from_date=from_date, to_date=to_date
+            )["Days"]
+
+        if len(json_day_events):
+            for event in json_day_events:
+                answers.append(self.__parse_day_events(event))
+        else:
+            answers.append(week_off_answer)
+
+        return answers
 
 
 class Group(db.Model):

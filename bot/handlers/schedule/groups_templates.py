@@ -5,7 +5,7 @@ from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 import bot.functions as func
 from bot import bot
-from bot.constants import emoji
+from app.constants import emoji
 from bot.handlers.check_first import start_handler
 
 

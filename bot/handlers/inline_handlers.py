@@ -7,7 +7,7 @@ from telebot.types import InlineQueryResultArticle, InputTextMessageContent
 
 import bot.functions as func
 from bot import bot
-from bot.constants import week_day_titles, week_day_number, server_timedelta
+from app.constants import week_day_titles, week_day_number, server_timedelta
 
 
 @bot.inline_handler(func=lambda query:

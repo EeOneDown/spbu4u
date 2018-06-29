@@ -4,11 +4,10 @@ from __future__ import unicode_literals
 import logging
 
 from telebot import TeleBot, logger
+from config import Config
 
-from app import app
 
-
-bot = TeleBot(app.config['TELEGRAM_BOT_RELEASE_TOKEN'], threaded=False)
+bot = TeleBot(Config.TELEGRAM_BOT_RELEASE_TOKEN, threaded=False)
 
 logger.setLevel(logging.INFO)
 

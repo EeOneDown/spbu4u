@@ -5,23 +5,23 @@ import logging
 from json import loads
 from time import time
 
-from flask import render_template, request, abort
+from flask import render_template, request, abort, current_app
 from telebot.apihelper import ApiException
 from telebot.types import Update
 
-from app import app
 from bot import bot
-from bot.constants import webhook_url_base, webhook_url_path, ids
+from app.constants import webhook_url_base, webhook_url_path, ids
 from bot.functions import delete_user, write_log
+from app.main import bp
 
 
-@app.route("/")
-@app.route("/index")
+@bp.route("/")
+@bp.route("/index")
 def main_page():
     from requests import get
 
     url = "https://api.rasp.yandex.net/v3.0/copyright/"
-    params = {"apikey": app.config['YANDEX_API_KEY'], "format": "json"}
+    params = {"apikey": current_app.config['YANDEX_API_KEY'], "format": "json"}
 
     data = get(url, params=params).json()["copyright"]
 
@@ -29,14 +29,14 @@ def main_page():
                            text=data["text"])
 
 
-@app.route("/reset_webhook", methods=["GET", "HEAD"])
+@bp.route("/reset_webhook", methods=["GET", "HEAD"])
 def reset_webhook():
     bot.remove_webhook()
     bot.set_webhook(url=webhook_url_base + webhook_url_path)
     return "OK", 200
 
 
-@app.route(webhook_url_path, methods=["POST"])
+@bp.route(webhook_url_path, methods=["POST"])
 def webhook():
     if request.headers.get("content-type") == "application/json":
         json_string = request.get_data().decode("utf-8")
@@ -78,7 +78,7 @@ def webhook():
         abort(403)
 
 
-@app.route("/test_route", methods=["POST"])
+@bp.route("/test_route", methods=["POST"])
 def test_route():
     json_string = request.get_data().decode("utf-8")
     print(json_string)

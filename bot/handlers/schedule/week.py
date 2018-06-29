@@ -9,7 +9,7 @@ from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 import bot.functions as func
 from bot import bot
-from bot.constants import server_timedelta, emoji, week_day_number, \
+from app.constants import server_timedelta, emoji, week_day_number, \
     week_day_titles, loading_text
 
 

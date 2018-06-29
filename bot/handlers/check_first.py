@@ -9,7 +9,7 @@ from telebot.types import ReplyKeyboardMarkup, ReplyKeyboardRemove
 import bot.functions as func
 import bot.registration_functions as reg_func
 from bot import bot
-from bot.constants import ids, emoji
+from app.constants import ids, emoji
 from bot.keyboards import main_keyboard
 
 

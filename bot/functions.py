@@ -9,8 +9,7 @@ import pymysql
 from spbu import get_group_events
 from telebot.apihelper import ApiException
 
-from app import app
-from bot.constants import emoji, subject_short_type, months, months_date, \
+from app.constants import emoji, subject_short_type, months, months_date, \
     week_day_number, week_day_titles, max_inline_button_text_len, \
     server_timedelta
 
@@ -1039,3 +1038,8 @@ def datetime_to_string(date_value):
 
 def string_to_time(time_str):
     return datetime.strptime(time_str, "%H:%M").time()
+
+
+def get_connection():
+    import sqlite3
+    return sqlite3.connect("app.db")

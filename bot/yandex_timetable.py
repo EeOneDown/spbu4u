@@ -5,15 +5,14 @@ import math
 from datetime import datetime, timedelta, time
 
 import requests
-
-from app import app
-from bot.constants import emoji, urls
+from config import Config
+from app.constants import emoji, urls
 
 
 def get_yandex_timetable_data(from_station, to_station, date, limit=3):
-    from bot.constants import server_timedelta
+    from app.constants import server_timedelta
     params = {"from": from_station, "to": to_station,
-              "apikey": app.config['YANDEX_API_KEY'], "date": date,
+              "apikey": Config.YANDEX_API_KEY, "date": date,
               "format": "json", "lang": "ru_RU", "transport_types": "suburban"}
     url = urls["ya_search"]
     req = requests.get(url, params=params)

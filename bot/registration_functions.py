@@ -7,7 +7,7 @@ from spbu import get_program_levels, get_groups
 from telebot.types import ReplyKeyboardMarkup
 
 from bot import bot, functions
-from bot.constants import emoji
+from app.constants import emoji
 from bot.keyboards import main_keyboard
 
 

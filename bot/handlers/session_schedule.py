@@ -7,7 +7,7 @@ from telebot.apihelper import ApiException
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 from bot import bot, functions as func
-from bot.constants import loading_text
+from app.constants import loading_text
 
 
 # Session message

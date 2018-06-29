@@ -4,7 +4,7 @@ from __future__ import unicode_literals
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 from bot import bot, functions as func
-from bot.constants import emoji
+from app.constants import emoji
 from bot.keyboards import main_keyboard, settings_keyboard, suburban_keyboard, \
     schedule_keyboard, schedule_editor_keyboard
 

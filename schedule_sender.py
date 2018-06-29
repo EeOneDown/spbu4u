@@ -4,7 +4,7 @@ from __future__ import unicode_literals
 from datetime import datetime, timedelta
 
 from bot import bot
-from bot.constants import server_timedelta
+from app.constants import server_timedelta
 from bot.functions import get_json_day_data, create_schedule_answer, \
     is_full_place, send_long_message, get_connection
 

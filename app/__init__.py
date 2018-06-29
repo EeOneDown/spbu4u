@@ -1,31 +1,39 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-import flask
-from os import path
+from flask import Flask
 
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
+from flask_bootstrap import Bootstrap
 # from flask_sslify import SSLify
 
 from config import Config
 
-basedir = path.abspath(path.dirname(__file__))
+db = SQLAlchemy()
+migrate = Migrate()
+bootstrap = Bootstrap()
 
-app = flask.Flask(__name__)
-app.config.from_object(Config)
-app.config.update(
-    dict(
-        SECRET_KEY="powerful-secretkey",
-        WTF_CSRF_SECRET_KEY="a-csrf-secret-key",
-        SQLALCHEMY_TRACK_MODIFICATIONS=False,
-        SQLALCHEMY_DATABASE_URI="mysql+pymysql://<user>:<password>@<host>:<port>/<db_name>"
+
+def create_app(config_class=Config):
+    app = Flask(__name__)
+    app.config.from_object(config_class)
+    app.config.update(
+        dict(
+            SECRET_KEY="powerful-secretkey",
+            WTF_CSRF_SECRET_KEY="a-csrf-secret-key",
+            SQLALCHEMY_TRACK_MODIFICATIONS=False,
+            SQLALCHEMY_DATABASE_URI="mysql+pymysql://root:myivan@localhost:3306/test_bot_db"
+        )
     )
-)
 
-# sslify = SSLify(app)
-db = SQLAlchemy(app)
-migrate = Migrate(app, db)
+    db.init_app(app)
+    migrate.init_app(app, db)
+    bootstrap.init_app(app)
 
+    from app.main import bp as main_bp
+    app.register_blueprint(main_bp)
 
-from app import routes, models
+    return app
+
+from app import models

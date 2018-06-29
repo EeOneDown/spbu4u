@@ -1,8 +1,12 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from app import app
+from app import create_app, db
+from app.models import User, Group, Lesson
+
+app = create_app()
 
 
-if __name__ == '__main__':
-    app.run()
+@app.shell_context_processor
+def make_shell_context():
+    return {'db': db, 'User': User, 'Group': Group, 'Lesson': Lesson}

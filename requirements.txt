@@ -7,3 +7,4 @@ pyTelegramBotAPI
 flask_sslify
 spbuTimetableAPI>=1.0.1
 python-dotenv
+Flask-Bootstrap

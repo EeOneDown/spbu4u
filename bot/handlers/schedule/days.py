@@ -5,14 +5,14 @@ from datetime import datetime, timedelta
 
 import bot.functions as func
 from bot import bot
-from bot.constants import server_timedelta, week_day_titles, emoji
+from app.constants import server_timedelta, week_day_titles, emoji
 from app.models import User
 
 
 # Today or tomorrow schedule message
-@bot.message_handler(func=lambda mess: mess.text.capitalize() == "Сегодня",
+@bot.message_handler(func=lambda mess: mess.text.title() == "Сегодня",
                      content_types=["text"])
-@bot.message_handler(func=lambda mess: mess.text.capitalize() == "Завтра",
+@bot.message_handler(func=lambda mess: mess.text.title() == "Завтра",
                      content_types=["text"])
 # Schedule for weekday title message
 @bot.message_handler(func=lambda mess:
@@ -27,15 +27,22 @@ from app.models import User
 def today_schedule_handler(message):
     bot.send_chat_action(message.chat.id, "typing")
 
-    user = User.query.filter_by(telegram_id=message.chat.id)
+    user = User.query.filter_by(telegram_id=message.chat.id).first()
 
-    for_date = datetime.today().date() + server_timedelta
-    if message.text.capitalize() == "Завтра":
-        for_date += timedelta(days=1)
+    if message.text.title() == "Сегодня":
+        date = datetime.today().date() + server_timedelta
+    elif message.text.title() == "Завтра":
+        date = datetime.today().date() + server_timedelta + timedelta(days=1)
+    elif message.text.title() in week_day_titles.keys():
+        date = func.get_day_date_by_weekday_title(
+            week_day_titles[message.text.title()]
+        )
+    elif message.text.title() in week_day_titles.values():
+        date = func.get_day_date_by_weekday_title(message.text.title())
+    else:
+        date = func.text_to_date(message.text.lower())
 
-    json_day = func.get_json_day_data(message.chat.id, for_date)
-    answer = func.create_schedule_answer(json_day, user.is_full_place,
-                                         message.chat.id)
+    answer = user.create_answer_for_date(date)
 
     func.send_long_message(bot, answer, message.chat.id)
 
@@ -72,45 +79,6 @@ def current_lesson_handler(message):
                 return
 
     answer = "{0} Пары уже закончились".format(emoji["sleep"])
-    func.send_long_message(bot, answer, message.chat.id)
-
-
-# Schedule for date message
-@bot.message_handler(func=lambda mess: func.text_to_date(mess.text.lower()),
-                     content_types=["text"])
-def schedule_for_date(message):
-    bot.send_chat_action(message.chat.id, "typing")
-    day = func.text_to_date(message.text.lower())
-    json_week = func.get_json_week_data(message.chat.id, for_day=day)
-    json_day = func.get_json_day_data(message.chat.id, day_date=day,
-                                      json_week_data=json_week)
-    full_place = func.is_full_place(message.chat.id)
-    answer = func.create_schedule_answer(json_day, full_place,
-                                         user_id=message.chat.id,
-                                         personal=True)
-    func.send_long_message(bot, answer, message.chat.id)
-
-
-# Schedule for weekday title message
-@bot.message_handler(func=lambda mess:
-                     mess.text.title() in week_day_titles.keys(),
-                     content_types=["text"])
-@bot.message_handler(func=lambda mess:
-                     mess.text.title() in week_day_titles.values(),
-                     content_types=["text"])
-def schedule_for_weekday(message):
-    bot.send_chat_action(message.chat.id, "typing")
-    message.text = message.text.title()
-    if message.text in week_day_titles.values():
-        week_day = message.text
-    else:
-        week_day = week_day_titles[message.text]
-
-    day_date = func.get_day_date_by_weekday_title(week_day)
-    json_day = func.get_json_day_data(message.chat.id, day_date)
-    full_place = func.is_full_place(message.chat.id)
-    answer = func.create_schedule_answer(json_day, full_place,
-                                         message.chat.id)
     func.send_long_message(bot, answer, message.chat.id)
 
 

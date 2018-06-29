@@ -5,7 +5,7 @@ from telebot.apihelper import ApiException
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton, ForceReply
 
 from bot import bot, functions as func
-from bot.constants import emoji, ids
+from app.constants import emoji, ids
 from bot.keyboards import main_keyboard
 
 

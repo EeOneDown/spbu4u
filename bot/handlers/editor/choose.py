@@ -6,7 +6,7 @@ from datetime import datetime
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 from bot import bot, functions as func
-from bot.constants import emoji, max_inline_button_text_len, server_timedelta, \
+from app.constants import emoji, max_inline_button_text_len, server_timedelta, \
     week_day_titles, week_day_number
 
 

@@ -7,7 +7,7 @@ from telebot.apihelper import ApiException
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 from bot import bot
-from bot.constants import emoji, server_timedelta, all_stations
+from app.constants import emoji, server_timedelta, all_stations
 from bot.yandex_timetable import get_yandex_timetable_data
 
 

@@ -8,7 +8,7 @@ from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton, ForceReply
 
 import bot.functions as func
 from bot import bot
-from bot.constants import emoji, loading_text
+from app.constants import emoji, loading_text
 from bot.keyboards import schedule_keyboard
 
 

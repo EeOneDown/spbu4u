@@ -6,7 +6,7 @@ from math import ceil
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 from bot import bot, functions as func
-from bot.constants import max_inline_button_text_len
+from app.constants import max_inline_button_text_len
 
 
 # Return message

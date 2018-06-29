@@ -1,11 +1,10 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from app import db
+from app import db, new_functions as f
 import spbu
-from bot import new_functions as f
 from datetime import timedelta
-from bot.constants import weekend_answer, emoji
+from app.constants import weekend_answer, emoji
 
 
 users_groups = db.Table(
@@ -56,6 +55,7 @@ class User(db.Model):
     univer_station_code = db.Column(db.String(10), default="s9603770",
                                     nullable=False)
     current_group_id = db.Column(db.Integer, db.ForeignKey("groups.id"))
+    educator_id = db.Column(db.Integer, nullable=True)
     groups = db.relationship("Group", secondary=users_groups,
                              back_populates="members", lazy="dynamic")
     added_lessons = db.relationship("Lesson", secondary=users_added_lesson,
@@ -65,29 +65,29 @@ class User(db.Model):
     chosen_educators = db.relationship("Lesson",
                                        secondary=users_chosen_educators,
                                        lazy="dynamic")
-    current_group = db.relationship("Group")
+    __current_group = db.relationship("Group")
 
-    def _parse_event(self, json_event):
-        pass
+    def __parse_event(self, event):
+        return f.create_schedule_answer(event, self.is_full_place)
 
-    def _parse_day_events(self, json_day_events):
+    def __parse_day_events(self, events):
         """
         This method parses the events data from SPBU API
-        :param json_day_events: an element of `DayStudyEvents`
-        :type json_day_events: dict
+        :param events: an element of `DayStudyEvents`
+        :type events: dict
         :return: html safe string
         :rtype: str
         """
         answer = "{0} {1}\n\n".format(
-            emoji["calendar"], json_day_events["DayString"].capitalize()
+            emoji["calendar"], events["DayString"].capitalize()
         )
 
-        events = f.create_events_blocks(
-            f.delete_cancelled_events(json_day_events["DayStudyEvents"])
-        )
-        return answer + str(events)
+        events = f.delete_cancelled_events(events["DayStudyEvents"])
+        for event in events:
+            answer += self.__parse_event(event)
+        return answer
 
-    def get_events_for_date(self, date):
+    def create_answer_for_date(self, date):
         """
         This method gets the schedule for date and parses it
         :param date: date for schedule
@@ -98,18 +98,18 @@ class User(db.Model):
         if self.is_educator:
             """
             In future:
-            json_day_events = spbu.get_educator_events(
+            json_day_events = spbu.get_educator_events(self.current_group_id
                 from_date=date, to_date=date + timedelta(days=1)  
             )["Days"]
             """
             json_day_events = []
         else:
-            json_day_events = self.current_group.get_events(
+            json_day_events = self.__current_group.get_events(
                 from_date=date, to_date=date + timedelta(days=1)
             )["Days"]
 
         if len(json_day_events):
-            answer = self._parse_day_events(json_day_events)
+            answer = self.__parse_day_events(json_day_events[0])
         else:
             answer = weekend_answer
 

@@ -7,7 +7,7 @@ from random import choice
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 from bot import bot, functions as func
-from bot.constants import emoji, server_timedelta, all_stations, loading_text
+from app.constants import emoji, server_timedelta, all_stations, loading_text
 from bot.yandex_timetable import get_yandex_timetable_data
 
 

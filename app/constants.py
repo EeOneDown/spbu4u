@@ -5,11 +5,10 @@ import hmac
 from collections import OrderedDict
 from datetime import timedelta
 from hashlib import sha256
+from config import Config
 
-from app import app
-
-sha_string = hmac.new(bytearray(app.config['SECRET_KEY'], "utf-8"),
-                      bytearray(app.config['OTHER_SECRET_KEY'], "utf-8"),
+sha_string = hmac.new(bytearray(Config.SECRET_KEY, "utf-8"),
+                      bytearray(Config.OTHER_SECRET_KEY, "utf-8"),
                       sha256).hexdigest()
 
 ids = {

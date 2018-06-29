@@ -18,14 +18,6 @@ bootstrap = Bootstrap()
 def create_app(config_class=Config):
     app = Flask(__name__)
     app.config.from_object(config_class)
-    app.config.update(
-        dict(
-            SECRET_KEY="powerful-secretkey",
-            WTF_CSRF_SECRET_KEY="a-csrf-secret-key",
-            SQLALCHEMY_TRACK_MODIFICATIONS=False,
-            SQLALCHEMY_DATABASE_URI="mysql+pymysql://root:myivan@localhost:3306/test_bot_db"
-        )
-    )
 
     db.init_app(app)
     migrate.init_app(app, db)

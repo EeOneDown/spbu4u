@@ -68,6 +68,7 @@ class User(db.Model):
     __current_group = db.relationship("Group")
 
     def __parse_event(self, event):
+        # TODO delete hidden lessons
         return f.create_schedule_answer(event, self.is_full_place)
 
     def __parse_day_events(self, events):

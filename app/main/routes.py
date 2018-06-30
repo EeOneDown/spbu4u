@@ -18,7 +18,7 @@ from app.models import User
 
 @bp.route("/")
 @bp.route("/index")
-def main_page():
+def index():
     from requests import get
 
     url = "https://api.rasp.yandex.net/v3.0/copyright/"

@@ -1,7 +1,10 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
-from app.constants import emoji, subject_short_type
+
 from datetime import datetime
+
+from app.constants import emoji, subject_short_type
+
 
 def delete_cancelled_events(events):
     """

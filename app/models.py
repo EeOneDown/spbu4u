@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from app import db, new_functions as f
-import spbu
 from datetime import timedelta
-from app.constants import week_off_answer, weekend_answer, emoji
 
+import spbu
+
+from app import db, new_functions as f
+from app.constants import week_off_answer, weekend_answer, emoji
 
 users_groups = db.Table(
     "users_groups",

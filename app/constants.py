@@ -5,6 +5,7 @@ import hmac
 from collections import OrderedDict
 from datetime import timedelta
 from hashlib import sha256
+
 from config import Config
 
 sha_string = hmac.new(bytearray(Config.SECRET_KEY, "utf-8"),

@@ -1,10 +1,9 @@
-pymysql
-requests
-Flask
+flask
 flask-sqlalchemy
 flask-migrate
+flask-bootstrap
+pymysql
 pyTelegramBotAPI
-flask_sslify
-spbuTimetableAPI>=1.0.1
 python-dotenv
-Flask-Bootstrap4
+requests
+spbuTimetableAPI>=1.0.1

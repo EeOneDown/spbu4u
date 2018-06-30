@@ -9,11 +9,11 @@ from flask import render_template, request, abort, current_app
 from telebot.apihelper import ApiException
 from telebot.types import Update
 
-from bot import bot
 from app.constants import webhook_url_base, webhook_url_path, ids
-from bot.functions import delete_user, write_log
 from app.main import bp
 from app.models import User
+from bot import bot
+from bot.functions import delete_user, write_log
 
 
 @bp.route("/")

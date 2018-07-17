@@ -8,10 +8,11 @@ from telebot.types import ReplyKeyboardMarkup, ReplyKeyboardRemove
 
 import bot.functions as func
 import bot.registration_functions as reg_func
-from bot import bot
+from app import db
 from app.constants import ids, emoji
+from app.models import User
+from bot import bot
 from bot.keyboards import main_keyboard
-
 
 bot_name = "tt202_bot"
 
@@ -121,7 +122,8 @@ def problem_text_handler(message):
                      content_types=["text"])
 def exit_handler(message):
     bot.send_chat_action(message.chat.id, "typing")
-    func.delete_user(message.chat.id, only_choice=False)
+    User.quey.filter_by(telegram_id=message.chat.id).delete()
+    db.session.commit()
     remove_keyboard = ReplyKeyboardRemove(True)
     answer = "До встречи!"
     bot.send_message(message.chat.id, answer, reply_markup=remove_keyboard)

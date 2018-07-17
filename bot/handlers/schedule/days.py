@@ -3,13 +3,14 @@ from __future__ import unicode_literals
 
 from datetime import datetime, timedelta
 
+from flask import g
+
 import bot.functions as func
-from bot import bot
+import telebot_login
 from app.constants import server_timedelta, week_day_titles, emoji, \
     max_answers_count
-from app.models import User
-from flask import g
-import telebot_login
+from bot import bot
+
 
 # Today or tomorrow schedule message
 @bot.message_handler(func=lambda mess: mess.text.title() == "Сегодня",
@@ -88,11 +89,12 @@ def current_lesson_handler(message):
 # Schedule for interval message
 @bot.message_handler(func=lambda mess: func.text_to_interval(mess.text.lower()),
                      content_types=["text"])
+@telebot_login.login_required
 def schedule_for_interval(message):
     bot.send_chat_action(message.chat.id, "typing")
     from_date, to_date = func.text_to_interval(message.text.lower())
 
-    user = User.query.filter_by(telegram_id=message.chat.id).first()
+    user = g.current_tbot_user
 
     answers = user.create_answers_for_interval(from_date, to_date)
 

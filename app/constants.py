@@ -23,6 +23,7 @@ webhook_url_base = "https://{0}:{1}".format(webhook_host, webhook_port)
 webhook_url_path = "/{0}/".format(sha_string)
 
 max_inline_button_text_len = 32
+max_answers_count = 10
 
 server_timedelta = timedelta(hours=0)
 

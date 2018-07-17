@@ -142,11 +142,8 @@ class User(db.Model):
                 from_date=from_date, to_date=to_date
             )["Days"]
 
-        if len(json_day_events):
-            for event in json_day_events:
+        for event in json_day_events:
                 answers.append(self.__parse_day_events(event))
-        else:
-            answers.append(week_off_answer)
 
         return answers
 

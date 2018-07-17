@@ -5,7 +5,8 @@ from datetime import datetime, timedelta
 
 import bot.functions as func
 from bot import bot
-from app.constants import server_timedelta, week_day_titles, emoji
+from app.constants import server_timedelta, week_day_titles, emoji, \
+    max_answers_count
 from app.models import User
 
 
@@ -44,7 +45,7 @@ def today_schedule_handler(message):
 
     answer = user.create_answer_for_date(date)
 
-    func.send_long_message(bot, answer, message.chat.id)
+    func.send_long_message(bot, answer, user.telegram_id)
 
 
 # Current lesson message
@@ -88,31 +89,21 @@ def current_lesson_handler(message):
 def schedule_for_interval(message):
     bot.send_chat_action(message.chat.id, "typing")
     from_date, to_date = func.text_to_interval(message.text.lower())
-    json_data = func.get_json_interval_data(message.chat.id,
-                                            from_date=from_date,
-                                            to_date=to_date + timedelta(days=1))
-    is_send = False
-    full_place = func.is_full_place(message.chat.id)
-    if len(json_data["Days"]) > 10:
-        answer = "{0} Превышен интервал в <b>10 дней</b>".format(
-            emoji["warning"]
-        )
-        bot.send_message(text=answer, chat_id=message.chat.id,
-                         parse_mode="HTML")
-        return
-    elif len(json_data["Days"]):
-        for day_info in json_data["Days"]:
-            answer = func.create_schedule_answer(day_info, full_place,
-                                                 message.chat.id)
-            if "Выходной" in answer:
-                continue
-            func.send_long_message(bot, answer, message.chat.id)
-            is_send = True
 
-    if not is_send or not len(json_data["Days"]):
-        answer = "{0} С <i>{1}</i> по <i>{2}</i> занятий нет".format(
+    user = User.query.filter_by(telegram_id=message.chat.id).first()
+
+    answers = user.create_answers_for_interval(from_date, to_date)
+
+    if len(answers) > max_answers_count:
+        answers = ["{0} Превышен интервал в <b>{1} дней</b>".format(
+            emoji["warning"], max_answers_count
+        )]
+    elif not len(answers):
+        answers = ["{0} С <i>{1}</i> по <i>{2}</i> занятий нет".format(
             emoji["sleep"], func.datetime_to_string(from_date),
             func.datetime_to_string(to_date)
-        )
-        bot.send_message(text=answer, chat_id=message.chat.id,
+        )]
+
+    for answer in answers:
+        bot.send_message(text=answer, chat_id=user.telegram_id,
                          parse_mode="HTML")

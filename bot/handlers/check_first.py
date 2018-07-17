@@ -122,7 +122,7 @@ def problem_text_handler(message):
                      content_types=["text"])
 def exit_handler(message):
     bot.send_chat_action(message.chat.id, "typing")
-    User.quey.filter_by(telegram_id=message.chat.id).delete()
+    User.query.filter_by(telegram_id=message.chat.id).delete()
     db.session.commit()
     remove_keyboard = ReplyKeyboardRemove(True)
     answer = "До встречи!"

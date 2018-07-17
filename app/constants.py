@@ -139,3 +139,5 @@ special_thanks = \
 
 weekend_answer = "{0} Выходной".format(emoji["sleep"])
 week_off_answer = "{0} Выходная неделя".format(emoji["sleep"])
+ask_register_answer = "Чтобы пользоваться сервисом, необходимо " \
+                      "зарегистрироваться.\nВоспользуйся коммандой /start"

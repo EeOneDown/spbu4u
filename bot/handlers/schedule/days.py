@@ -8,7 +8,8 @@ from bot import bot
 from app.constants import server_timedelta, week_day_titles, emoji, \
     max_answers_count
 from app.models import User
-
+from flask import g
+import telebot_login
 
 # Today or tomorrow schedule message
 @bot.message_handler(func=lambda mess: mess.text.title() == "Сегодня",
@@ -25,6 +26,7 @@ from app.models import User
 # Schedule for date message
 @bot.message_handler(func=lambda mess: func.text_to_date(mess.text.lower()),
                      content_types=["text"])
+@telebot_login.login_required
 def today_schedule_handler(message):
     bot.send_chat_action(message.chat.id, "typing")
 

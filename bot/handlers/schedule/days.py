@@ -30,7 +30,7 @@ import telebot_login
 def today_schedule_handler(message):
     bot.send_chat_action(message.chat.id, "typing")
 
-    user = User.query.filter_by(telegram_id=message.chat.id).first()
+    user = g.current_tbot_user
 
     if message.text.title() == "Сегодня":
         date = datetime.today().date() + server_timedelta

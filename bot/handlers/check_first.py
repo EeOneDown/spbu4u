@@ -13,8 +13,8 @@ from app.constants import ids, emoji
 from app.models import User
 from bot import bot
 from bot.keyboards import main_keyboard
+from flask import current_app
 
-bot_name = "tt202_bot"
 
 # Start message
 @bot.message_handler(commands=["start"])
@@ -24,7 +24,8 @@ bot_name = "tt202_bot"
 def start_handler(message):
     answer = ""
 
-    if bot_name != "Spbu4UBot" and message.chat.id not in ids.values():
+    if current_app.config["BOT_NAME"] != "Spbu4UBot" \
+            and message.chat.id not in ids.values():
         answer = "Это тестовый бот. Используйте @Spbu4UBot"
         bot.send_message(message.chat.id, answer)
         return

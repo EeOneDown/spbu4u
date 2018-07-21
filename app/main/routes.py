@@ -12,8 +12,8 @@ from telebot.types import Update
 from app.constants import webhook_url_base, webhook_url_path, ids
 from app.main import bp
 from app.models import User
-from bot import bot
-from bot.functions import delete_user, write_log
+from tg_bot import bot
+from tg_bot.functions import delete_user, write_log
 
 
 @bp.route("/")
@@ -62,7 +62,7 @@ def webhook():
                                      str(err) + "\n\nWas sent: True")
                 except ApiException as ApiExcept:
                     json_err = loads(ApiExcept.result.text)
-                    if json_err["description"] == "Forbidden: bot was " \
+                    if json_err["description"] == "Forbidden: tg_bot was " \
                                                   "blocked by the user":
                         delete_user(update.message.chat.id)
                         logging.info("USER LEFT {0}".format(
@@ -88,10 +88,10 @@ def test_route():
     return "OK", 200
 
 
-@bp.route("/<tid>/<idate>/<n>")
-def schedule(tid, idate, n):
+@bp.route("/<tg_id>/<idate>/<n>")
+def schedule(tg_id, idate, n):
     from datetime import date
-    user = User.query.filter_by(telegram_id=tid).first()
+    user = User.query.filter_by(tg_id=tg_id).first()
     answers = user.create_answers_for_interval(
         from_date=date(2018, 6, int(idate)),
         to_date=date(2018, 6, int(idate) + int(n)))

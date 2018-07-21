@@ -48,7 +48,7 @@ class User(db.Model):
     __tablename__ = "users"
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    telegram_id = db.Column(db.Integer, index=True, unique=True, nullable=False)
+    tg_id = db.Column(db.Integer, index=True, unique=True, nullable=False)
     is_educator = db.Column(db.Boolean, default=False, nullable=False)
     is_full_place = db.Column(db.Boolean, default=True, nullable=False)
     is_subscribed = db.Column(db.Boolean, default=False, nullable=False)

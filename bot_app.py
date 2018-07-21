@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from bot import bot
+from tg_bot import bot
 from app import create_app
 
 

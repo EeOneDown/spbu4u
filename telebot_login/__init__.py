@@ -7,7 +7,7 @@ from flask import g
 
 from app.constants import ask_register_answer
 from app.models import User
-from bot import bot
+from tg_bot import bot
 
 
 def login_required(func):

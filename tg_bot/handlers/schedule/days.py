@@ -51,6 +51,34 @@ def today_schedule_handler(message):
     func.send_long_message(bot, answer, user.tg_id)
 
 
+# Schedule for interval message
+@bot.message_handler(func=lambda mess: func.text_to_interval(mess.text.lower()),
+                     content_types=["text"])
+@telebot_login.login_required
+def schedule_for_interval(message):
+    bot.send_chat_action(message.chat.id, "typing")
+    from_date, to_date = func.text_to_interval(message.text.lower())
+
+    user = g.current_tbot_user
+
+    answers = user.create_answers_for_interval(from_date, to_date)
+
+    if len(answers) > max_answers_count:
+        answers = ["{0} Превышен интервал в <b>{1} дней</b>".format(
+            emoji["warning"], max_answers_count
+        )]
+    elif not len(answers):
+        answers = ["{0} С <i>{1}</i> по <i>{2}</i> занятий нет".format(
+            emoji["sleep"], func.datetime_to_string(from_date),
+            func.datetime_to_string(to_date)
+        )]
+
+    for answer in answers:
+        bot.send_message(text=answer, chat_id=user.tg_id,
+                         parse_mode="HTML")
+
+
+# TODO NEW FEATURE
 # Current lesson message
 @bot.message_handler(func=lambda mess: "Сейчас" in mess.text.title(),
                      content_types=["text"])
@@ -84,30 +112,3 @@ def current_lesson_handler(message):
 
     answer = "{0} Пары уже закончились".format(emoji["sleep"])
     func.send_long_message(bot, answer, message.chat.id)
-
-
-# Schedule for interval message
-@bot.message_handler(func=lambda mess: func.text_to_interval(mess.text.lower()),
-                     content_types=["text"])
-@telebot_login.login_required
-def schedule_for_interval(message):
-    bot.send_chat_action(message.chat.id, "typing")
-    from_date, to_date = func.text_to_interval(message.text.lower())
-
-    user = g.current_tbot_user
-
-    answers = user.create_answers_for_interval(from_date, to_date)
-
-    if len(answers) > max_answers_count:
-        answers = ["{0} Превышен интервал в <b>{1} дней</b>".format(
-            emoji["warning"], max_answers_count
-        )]
-    elif not len(answers):
-        answers = ["{0} С <i>{1}</i> по <i>{2}</i> занятий нет".format(
-            emoji["sleep"], func.datetime_to_string(from_date),
-            func.datetime_to_string(to_date)
-        )]
-
-    for answer in answers:
-        bot.send_message(text=answer, chat_id=user.tg_id,
-                         parse_mode="HTML")

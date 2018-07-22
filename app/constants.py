@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 
 import hmac
+import re
 from collections import OrderedDict
 from datetime import timedelta
 from hashlib import sha256
@@ -139,5 +140,14 @@ special_thanks = \
 
 weekend_answer = "{0} Выходной".format(emoji["sleep"])
 week_off_answer = "{0} Выходная неделя".format(emoji["sleep"])
+interval_exceeded_answer = "{0} Превышен интервал в <b>{1} дней</b>".format(
+    emoji["warning"], max_answers_count
+)
+interval_off_answer = "{0} С <i>{1}</i> по <i>{2}</i> занятий нет"
 ask_register_answer = "Чтобы пользоваться сервисом, необходимо " \
                       "зарегистрироваться.\nВоспользуйся коммандой /start"
+
+# groups: 0 - day, 3 - month, 5 - year
+reg_before_30 = re.compile(r"^(0?[1-9]|[12]\d)((\.| )(0?[1-9]|1[012]|января|февраля|марта|апреля|мая|ию[нл]я|августа|сентября|октября|ноября|декабря)(\3(20(1[8-9]|[2-9]\d)))?)?$")
+reg_only_30 = re.compile(r"^(30)((\.| )(0[13-9]|1[012]|января|марта|апреля|мая|ию[нл]я|августа|сентября|октября|ноября|декабря)(\3(20(1[8-9]|[2-9]\d)))?)?$")
+reg_only_31 = re.compile(r"^(31)((\.| )(0[13578]|1[02]|января|марта|мая|июля|августа|октября|декабря)(\3(20(1[8-9]|[2-9]\d)))?)?$")

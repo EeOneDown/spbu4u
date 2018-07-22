@@ -5,10 +5,12 @@ from datetime import datetime, timedelta
 
 from flask import g
 
-import tg_bot.functions as func
+import app.new_functions as nf
 import telebot_login
-from app.constants import server_timedelta, week_day_titles, emoji, \
-    max_answers_count
+import tg_bot.functions as func
+from app.constants import (
+    server_timedelta, week_day_titles, emoji
+)
 from tg_bot import bot
 
 
@@ -25,7 +27,7 @@ from tg_bot import bot
                      mess.text.title() in week_day_titles.values(),
                      content_types=["text"])
 # Schedule for date message
-@bot.message_handler(func=lambda mess: func.text_to_date(mess.text.lower()),
+@bot.message_handler(func=lambda mess: nf.text_to_date(mess.text.lower()),
                      content_types=["text"])
 @telebot_login.login_required
 def today_schedule_handler(message):
@@ -38,44 +40,35 @@ def today_schedule_handler(message):
     elif message.text.title() == "Завтра":
         date = datetime.today().date() + server_timedelta + timedelta(days=1)
     elif message.text.title() in week_day_titles.keys():
-        date = func.get_day_date_by_weekday_title(
-            week_day_titles[message.text.title()]
+        date = nf.get_date_by_weekday_title(
+            title=week_day_titles[message.text.title()]
         )
     elif message.text.title() in week_day_titles.values():
-        date = func.get_day_date_by_weekday_title(message.text.title())
+        date = nf.get_date_by_weekday_title(
+            title=message.text.title()
+        )
     else:
-        date = func.text_to_date(message.text.lower())
+        date = nf.text_to_date(message.text.lower())
 
     answer = user.create_answer_for_date(date)
 
-    func.send_long_message(bot, answer, user.tg_id)
+    nf.send_long_message(bot, answer, user.tg_id)
 
 
 # Schedule for interval message
-@bot.message_handler(func=lambda mess: func.text_to_interval(mess.text.lower()),
+@bot.message_handler(func=lambda mess: nf.text_to_interval(mess.text.lower()),
                      content_types=["text"])
 @telebot_login.login_required
 def schedule_for_interval(message):
-    bot.send_chat_action(message.chat.id, "typing")
-    from_date, to_date = func.text_to_interval(message.text.lower())
-
     user = g.current_tbot_user
 
-    answers = user.create_answers_for_interval(from_date, to_date)
+    bot.send_chat_action(user.tg_id, "typing")
 
-    if len(answers) > max_answers_count:
-        answers = ["{0} Превышен интервал в <b>{1} дней</b>".format(
-            emoji["warning"], max_answers_count
-        )]
-    elif not len(answers):
-        answers = ["{0} С <i>{1}</i> по <i>{2}</i> занятий нет".format(
-            emoji["sleep"], func.datetime_to_string(from_date),
-            func.datetime_to_string(to_date)
-        )]
-
+    answers = user.create_answers_for_interval(
+        *nf.text_to_interval(message.text.lower())
+    )
     for answer in answers:
-        bot.send_message(text=answer, chat_id=user.tg_id,
-                         parse_mode="HTML")
+        nf.send_long_message(bot, answer, user.tg_id)
 
 
 # TODO NEW FEATURE

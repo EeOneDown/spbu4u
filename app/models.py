@@ -6,7 +6,11 @@ from datetime import timedelta
 import spbu
 
 from app import db, new_functions as f
-from app.constants import week_off_answer, weekend_answer, emoji
+from app.constants import (
+    week_off_answer, weekend_answer, emoji, max_answers_count,
+    interval_exceeded_answer
+)
+import app.new_functions as nf
 
 users_groups = db.Table(
     "users_groups",
@@ -66,13 +70,13 @@ class User(db.Model):
     chosen_educators = db.relationship("Lesson",
                                        secondary=users_chosen_educators,
                                        lazy="dynamic")
-    __current_group = db.relationship("Group")
+    _current_group = db.relationship("Group")
 
-    def __parse_event(self, event):
+    def _parse_event(self, event):
         # TODO delete hidden lessons
         return f.create_schedule_answer(event, self.is_full_place)
 
-    def __parse_day_events(self, events):
+    def _parse_day_events(self, events):
         """
         This method parses the events data from SPBU API
         :param events: an element of `DayStudyEvents`
@@ -86,7 +90,7 @@ class User(db.Model):
 
         events = f.delete_cancelled_events(events["DayStudyEvents"])
         for event in events:
-            answer += self.__parse_event(event)
+            answer += self._parse_event(event)
         return answer
 
     def create_answer_for_date(self, date):
@@ -106,28 +110,32 @@ class User(db.Model):
             """
             json_day_events = []
         else:
-            json_day_events = self.__current_group.get_events(
+            json_day_events = self._current_group.get_events(
                 from_date=date, to_date=date + timedelta(days=1)
             )["Days"]
 
         if len(json_day_events):
-            answer = self.__parse_day_events(json_day_events[0])
+            answer = self._parse_day_events(json_day_events[0])
         else:
             answer = weekend_answer
 
         return answer
 
-    def create_answers_for_interval(self, from_date, to_date):
+    def create_answers_for_interval(self, from_date, to_date=None):
         """
-        Method to create answers for interval
+        Method to create answers for interval. if no `to_date` will return for
+        7 days
         :param from_date: the datetime the events start from
         :type from_date: datetime.date
-        :param to_date: the datetime the events ends
+        :param to_date: (Optional) the datetime the events ends
         :type to_date: datetime.date
         :return: list of schedule answers
         :rtype: list of str
         """
         answers = []
+
+        if not to_date:
+            to_date = from_date + timedelta(days=7)
 
         if self.is_educator:
             """
@@ -138,13 +146,20 @@ class User(db.Model):
             """
             json_day_events = []
         else:
-            json_day_events = self.__current_group.get_events(
+            json_day_events = self._current_group.get_events(
                 from_date=from_date, to_date=to_date
             )["Days"]
 
         for event in json_day_events:
-                answers.append(self.__parse_day_events(event))
+            answers.append(self._parse_day_events(event))
 
+        if len(answers) > max_answers_count:
+            answers = [interval_exceeded_answer]
+        elif not len(answers):
+            if from_date.weekday() == 1:
+                answers = [week_off_answer]
+            else:
+                answers = [nf.create_interval_off_answer(from_date, to_date)]
         return answers
 
 

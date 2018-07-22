@@ -18,7 +18,7 @@ from tg_bot import bot
 @bot.message_handler(func=lambda mess: mess.text.capitalize() == "Неделя",
                      content_types=["text"])
 @telebot_login.login_required
-def calendar_handler(message):
+def week_handler(message):
     user = g.current_tbot_user
 
     bot.send_chat_action(user.tg_id, "typing")

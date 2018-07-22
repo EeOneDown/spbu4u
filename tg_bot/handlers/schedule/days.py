@@ -8,9 +8,7 @@ from flask import g
 import app.new_functions as nf
 import telebot_login
 import tg_bot.functions as func
-from app.constants import (
-    server_timedelta, week_day_titles, emoji
-)
+from app.constants import server_timedelta, week_day_titles, emoji
 from tg_bot import bot
 
 
@@ -30,10 +28,10 @@ from tg_bot import bot
 @bot.message_handler(func=lambda mess: nf.text_to_date(mess.text.lower()),
                      content_types=["text"])
 @telebot_login.login_required
-def today_schedule_handler(message):
-    bot.send_chat_action(message.chat.id, "typing")
-
+def day_schedule_handler(message):
     user = g.current_tbot_user
+
+    bot.send_chat_action(message.chat.id, "typing")
 
     if message.text.title() == "Сегодня":
         date = datetime.today().date() + server_timedelta
@@ -59,7 +57,7 @@ def today_schedule_handler(message):
 @bot.message_handler(func=lambda mess: nf.text_to_interval(mess.text.lower()),
                      content_types=["text"])
 @telebot_login.login_required
-def schedule_for_interval(message):
+def interval_schedule_handler(message):
     user = g.current_tbot_user
 
     bot.send_chat_action(user.tg_id, "typing")

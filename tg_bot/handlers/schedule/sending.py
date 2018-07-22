@@ -1,54 +1,60 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+from flask import g
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
-import tg_bot.functions as func
+import telebot_login
+from app import db
+from app.constants import (
+    emoji, sending_off_answer, sending_on_answer, sending_info_answer
+)
 from tg_bot import bot
-from app.constants import emoji
 
 
 # Schedule sending message
 @bot.message_handler(func=lambda mess: mess.text == emoji["alarm_clock"],
                      content_types=["text"])
+@telebot_login.login_required
 def sending_handler(message):
-    bot.send_chat_action(message.chat.id, "typing")
-    answer = "Здесь ты можешь <b>подписаться</b> на рассылку расписания на " + \
-             "следующий день или <b>отписаться</b> от неё.\n" + \
-             "Рассылка производится в 21:00"
-    sending_keyboard = InlineKeyboardMarkup(True)
-    if func.is_sending_on(message.chat.id):
+    user = g.current_tbot_user
+
+    bot.send_chat_action(user.tg_id, "typing")
+
+    sending_keyboard = InlineKeyboardMarkup()
+    if user.is_subscribed:
         sending_keyboard.row(
             *[InlineKeyboardButton(text=name, callback_data="Отписаться")
-              for name in [emoji["cross_mark"] + " Отписаться"]])
+              for name in [emoji["cross_mark"] + " Отписаться"]]
+        )
     else:
         sending_keyboard.row(
             *[InlineKeyboardButton(text=name, callback_data="Подписаться")
-              for name in [emoji["check_mark"] + " Подписаться"]])
-    bot.send_message(message.chat.id, answer, parse_mode="HTML",
+              for name in [emoji["check_mark"] + " Подписаться"]]
+        )
+    bot.send_message(user.tg_id, sending_info_answer, parse_mode="HTML",
                      reply_markup=sending_keyboard)
 
 
-# Activate sending callback
+# Subscribe/Unsubscribe for sending callback
 @bot.callback_query_handler(func=lambda call_back:
                             call_back.data == "Подписаться")
-def sending_on_handler(call_back):
-    func.set_sending(call_back.message.chat.id, True)
-    answer = "{0} Рассылка <b>активирована</b>\nЖди рассылку в 21:00" \
-             "".format(emoji["mailbox_on"])
-    bot.edit_message_text(text=answer,
-                          chat_id=call_back.message.chat.id,
-                          message_id=call_back.message.message_id,
-                          parse_mode="HTML")
-
-
-# Deactivate sending callback
 @bot.callback_query_handler(func=lambda call_back:
                             call_back.data == "Отписаться")
-def sending_off_handler(call_back):
-    func.set_sending(call_back.message.chat.id, False)
-    answer = "{0} Рассылка <b>отключена</b>".format(emoji["mailbox_off"])
+@telebot_login.login_required_callback
+def sending_subscribing_handler(call_back):
+    user = g.current_tbot_user
+
+    if call_back.data == "Отписаться":
+        user.is_subscribed = False
+        answer = sending_off_answer
+    else:
+        user.is_subscribed = True
+        answer = sending_on_answer
+
+    db.session.commit()
+
     bot.edit_message_text(text=answer,
-                          chat_id=call_back.message.chat.id,
+                          chat_id=user.tg_id,
                           message_id=call_back.message.message_id,
                           parse_mode="HTML")

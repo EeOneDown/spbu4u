@@ -87,7 +87,7 @@ def g_e_templates(call_back):
 @bot.callback_query_handler(func=lambda call_back:
                             call_back.data == "Удалить")
 @telebot_login.login_required_callback
-def save_current_group_handler(call_back):
+def sav_del_current_status_handler(call_back):
     user = g.current_tbot_user
 
     if call_back.data == "Сохранить":
@@ -125,7 +125,7 @@ def save_current_group_handler(call_back):
 @bot.callback_query_handler(func=lambda call_back:
                             "Выбери преподавателя:" in call_back.message.text)
 @telebot_login.login_required_callback
-def change_template_group_handler(call_back):
+def change_template_handler(call_back):
     user = g.current_tbot_user
 
     if "Выбери группу:" in call_back.message.text:
@@ -150,7 +150,7 @@ def change_template_group_handler(call_back):
 @bot.callback_query_handler(func=lambda call_back:
                             call_back.data == "Перезайти")
 @telebot_login.login_required_callback
-def change_group_handler(call_back):
+def relogin_callback_handler(call_back):
     user = g.current_tbot_user
 
     answer = "<i>Перезайти</i>\nИспользуй /home для отмены"

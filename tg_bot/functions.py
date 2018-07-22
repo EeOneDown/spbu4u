@@ -415,10 +415,12 @@ def create_schedule_answer(day_info, full_place, user_id=None, personal=True,
 
 def create_master_schedule_answer(day_info):
     answer = "{0} {1}\n\n".format(emoji["calendar"], day_info["DayString"])
+
     for event in day_info["DayStudyEvents"]:
         answer += "{0} {1} <i>({2})</i>\n".format(
             emoji["clock"], event["TimeIntervalString"],
-            "; ".join(event["Dates"]))
+            "; ".join(event["Dates"])
+        )
         answer += "<b>"
         subject_type = event["Subject"].split(", ")[-1]
         stripped_subject_type = " ".join(subject_type.split()[:2])
@@ -427,12 +429,15 @@ def create_master_schedule_answer(day_info):
         else:
             answer += subject_type.upper() + " - "
         answer += ", ".join(
-            event["Subject"].split(", ")[:-1]) + "</b>\n"
+            event["Subject"].split(", ")[:-1]
+        ) + "</b>\n"
+
         for location in event["EventLocations"]:
             location_name = location["DisplayName"]
             answer += location_name + " <i>({0})</i>\n".format(
                 "; ".join(name["Item1"] for name in
-                          event["ContingentUnitNames"]))
+                          event["ContingentUnitNames"])
+            )
         answer += "\n"
     return answer
 

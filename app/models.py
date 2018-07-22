@@ -5,12 +5,12 @@ from datetime import timedelta
 
 import spbu
 
+import app.new_functions as nf
 from app import db, new_functions as f
 from app.constants import (
     week_off_answer, weekend_answer, emoji, max_answers_count,
     interval_exceeded_answer
 )
-import app.new_functions as nf
 
 users_groups_templates = db.Table(
     "users_groups",
@@ -218,6 +218,14 @@ class Group(db.Model):
                               back_populates="groups", lazy="dynamic")
 
     def get_events(self, from_date=None, to_date=None, lessons_type=None):
+        """
+        Method to get raw data for group from SPBU
+        :param from_date: from date
+        :param to_date: to date
+        :param lessons_type: type of lessons
+        :return: raw data
+        :rtype: dict
+        """
         return spbu.get_group_events(self.id, from_date, to_date, lessons_type)
 
 
@@ -232,6 +240,39 @@ class Educator(db.Model):
     def get_events(self, from_date=None, to_date=None, lessons_type=None):
         # TODO change spbu method in future
         return spbu.get_group_events(self.id, from_date, to_date, lessons_type)
+
+    def get_term_events(self, is_next_term=False):
+        """
+        Method to get raw data for educator's term from SPBU
+        :param is_next_term: whether to show the events for the next term
+        :type is_next_term: bool
+        :return: raw data
+        :rtype: dict
+        """
+        return spbu.get_educator_events(self.id, is_next_term)
+
+    def create_answers_for_term(self, is_next_term=False):
+        """
+        Method to create educators's term answers
+        :param is_next_term: (Optional) is for next term
+        :type is_next_term: bool
+        :return: list of schedule answers
+        :rtype: list of str
+        """
+        data = self.get_term_events(is_next_term)
+        answers = [
+            "{0} Расписание преподавателя: <b>{1}</b>\n\n{2} {3}".format(
+                emoji["bust_in_silhouette"], data["EducatorLongDisplayText"],
+                emoji["calendar"], data["DateRangeDisplayText"]
+            )
+        ]
+        if not data["HasEvents"]:
+            answers[-1] += "\n\n<i>Нет событий</i>"
+        else:
+            for day in data["EducatorEventsDays"]:
+                if day["DayStudyEventsCount"]:
+                    answers.append(nf.create_master_schedule_answer(day))
+        return answers
 
 
 class Lesson(db.Model):

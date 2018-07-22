@@ -12,7 +12,7 @@ from app.constants import (
 )
 import app.new_functions as nf
 
-users_groups = db.Table(
+users_groups_templates = db.Table(
     "users_groups",
     db.Column("group_id", db.Integer, db.ForeignKey("groups.id"),
               primary_key=True),
@@ -20,6 +20,13 @@ users_groups = db.Table(
               primary_key=True)
 )
 
+users_educators_templates = db.Table(
+    "users_educators",
+    db.Column("educator_id", db.Integer, db.ForeignKey("educators.id"),
+              primary_key=True),
+    db.Column("user_id", db.Integer, db.ForeignKey("users.id"),
+              primary_key=True)
+)
 
 users_added_lesson = db.Table(
     "users_added_lesson",
@@ -60,9 +67,12 @@ class User(db.Model):
     univer_station_code = db.Column(db.String(10), default="s9603770",
                                     nullable=False)
     current_group_id = db.Column(db.Integer, db.ForeignKey("groups.id"))
-    educator_id = db.Column(db.Integer, nullable=True)
-    groups = db.relationship("Group", secondary=users_groups,
+    current_educator_id = db.Column(db.Integer, db.ForeignKey("educators.id"))
+    groups = db.relationship("Group", secondary=users_groups_templates,
                              back_populates="members", lazy="dynamic")
+    educators = db.relationship("Educator",
+                                secondary=users_educators_templates,
+                                back_populates="members", lazy="dynamic")
     added_lessons = db.relationship("Lesson", secondary=users_added_lesson,
                                     lazy="dynamic")
     hidden_lessons = db.relationship("Lesson", secondary=users_hidden_lessons,
@@ -71,6 +81,7 @@ class User(db.Model):
                                        secondary=users_chosen_educators,
                                        lazy="dynamic")
     _current_group = db.relationship("Group")
+    _current_educator = db.relationship("Educator")
 
     def _parse_event(self, event):
         # TODO delete hidden lessons
@@ -102,13 +113,9 @@ class User(db.Model):
         :rtype: str
         """
         if self.is_educator:
-            """
-            In future:
-            json_day_events = spbu.get_educator_events(self.current_group_id
-                from_date=date, to_date=date + timedelta(days=1)  
+            json_day_events = self._current_educator.get_events(
+                from_date=date, to_date=date + timedelta(days=1)
             )["Days"]
-            """
-            json_day_events = []
         else:
             json_day_events = self._current_group.get_events(
                 from_date=date, to_date=date + timedelta(days=1)
@@ -138,13 +145,9 @@ class User(db.Model):
             to_date = from_date + timedelta(days=7)
 
         if self.is_educator:
-            """
-            In future:
-            json_day_events = spbu.get_educator_events(self.current_group_id
-                from_date=from_date, to_date=to_date  
+            json_day_events = self._current_educator.get_events(
+                from_date=from_date, to_date=to_date
             )["Days"]
-            """
-            json_day_events = []
         else:
             json_day_events = self._current_group.get_events(
                 from_date=from_date, to_date=to_date
@@ -162,16 +165,72 @@ class User(db.Model):
                 answers = [nf.create_interval_off_answer(from_date, to_date)]
         return answers
 
+    def get_current_status_title(self):
+        """
+        Gets title of current status (group/educator)
+        :return: suitable title
+        :rtype: str
+        """
+        if self.is_educator:
+            return self._current_educator.title
+        else:
+            return self._current_group.title
+
+    def get_sav_del_button(self):
+        """
+        Gets `Save` or `Delete` text for templates's button
+        :return: text
+        :rtype: str
+        """
+        if self.is_educator and self._current_educator in self.educators \
+                or not self.is_educator and self._current_group in self.groups:
+            return "Удалить"
+        else:
+            return "Сохранить"
+
+    def save_current_status_into_templates(self):
+        """
+        Saves current group/educator into templates
+        :return: None
+        """
+        if self.is_educator:
+            self.educators.append(self._current_educator)
+        else:
+            self.groups.append(self._current_group)
+
+    def delete_current_status_from_templates(self):
+        """
+        Deletes current group/educator from templates
+        :return: None
+        """
+        if self.is_educator:
+            self.educators.remove(self._current_educator)
+        else:
+            self.groups.remove(self._current_group)
+
 
 class Group(db.Model):
     __tablename__ = "groups"
 
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(128))
-    members = db.relationship("User", secondary=users_groups,
+    members = db.relationship("User", secondary=users_groups_templates,
                               back_populates="groups", lazy="dynamic")
 
     def get_events(self, from_date=None, to_date=None, lessons_type=None):
+        return spbu.get_group_events(self.id, from_date, to_date, lessons_type)
+
+
+class Educator(db.Model):
+    __tablename__ = "educators"
+
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(128))
+    members = db.relationship("User", secondary=users_educators_templates,
+                              back_populates="educators", lazy="dynamic")
+
+    def get_events(self, from_date=None, to_date=None, lessons_type=None):
+        # TODO change spbu method in future
         return spbu.get_group_events(self.id, from_date, to_date, lessons_type)
 
 

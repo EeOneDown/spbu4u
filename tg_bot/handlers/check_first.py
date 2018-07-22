@@ -19,7 +19,7 @@ from flask import current_app
 # Start message
 @bot.message_handler(commands=["start"])
 @bot.message_handler(func=lambda mess:
-                     mess.text.capitalize() == "Сменить группу",
+                     mess.text.capitalize() == "Перезайти",
                      content_types=["text"])
 def start_handler(message):
     answer = ""

@@ -1,2 +1,2 @@
-from tg_bot.handlers.schedule import days, week, groups_templates, educators, \
+from tg_bot.handlers.schedule import days, week, templates, educators, \
     sending

@@ -164,6 +164,11 @@ personalization_answer = \
     "<b>Домашняя:</b> {0}\n<b>Университетская:</b> {1}"
 select_home_station = "Выбери домашнюю станцию:"
 select_univer_station = "Выбери университетскую станцию:"
+yandex_error_answer = "Ошибка в обращении к серверу Яндекса. " \
+                      "Попробуйте повторить позже."
+yandex_segment_answer = "{time_mark} <i>Через</i> {lef_time}\n{train_mark} " \
+                        "Отправление в <b>{dep_time}</b> ({arr_time}) " \
+                        "<code>{price}{ruble_sign}</code>\n\n"
 
 # groups: 0 - day, 3 - month, 5 - year
 reg_before_30 = re.compile(r"^(0?[1-9]|[12]\d)((\.| )(0?[1-9]|1[012]|января|февраля|марта|апреля|мая|ию[нл]я|августа|сентября|октября|ноября|декабря)(\3(20(1[8-9]|[2-9]\d)))?)?$")

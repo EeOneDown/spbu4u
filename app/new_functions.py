@@ -9,8 +9,11 @@ from telebot.apihelper import ApiException
 
 from app.constants import (
     emoji, subject_short_type, week_day_number, week_day_titles, months,
-    reg_before_30, reg_only_30, reg_only_31, interval_off_answer
+    reg_before_30, reg_only_30, reg_only_31, interval_off_answer, urls,
+    yandex_error_answer, yandex_segment_answer
 )
+from config import Config
+import requests
 
 
 def delete_cancelled_events(events):
@@ -56,7 +59,9 @@ def datetime_from_string(dt_string):
     :return: datetime object
     :rtype: datetime
     """
-    return datetime.strptime(dt_string, "%Y-%m-%dT%H:%M:%S")
+    return datetime.strptime(
+        dt_string.split("+")[0].split("Z")[0], "%Y-%m-%dT%H:%M:%S"
+    )
 
 
 def get_key_by_value(dct, val):
@@ -290,6 +295,149 @@ def create_master_schedule_answer(day_info):
             )
         answer += "\n"
     return answer
+
+
+def get_hours_minutes_by_seconds(seconds):
+    """
+    Gets hours and minutes by input seconds
+    :param seconds: seconds
+    :type seconds: int
+    :return: hours and minutes
+    :rtype: tuple
+    """
+    m, s = divmod(seconds, 60)
+    h, m = divmod(m, 60)
+    return h, m
+
+
+def get_yandex_raw_data(from_station, to_station, for_date):
+    """
+    Gets yandex raw data and status code
+    :param from_station: `from` station yandex code
+    :type from_station: str
+    :param to_station: `to` station yandex code
+    :type to_station: str
+    :param for_date: date for which data should be received
+    :type for_date: date
+    :return: status code and raw json data
+    :rtype: tuple
+    """
+    params = {
+        "from": from_station,
+        "to": to_station,
+        "apikey": Config.YANDEX_API_KEY,
+        "date": for_date,
+        "format": "json",
+        "lang": "ru_RU",
+        "transport_types": "suburban"
+    }
+    url = urls["ya_search"]
+    req = requests.get(url, params=params)
+    return req.status_code, req.json()
+
+
+def parse_yandex_segment(segment, current_datetime=datetime.now()):
+    """
+    Parses segments data to yandex_segment_answer
+    :param segment: segment's json data from api.rasp.yandex's search method
+    :type segment: dict
+    :param current_datetime: current datetime
+    :type current_datetime: datetime
+    :return: parsed yandex segment answer
+    :rtype: str
+    """
+    departure_datetime = datetime_from_string(segment["departure"])
+    arrival_datetime = datetime_from_string(segment["arrival"])
+
+    hours, minutes = get_hours_minutes_by_seconds(
+        (departure_datetime - current_datetime).seconds
+    )
+
+    if hours:
+        time_mark = emoji["blue_diamond"]
+        lef_time = "{0} ч {1} мин".format(hours, minutes)
+    elif 15.0 < minutes < 60:
+        time_mark = emoji["orange_diamond"],
+        lef_time = "{0} мин".format(minutes)
+    else:
+        time_mark = emoji["runner"]
+        lef_time = "{0} мин".format(minutes)
+
+    if segment["thread"]["express_type"]:
+        train_mark = emoji["express"]
+    else:
+        train_mark = emoji["train"]
+
+    if segment["tickets_info"]:
+        price = str(
+            segment["tickets_info"]["places"][0]["price"]["whole"]
+        )
+        if segment["tickets_info"]["places"][0]["price"]["cents"]:
+            price += ",{0}".format(
+                segment["tickets_info"]["places"][0]["price"]["cents"]
+            )
+    else:
+        price = "?"
+
+    return yandex_segment_answer.format(
+        time_mark=time_mark,
+        lef_time=lef_time,
+        train_mark=train_mark,
+        dep_time=departure_datetime.time().strftime("%H:%M"),
+        arr_time=arrival_datetime.time().strftime("%H:%M"),
+        price=price,
+        ruble_sign=emoji["ruble_sign"]
+    )
+
+
+def create_suburbans_answer(from_code, to_code, for_date, limit=3):
+    """
+    Creates yandex suburbans answer for date by stations codes
+    :param from_code: `from` yandex station code
+    :type from_code: str
+    :param to_code: `to` yandex station code
+    :type to_code: str
+    :param for_date: date for which data should be received
+    :type for_date: datetime.date
+    :param limit: limit of segments in answer
+    :type limit: int
+    :return: dict with keys: `answer`, `is_error` and `is_tomorrow`
+    :rtype: dict
+    """
+    code, data = get_yandex_raw_data(from_code, to_code, for_date)
+
+    if code != 200:
+        return {
+            "answer": yandex_error_answer,
+            "is_tomorrow": False,
+            "is_error": True
+        }
+
+    from_title = data["search"]["from"]["title"]
+    to_title = data["search"]["to"]["title"]
+
+    answer = ""
+
+    for segment in data["segments"]:
+        if len(answer.split("\n\n")) > limit:
+            break
+
+        if datetime_from_string(segment["departure"]) >= datetime.now():
+            answer += parse_yandex_segment(segment)
+
+    if answer:
+        answer = "<b>{0}</b> => <b>{1}</b>\n\n".format(
+            from_title, to_title
+        ) + answer
+        is_tomorrow = False
+    else:
+        for_date = date.today() + timedelta(days=1)
+        answer += create_suburbans_answer(
+            from_code, to_code, for_date, limit=5
+        )["answer"]
+        is_tomorrow = True
+
+    return {"answer": answer, "is_tomorrow": is_tomorrow, "is_error": False}
 
 
 def send_long_message(bot, text, user_id, split="\n\n"):

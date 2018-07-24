@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from datetime import datetime, timedelta
+from datetime import date, timedelta
 
 from flask import g
 
 import app.new_functions as nf
 import telebot_login
 import tg_bot.functions as func
-from app.constants import server_timedelta, week_day_titles, emoji
+from app.constants import week_day_titles, emoji
 from tg_bot import bot
 
 
@@ -34,21 +34,21 @@ def day_schedule_handler(message):
     bot.send_chat_action(message.chat.id, "typing")
 
     if message.text.title() == "Сегодня":
-        date = datetime.today().date() + server_timedelta
+        for_date = date.today()
     elif message.text.title() == "Завтра":
-        date = datetime.today().date() + server_timedelta + timedelta(days=1)
+        for_date = date.today()  + timedelta(days=1)
     elif message.text.title() in week_day_titles.keys():
-        date = nf.get_date_by_weekday_title(
+        for_date = nf.get_date_by_weekday_title(
             title=week_day_titles[message.text.title()]
         )
     elif message.text.title() in week_day_titles.values():
-        date = nf.get_date_by_weekday_title(
+        for_date = nf.get_date_by_weekday_title(
             title=message.text.title()
         )
     else:
-        date = nf.text_to_date(message.text.lower())
+        for_date = nf.text_to_date(message.text.lower())
 
-    answer = user.create_answer_for_date(date)
+    answer = user.create_answer_for_date(for_date)
 
     nf.send_long_message(bot, answer, user.tg_id)
 
@@ -74,9 +74,10 @@ def interval_schedule_handler(message):
 @bot.message_handler(func=lambda mess: "Сейчас" in mess.text.title(),
                      content_types=["text"])
 def current_lesson_handler(message):
+    from datetime import datetime
     bot.send_chat_action(message.chat.id, "typing")
 
-    today = datetime.today() + server_timedelta
+    today = datetime.today()
     json_day = func.get_json_day_data(message.chat.id, today.date())
     full_place = func.is_full_place(message.chat.id)
     answer = func.create_schedule_answer(json_day, full_place, message.chat.id)

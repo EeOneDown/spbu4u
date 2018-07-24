@@ -9,9 +9,11 @@ from hashlib import sha256
 
 from config import Config
 
-sha_string = hmac.new(bytearray(Config.SECRET_KEY, "utf-8"),
-                      bytearray(Config.OTHER_SECRET_KEY, "utf-8"),
-                      sha256).hexdigest()
+sha_string = hmac.new(
+    bytearray(Config.SECRET_KEY, "utf-8"),
+    bytearray(Config.OTHER_SECRET_KEY, "utf-8"),
+    sha256
+).hexdigest()
 
 ids = {
     "my": 200466757,
@@ -26,6 +28,7 @@ webhook_url_path = "/{0}/".format(sha_string)
 max_inline_button_text_len = 32
 max_answers_count = 10
 
+# TODO remove
 server_timedelta = timedelta(hours=0)
 
 urls = {

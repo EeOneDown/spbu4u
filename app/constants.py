@@ -169,6 +169,8 @@ yandex_error_answer = "Ошибка в обращении к серверу Ян
 yandex_segment_answer = "{time_mark} <i>Через</i> {lef_time}\n{train_mark} " \
                         "Отправление в <b>{dep_time}</b> ({arr_time}) " \
                         "<code>{price}{ruble_sign}</code>\n\n"
+fast_trail_answer_select_day = "Начальная: <b>{from_title}</b>\n" \
+                               "Кончная: <b>{to_title}</b>\nВыбери день:"
 
 # groups: 0 - day, 3 - month, 5 - year
 reg_before_30 = re.compile(r"^(0?[1-9]|[12]\d)((\.| )(0?[1-9]|1[012]|января|февраля|марта|апреля|мая|ию[нл]я|августа|сентября|октября|ноября|декабря)(\3(20(1[8-9]|[2-9]\d)))?)?$")

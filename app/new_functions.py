@@ -10,7 +10,7 @@ from telebot.apihelper import ApiException
 from app.constants import (
     emoji, subject_short_type, week_day_number, week_day_titles, months,
     reg_before_30, reg_only_30, reg_only_31, interval_off_answer, urls,
-    yandex_error_answer, yandex_segment_answer
+    yandex_error_answer, yandex_segment_answer, all_stations
 )
 from config import Config
 import requests
@@ -401,17 +401,13 @@ def create_suburbans_answer(from_code, to_code, for_date, limit=3):
     :type for_date: datetime.date
     :param limit: limit of segments in answer
     :type limit: int
-    :return: dict with keys: `answer`, `is_error` and `is_tomorrow`
-    :rtype: dict
+    :return: tuple with `answer`, `is_tomorrow` and `is_error` data
+    :rtype: tuple
     """
     code, data = get_yandex_raw_data(from_code, to_code, for_date)
 
     if code != 200:
-        return {
-            "answer": yandex_error_answer,
-            "is_tomorrow": False,
-            "is_error": True
-        }
+        return yandex_error_answer, False, True
 
     from_title = data["search"]["from"]["title"]
     to_title = data["search"]["to"]["title"]
@@ -434,10 +430,51 @@ def create_suburbans_answer(from_code, to_code, for_date, limit=3):
         for_date = date.today() + timedelta(days=1)
         answer += create_suburbans_answer(
             from_code, to_code, for_date, limit=5
-        )["answer"]
+        )[0]
         is_tomorrow = True
 
-    return {"answer": answer, "is_tomorrow": is_tomorrow, "is_error": False}
+    return answer, is_tomorrow, False
+
+
+def get_station_title_from_text(text, is_end=False):
+    """
+    Gets start/end station title from bot's answer text
+    :param text: bot's answer text
+    :type text: str
+    :param is_end: is get end station title
+    :type is_end: bool
+    :return: station title
+    :rtype: str
+    """
+    return text.split("\n")[int(is_end)].split(": ")[-1]
+
+
+def add_end_station(text, end_title):
+    """
+    Changes answer text by adding end station title
+    :param text: bot's answer text
+    :type text: str
+    :param end_title: end station title
+    :type end_title: str
+    :return: answer text
+    :type: str
+    """
+    return "Начальная: <b>{0}</b>\nКончная: <b>{1}</b>\nВыбери день:".format(
+        get_station_title_from_text(text), end_title
+    )
+
+
+def get_station_code_from_text(text, is_end=False):
+    """
+    Gets start/end station yandex code from bot's answer text
+    :param text: bot's answer text
+    :type text: str
+    :param is_end: is get end station title
+    :type is_end: bool
+    :return: yandex station code
+    :rtype: str
+    """
+    return all_stations[get_station_title_from_text(text, is_end)]
 
 
 def send_long_message(bot, text, user_id, split="\n\n"):

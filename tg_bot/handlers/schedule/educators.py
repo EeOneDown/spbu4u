@@ -56,7 +56,7 @@ def write_educator_name_handler(message):
     if not nf.is_correct_educator_name(name):
         answer = "Недопустимые символы."
         bot.send_message(user.tg_id, answer,
-                         reply_markup=schedule_keyboard)
+                         reply_markup=schedule_keyboard())
         return
 
     try:
@@ -64,13 +64,13 @@ def write_educator_name_handler(message):
     except spbu.ApiException:
         answer = "Во время выполнения запроса произошла ошибка."
         bot.send_message(user.tg_id, answer,
-                         reply_markup=schedule_keyboard)
+                         reply_markup=schedule_keyboard())
         return
 
     if not educators_data["Educators"]:
         answer = "Никого не найдено."
         bot.send_message(user.tg_id, answer,
-                         reply_markup=schedule_keyboard)
+                         reply_markup=schedule_keyboard())
     elif len(educators_data["Educators"]) > 10:
         answer = "Слишком много преподавателей.\n" \
                  "Пожалуйста, <b>уточни</b>."
@@ -80,7 +80,7 @@ def write_educator_name_handler(message):
                          reply_markup=ForceReply(), parse_mode="HTML")
     else:
         bot.send_message(user.tg_id, "Готово!",
-                         reply_markup=schedule_keyboard)
+                         reply_markup=schedule_keyboard())
 
         educators_keyboard = InlineKeyboardMarkup(row_width=1)
         educators_keyboard.add(

@@ -23,7 +23,7 @@ def home_handler(message):
     user = g.current_tbot_user
     bot.send_chat_action(user.tg_id, "typing")
     answer = "Главное меню"
-    bot.send_message(user.tg_id, answer, reply_markup=main_keyboard)
+    bot.send_message(user.tg_id, answer, reply_markup=main_keyboard())
 
 
 # Schedule menu message
@@ -34,7 +34,7 @@ def schedule_handler(message):
     user = g.current_tbot_user
     bot.send_chat_action(user.tg_id, "typing")
     answer = "Меню расписания"
-    bot.send_message(user.tg_id, answer, reply_markup=schedule_keyboard)
+    bot.send_message(user.tg_id, answer, reply_markup=schedule_keyboard())
 
 
 # Suburbans message
@@ -50,7 +50,7 @@ def suburban_handler(message):
              "<a href = 'http://rasp.yandex.ru/'>Яндекс.Расписания</a>"
     bot.send_message(user.tg_id,
                      answer,
-                     reply_markup=suburban_keyboard,
+                     reply_markup=suburban_keyboard(),
                      parse_mode='HTML',
                      disable_web_page_preview=True)
 
@@ -67,7 +67,7 @@ def schedule_editor_handler(message):
     answer = "Редактор расписания"
     bot.send_message(user.tg_id,
                      answer,
-                     reply_markup=schedule_editor_keyboard,
+                     reply_markup=schedule_editor_keyboard(),
                      parse_mode='HTML')
 
 
@@ -80,7 +80,7 @@ def settings_handler(message):
     user = g.current_tbot_user
     bot.send_chat_action(user.tg_id, "typing")
     answer = "Настройки"
-    bot.send_message(user.tg_id, answer, reply_markup=settings_keyboard)
+    bot.send_message(user.tg_id, answer, reply_markup=settings_keyboard())
 
 
 # Rate message

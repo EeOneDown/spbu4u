@@ -1,14 +1,22 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from datetime import datetime, timedelta, time
+from datetime import date
 from random import choice
 
+from flask import g
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
-from tg_bot import bot, functions as func
-from app.constants import emoji, server_timedelta, all_stations, loading_text
-from tg_bot.yandex_timetable import get_yandex_timetable_data
+import telebot_login
+from app import new_functions as nf
+from app.constants import (
+    emoji, all_stations, loading_text, fast_trail_answer_select_day
+)
+from tg_bot import bot
+from tg_bot.keyboards import (
+    start_station_keyboard, end_station_keyboard, select_day_keyboard,
+    update_keyboard
+)
 
 
 # Fast trail messages
@@ -16,36 +24,37 @@ from tg_bot.yandex_timetable import get_yandex_timetable_data
                      content_types=["text"])
 @bot.message_handler(func=lambda mess: mess.text.title() == "Домой",
                      content_types=["text"])
-def to_university_handler(message):
-    bot.send_chat_action(message.chat.id, "typing")
+@telebot_login.login_required
+def fast_trail_handler(message):
+    user = g.current_tbot_user
+
+    bot.send_chat_action(user, "typing")
 
     if message.text.title() == "В Универ":
-        from_station = func.get_station_code(message.chat.id, is_home=True)
-        to_station = func.get_station_code(message.chat.id, is_home=False)
+        from_code = user.home_station_code
+        to_code = user.univer_station_code
     else:
-        from_station = func.get_station_code(message.chat.id, is_home=False)
-        to_station = func.get_station_code(message.chat.id, is_home=True)
+        from_code = user.univer_station_code
+        to_code = user.home_station_code
 
-    server_datetime = datetime.today() + server_timedelta
-    data = get_yandex_timetable_data(from_station, to_station, server_datetime)
-    answer = data["answer"]
+    answer, is_tomorrow, is_error = nf.create_suburbans_answer(
+        from_code=from_code,
+        to_code=to_code,
+        for_date=date.today()
+    )
 
-    update_keyboard = InlineKeyboardMarkup(True)
-    if data["is_OK"]:
-        if data["is_tomorrow"]:
-            bot.send_message(message.chat.id, emoji["warning"] +
-                             " На сегодня нет электричек")
-            update_keyboard.row(*[InlineKeyboardButton(
-                text=name, callback_data=name)
-                for name in ["Все на завтра"]])
-        else:
-            update_keyboard.row(*[InlineKeyboardButton(
-                text=name, callback_data=name)
-                for name in ["Оставшиеся", "Обновить"]])
+    if not is_error:
+        if is_tomorrow:
+            bot.send_message(
+                user.tg_id, emoji["warning"] + " На сегодня нет электричек"
+            )
+        inline_keyboard = update_keyboard(is_tomorrow)
+    else:
+        inline_keyboard = InlineKeyboardMarkup()
 
-    bot.send_message(message.chat.id,
+    bot.send_message(user.tg_id,
                      answer,
-                     reply_markup=update_keyboard,
+                     reply_markup=inline_keyboard,
                      parse_mode='HTML',
                      disable_web_page_preview=True)
 
@@ -53,142 +62,151 @@ def to_university_handler(message):
 # Trail message
 @bot.message_handler(func=lambda mess: mess.text.title() == "Маршрут",
                      content_types=["text"])
+@telebot_login.login_required
 def own_trail_handler(message):
-    answer = "Выбери начальную станцию:"
-    start_station_keyboard = InlineKeyboardMarkup(True)
-    for station_title in all_stations.keys():
-        start_station_keyboard.row(*[InlineKeyboardButton(
-            text=name, callback_data=name) for name in [station_title]])
-    start_station_keyboard.row(*[InlineKeyboardButton(
-            text=name, callback_data=name) for name in ["Домой", "В Универ"]])
-    bot.send_message(message.chat.id, answer,
-                     reply_markup=start_station_keyboard)
+    user = g.current_tbot_user
+
+    bot.send_message(chat_id=user.tg_id,
+                     text="Выбери начальную станцию:",
+                     reply_markup=start_station_keyboard())
 
 
 # personal trails callbacks
 @bot.callback_query_handler(func=lambda call_back: call_back.data == "Домой")
 @bot.callback_query_handler(func=lambda call_back: call_back.data == "В Универ")
+@telebot_login.login_required_callback
 def to_home_or_univer_handler(call_back):
-    user_id = call_back.message.chat.id
+    user = g.current_tbot_user
+
     if call_back.data == "В Универ":
-        from_station = func.get_station_code(user_id, is_home=True)
-        to_station = func.get_station_code(user_id, is_home=False)
+        from_code = user.home_station_code
+        to_code = user.univer_station_code
     else:
-        from_station = func.get_station_code(user_id, is_home=False)
-        to_station = func.get_station_code(user_id, is_home=True)
+        from_code = user.univer_station_code
+        to_code = user.home_station_code
 
-    from_station_title = func.get_key_by_value(all_stations, from_station)
-    to_station_title = func.get_key_by_value(all_stations, to_station)
-
-    answer = "Начальная: <b>{0}</b>\nКончная: <b>{1}</b>\nВыбери день:".format(
-        from_station_title, to_station_title)
-    day_keyboard = InlineKeyboardMarkup(True)
-    day_keyboard.row(*[InlineKeyboardButton(
-        text=name, callback_data=name) for name in ["Сегодня", "Завтра"]])
+    answer = fast_trail_answer_select_day.format(
+        from_title=nf.get_key_by_value(all_stations, from_code),
+        to_title=nf.get_key_by_value(all_stations, to_code)
+    )
     bot.edit_message_text(text=answer,
-                          chat_id=call_back.message.chat.id,
+                          chat_id=user.tg_id,
                           message_id=call_back.message.message_id,
-                          reply_markup=day_keyboard,
+                          reply_markup=select_day_keyboard(),
                           parse_mode="HTML")
 
 
 # From station callback
-@bot.callback_query_handler(func=lambda call_back:
-                            call_back.message.text == "Выбери начальную "
-                                                      "станцию:")
+@bot.callback_query_handler(
+    func=lambda call_back: call_back.message.text == "Выбери начальную станцию:"
+)
+@telebot_login.login_required_callback
 def start_station_handler(call_back):
+    user = g.current_tbot_user
+
     answer = "Начальная: <b>{0}</b>\nВыбери конечную станцию:".format(
-        call_back.data)
-    end_station_keyboard = InlineKeyboardMarkup(True)
-    for station_title in all_stations.keys():
-        if station_title == call_back.data:
-            continue
-        end_station_keyboard.row(*[InlineKeyboardButton(
-            text=name, callback_data=name) for name in [station_title]])
-    end_station_keyboard.row(*[InlineKeyboardButton(
-            text=name, callback_data=name) for name in ["Изменить начальную"]])
+        call_back.data
+    )
     bot.edit_message_text(text=answer,
-                          chat_id=call_back.message.chat.id,
+                          chat_id=user.tg_id,
                           message_id=call_back.message.message_id,
-                          reply_markup=end_station_keyboard,
+                          reply_markup=end_station_keyboard(call_back.data),
                           parse_mode="HTML")
 
 
 # Change start station callback
-@bot.callback_query_handler(func=lambda call_back:
-                            call_back.data == "Изменить начальную")
+@bot.callback_query_handler(
+    func=lambda call_back: call_back.data == "Изменить начальную"
+)
+@telebot_login.login_required_callback
 def change_start_station_handler(call_back):
+    user = g.current_tbot_user
+
     answer = "Выбери начальную станцию:"
-    start_station_keyboard = InlineKeyboardMarkup(True)
-    for station_title in all_stations.keys():
-        start_station_keyboard.row(*[InlineKeyboardButton(
-            text=name, callback_data=name) for name in [station_title]])
+
     bot.edit_message_text(text=answer,
-                          chat_id=call_back.message.chat.id,
+                          chat_id=user.tg_id,
                           message_id=call_back.message.message_id,
-                          reply_markup=start_station_keyboard)
+                          reply_markup=start_station_keyboard())
 
 
 # To station callback
-@bot.callback_query_handler(func=lambda call_back: "Выбери конечную станцию:"
-                                                   in call_back.message.text)
+@bot.callback_query_handler(
+    func=lambda call_back: "Выбери конечную станцию:" in call_back.message.text
+)
+@telebot_login.login_required_callback
 def end_station_handler(call_back):
-    from_station_title = call_back.message.text.split("\n")[0].split(": ")[-1]
-    to_station_title = call_back.data
-    answer = "Начальная: <b>{0}</b>\nКончная: <b>{1}</b>\nВыбери день:".format(
-        from_station_title, to_station_title)
-    day_keyboard = InlineKeyboardMarkup(True)
-    day_keyboard.row(*[InlineKeyboardButton(
-        text=name, callback_data=name) for name in ["Сегодня", "Завтра"]])
+    user = g.current_tbot_user
+
+    answer = nf.add_end_station(call_back.message.text, call_back.data)
+
+    inline_keyboard = select_day_keyboard()
+    inline_keyboard.row(
+        *[InlineKeyboardButton(text=name, callback_data=name)
+          for name in ["Изменить конечную"]]
+    )
     bot.edit_message_text(text=answer,
-                          chat_id=call_back.message.chat.id,
+                          chat_id=user.tg_id,
                           message_id=call_back.message.message_id,
-                          reply_markup=day_keyboard,
+                          reply_markup=inline_keyboard,
                           parse_mode="HTML")
 
 
+# Change end station callback
+@bot.callback_query_handler(
+    func=lambda call_back: call_back.data == "Изменить конечную"
+)
+@telebot_login.login_required_callback
+def change_end_station_handler(call_back):
+    user = g.current_tbot_user
+
+    start_station = nf.get_station_title_from_text(call_back.message.text)
+
+    answer = "Начальная: <b>{0}</b>\nВыбери конечную станцию:".format(
+        start_station
+    )
+    bot.edit_message_text(text=answer,
+                          chat_id=user.tg_id,
+                          message_id=call_back.message.message_id,
+                          reply_markup=end_station_keyboard(start_station))
+
+
 # Day callback
-@bot.callback_query_handler(func=lambda call_back: "Выбери день:"
-                                                   in call_back.message.text)
+@bot.callback_query_handler(
+    func=lambda call_back: "Выбери день:" in call_back.message.text
+)
+@telebot_login.login_required_callback
 def build_trail_handler(call_back):
+    user = g.current_tbot_user
+
     bot_msg = bot.edit_message_text(
         text="{0}\U00002026".format(choice(loading_text["ya_timetable"])),
-        chat_id=call_back.message.chat.id,
+        chat_id=user.tg_id,
         message_id=call_back.message.message_id
     )
-    from_station_title = call_back.message.text.split("\n")[0].split(": ")[-1]
-    to_station_title = call_back.message.text.split("\n")[1].split(": ")[-1]
-    from_station = all_stations[from_station_title]
-    to_station = all_stations[to_station_title]
-
-    if call_back.data == "Завтра":
-        server_datetime = datetime.combine(
-            (datetime.today() + timedelta(days=1)).date(), time())
-        limit = 7
-    else:
-        server_datetime = datetime.today() + server_timedelta
-        limit = 3
-
-    data = get_yandex_timetable_data(from_station, to_station, server_datetime,
-                                     limit)
-    answer = data["answer"]
-
-    update_keyboard = InlineKeyboardMarkup(True)
-    if data["is_OK"]:
-        if call_back.data == "Завтра" or data["is_tomorrow"]:
-            if data["is_tomorrow"]:
+    answer, is_tomorrow, is_error = nf.create_suburbans_answer(
+        from_code=nf.get_station_title_from_text(call_back.message.text),
+        to_code=nf.get_station_title_from_text(
+            call_back.message.text, is_end=True
+        ),
+        for_date=date.today(),
+        limit=7 if call_back.data == "Завтра" else 3
+    )
+    if not is_error:
+        if call_back.data == "Завтра" or is_tomorrow:
+            if is_tomorrow:
                 inline_answer = emoji["warning"] + " На сегодня нет электричек"
-                bot.answer_callback_query(call_back.id, inline_answer,
-                                          show_alert=True)
-            update_keyboard.row(*[InlineKeyboardButton(
-                text=name, callback_data=name) for name in ["Все на завтра"]])
+                bot.answer_callback_query(
+                    call_back.id, inline_answer, show_alert=True
+                )
+            inline_keyboard = update_keyboard(is_tomorrow=True)
         else:
-            update_keyboard.row(*[InlineKeyboardButton(
-                text=name, callback_data=name)
-                for name in ["Оставшиеся", "Обновить"]])
+            inline_keyboard = update_keyboard()
+    else:
+        inline_keyboard = InlineKeyboardMarkup()
 
     bot.edit_message_text(text=answer,
-                          chat_id=call_back.message.chat.id,
+                          chat_id=user.tg_id,
                           message_id=bot_msg.message_id,
-                          reply_markup=update_keyboard,
+                          reply_markup=inline_keyboard,
                           parse_mode="HTML")

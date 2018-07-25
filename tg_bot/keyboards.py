@@ -8,7 +8,8 @@ from app.constants import emoji, all_stations
 
 def main_keyboard():
     """
-    Gets main menu keyboard
+    Creates main menu keyboard
+
     :return: main menu keyboard
     :rtype: types.ReplyKeyboardMarkup
     """
@@ -28,7 +29,8 @@ def main_keyboard():
 
 def schedule_keyboard():
     """
-    Gets schedule menu keyboard
+    Creates schedule menu keyboard
+
     :return: schedule menu keyboard
     :rtype: types.ReplyKeyboardMarkup
     """
@@ -45,7 +47,8 @@ def schedule_keyboard():
 
 def settings_keyboard():
     """
-    Gets settings menu keyboard
+    Creates settings menu keyboard
+
     :return: settings menu keyboard
     :rtype: types.ReplyKeyboardMarkup
     """
@@ -59,7 +62,8 @@ def settings_keyboard():
 
 def suburban_keyboard():
     """
-    Gets suburbans menu keyboard
+    Creates suburbans menu keyboard
+
     :return: suburbans menu keyboard
     :rtype: types.ReplyKeyboardMarkup
     """
@@ -73,7 +77,8 @@ def suburban_keyboard():
 
 def schedule_editor_keyboard():
     """
-    Gets editor keyboard
+    Creates editor keyboard
+
     :return: editor menu keyboard
     :rtype: types.ReplyKeyboardMarkup
     """
@@ -87,7 +92,8 @@ def schedule_editor_keyboard():
 
 def start_station_keyboard():
     """
-    Gets start station keyboard
+    Creates start station keyboard
+
     :return: start station keyboard
     :rtype: types.InlineKeyboardMarkup
     """
@@ -106,6 +112,7 @@ def start_station_keyboard():
 def end_station_keyboard(chosen_station):
     """
     Creates end station inline keyboard
+
     :param chosen_station: chosen station title
     :type chosen_station: str
     :return: inline keyboard
@@ -125,7 +132,8 @@ def end_station_keyboard(chosen_station):
 
 def select_day_keyboard():
     """
-    Gets select day keyboard
+    Creates select day keyboard
+
     :return: select day keyboard
     :rtype: types.InlineKeyboardMarkup
     """
@@ -137,20 +145,33 @@ def select_day_keyboard():
     return inline_keyboard
 
 
-def update_keyboard(is_tomorrow=False):
+def update_keyboard(show_less=False, for_tomorrow=False):
     """
-    Gets suburbans update keyboard
-    :param is_tomorrow:
-    :return:
+    Creates suburbans update keyboard
+
+    :param show_less: is need to use nearest's buttons
+    :type show_less: bool
+    :param for_tomorrow: is need to use tomorrow's buttons
+    :type for_tomorrow: bool
+    :return: suburbans update keyboard
+    :rtype: types.InlineKeyboardMarkup
     """
     inline_keyboard = types.InlineKeyboardMarkup()
 
-    if is_tomorrow:
-        buttons = [types.InlineKeyboardButton(text=name, callback_data=name)
-                   for name in ["Все на завтра"]]
+    if for_tomorrow:
+        if show_less:
+            buttons = [types.InlineKeyboardButton(text=name, callback_data=name)
+                       for name in ["Самые ранние"]]
+        else:
+            buttons = [types.InlineKeyboardButton(text=name, callback_data=name)
+                       for name in ["Все на завтра"]]
     else:
-        buttons = [types.InlineKeyboardButton(text=name, callback_data=name)
-                   for name in ["Оставшиеся", "Обновить"]]
+        if show_less:
+            buttons = [types.InlineKeyboardButton(text=name, callback_data=name)
+                       for name in ["Ближайшие", "Обновить"]]
+        else:
+            buttons = [types.InlineKeyboardButton(text=name, callback_data=name)
+                       for name in ["Оставшиеся", "Обновить"]]
 
     inline_keyboard.row(*buttons)
 

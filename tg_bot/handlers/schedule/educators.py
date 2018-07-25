@@ -18,8 +18,10 @@ from tg_bot.keyboards import schedule_keyboard
 
 
 # Educator search message
-@bot.message_handler(func=lambda mess: mess.text == emoji["bust_in_silhouette"],
-                     content_types=["text"])
+@bot.message_handler(
+    func=lambda mess: mess.text == emoji["bust_in_silhouette"],
+    content_types=["text"]
+)
 @telebot_login.login_required
 def educator_schedule_handler(message):
     user = g.current_tbot_user
@@ -45,7 +47,10 @@ def waiting_for_educator(msg):
 
 
 # Educator name (Force reply) message
-@bot.message_handler(func=waiting_for_educator, content_types=["text"])
+@bot.message_handler(
+    func=waiting_for_educator,
+    content_types=["text"]
+)
 @telebot_login.login_required
 def write_educator_name_handler(message):
     user = g.current_tbot_user

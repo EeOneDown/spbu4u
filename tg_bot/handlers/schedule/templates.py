@@ -12,9 +12,10 @@ from tg_bot.handlers.check_first import start_handler
 
 
 # Templates message
-@bot.message_handler(func=lambda mess:
-                     mess.text == emoji["arrows_counterclockwise"],
-                     content_types=["text"])
+@bot.message_handler(
+    func=lambda mess: mess.text == emoji["arrows_counterclockwise"],
+    content_types=["text"]
+)
 @telebot_login.login_required
 def templates_handler(message):
     user = g.current_tbot_user
@@ -38,10 +39,12 @@ def templates_handler(message):
 
 
 # Groups/Educators templates
-@bot.callback_query_handler(func=lambda call_back:
-                            call_back.data == "Группы")
-@bot.callback_query_handler(func=lambda call_back:
-                            call_back.data == "Преподаватели")
+@bot.callback_query_handler(
+    func=lambda call_back: call_back.data == "Группы"
+)
+@bot.callback_query_handler(
+    func=lambda call_back: call_back.data == "Преподаватели"
+)
 @telebot_login.login_required_callback
 def g_e_templates(call_back):
     user = g.current_tbot_user
@@ -82,10 +85,12 @@ def g_e_templates(call_back):
 
 
 # Save/Delete into/from templates callback
-@bot.callback_query_handler(func=lambda call_back:
-                            call_back.data == "Сохранить")
-@bot.callback_query_handler(func=lambda call_back:
-                            call_back.data == "Удалить")
+@bot.callback_query_handler(
+    func=lambda call_back: call_back.data == "Сохранить"
+)
+@bot.callback_query_handler(
+    func=lambda call_back: call_back.data == "Удалить"
+)
 @telebot_login.login_required_callback
 def sav_del_current_status_handler(call_back):
     user = g.current_tbot_user
@@ -120,10 +125,12 @@ def sav_del_current_status_handler(call_back):
 
 
 # Choose template callback
-@bot.callback_query_handler(func=lambda call_back:
-                            "Выбери группу:" in call_back.message.text)
-@bot.callback_query_handler(func=lambda call_back:
-                            "Выбери преподавателя:" in call_back.message.text)
+@bot.callback_query_handler(
+    func=lambda call_back: "Выбери группу:" in call_back.message.text
+)
+@bot.callback_query_handler(
+    func=lambda call_back: "Выбери преподавателя:" in call_back.message.text
+)
 @telebot_login.login_required_callback
 def change_template_handler(call_back):
     user = g.current_tbot_user
@@ -147,8 +154,9 @@ def change_template_handler(call_back):
 
 
 # Relogin callback
-@bot.callback_query_handler(func=lambda call_back:
-                            call_back.data == "Перезайти")
+@bot.callback_query_handler(
+    func=lambda call_back: call_back.data == "Перезайти"
+)
 @telebot_login.login_required_callback
 def relogin_callback_handler(call_back):
     user = g.current_tbot_user

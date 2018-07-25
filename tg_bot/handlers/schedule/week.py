@@ -15,8 +15,10 @@ from tg_bot import bot
 
 
 # Week schedule message
-@bot.message_handler(func=lambda mess: mess.text.capitalize() == "Неделя",
-                     content_types=["text"])
+@bot.message_handler(
+    func=lambda mess: mess.text.capitalize() == "Неделя",
+    content_types=["text"]
+)
 @telebot_login.login_required
 def week_handler(message):
     user = g.current_tbot_user
@@ -37,9 +39,12 @@ def week_handler(message):
 
 
 # Week schedule callback
-@bot.callback_query_handler(func=lambda call_back:
-                            call_back.data in week_day_number.keys() or
-                            call_back.data == "Вся неделя")
+@bot.callback_query_handler(
+    func=lambda call_back: call_back.data in week_day_number.keys()
+)
+@bot.callback_query_handler(
+    func=lambda call_back: call_back.data == "Вся неделя"
+)
 @telebot_login.login_required_callback
 def select_week_day_schedule_handler(call_back):
     user = g.current_tbot_user
@@ -65,8 +70,9 @@ def select_week_day_schedule_handler(call_back):
 
 
 # All week schedule callback
-@bot.callback_query_handler(func=lambda call_back:
-                            "Расписание на: Неделя" in call_back.message.text)
+@bot.callback_query_handler(
+    func=lambda call_back: "Расписание на: Неделя" in call_back.message.text
+)
 @telebot_login.login_required_callback
 def all_week_schedule_handler(call_back):
     user = g.current_tbot_user
@@ -93,10 +99,12 @@ def all_week_schedule_handler(call_back):
 
 
 # Week type callback
-@bot.callback_query_handler(func=lambda call_back:
-                            call_back.data == "Текущее")
-@bot.callback_query_handler(func=lambda call_back:
-                            call_back.data == "Следующее")
+@bot.callback_query_handler(
+    func=lambda call_back: call_back.data == "Текущее"
+)
+@bot.callback_query_handler(
+    func=lambda call_back: call_back.data == "Следующее"
+)
 @telebot_login.login_required_callback
 def week_day_schedule_handler(call_back):
     user = g.current_tbot_user

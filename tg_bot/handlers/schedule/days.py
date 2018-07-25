@@ -13,20 +13,28 @@ from tg_bot import bot
 
 
 # Today or tomorrow schedule message
-@bot.message_handler(func=lambda mess: mess.text.title() == "Сегодня",
-                     content_types=["text"])
-@bot.message_handler(func=lambda mess: mess.text.title() == "Завтра",
-                     content_types=["text"])
+@bot.message_handler(
+    func=lambda mess: mess.text.title() == "Сегодня",
+    content_types=["text"]
+)
+@bot.message_handler(
+    func=lambda mess: mess.text.title() == "Завтра",
+    content_types=["text"]
+)
 # Schedule for weekday title message
-@bot.message_handler(func=lambda mess:
-                     mess.text.title() in week_day_titles.keys(),
-                     content_types=["text"])
-@bot.message_handler(func=lambda mess:
-                     mess.text.title() in week_day_titles.values(),
-                     content_types=["text"])
+@bot.message_handler(
+    func=lambda mess: mess.text.title() in week_day_titles.keys(),
+    content_types=["text"]
+)
+@bot.message_handler(
+    func=lambda mess: mess.text.title() in week_day_titles.values(),
+    content_types=["text"]
+)
 # Schedule for date message
-@bot.message_handler(func=lambda mess: nf.text_to_date(mess.text.lower()),
-                     content_types=["text"])
+@bot.message_handler(
+    func=lambda mess: nf.text_to_date(mess.text.lower()),
+    content_types=["text"]
+)
 @telebot_login.login_required
 def day_schedule_handler(message):
     user = g.current_tbot_user
@@ -54,8 +62,10 @@ def day_schedule_handler(message):
 
 
 # Schedule for interval message
-@bot.message_handler(func=lambda mess: nf.text_to_interval(mess.text.lower()),
-                     content_types=["text"])
+@bot.message_handler(
+    func=lambda mess: nf.text_to_interval(mess.text.lower()),
+    content_types=["text"]
+)
 @telebot_login.login_required
 def interval_schedule_handler(message):
     user = g.current_tbot_user
@@ -71,8 +81,10 @@ def interval_schedule_handler(message):
 
 # TODO NEW FEATURE
 # Current lesson message
-@bot.message_handler(func=lambda mess: "Сейчас" in mess.text.title(),
-                     content_types=["text"])
+@bot.message_handler(
+    func=lambda mess: "Сейчас" in mess.text.title(),
+    content_types=["text"]
+)
 def current_lesson_handler(message):
     from datetime import datetime
     bot.send_chat_action(message.chat.id, "typing")

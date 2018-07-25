@@ -20,10 +20,14 @@ from tg_bot.keyboards import (
 
 
 # Fast trail messages
-@bot.message_handler(func=lambda mess: mess.text.title() == "В Универ",
-                     content_types=["text"])
-@bot.message_handler(func=lambda mess: mess.text.title() == "Домой",
-                     content_types=["text"])
+@bot.message_handler(
+    func=lambda mess: mess.text.title() == "В Универ",
+    content_types=["text"]
+)
+@bot.message_handler(
+    func=lambda mess: mess.text.title() == "Домой",
+    content_types=["text"]
+)
 @telebot_login.login_required
 def fast_trail_handler(message):
     user = g.current_tbot_user
@@ -72,8 +76,12 @@ def own_trail_handler(message):
 
 
 # personal trails callbacks
-@bot.callback_query_handler(func=lambda call_back: call_back.data == "Домой")
-@bot.callback_query_handler(func=lambda call_back: call_back.data == "В Универ")
+@bot.callback_query_handler(
+    func=lambda call_back: call_back.data == "Домой"
+)
+@bot.callback_query_handler(
+    func=lambda call_back: call_back.data == "В Универ"
+)
 @telebot_login.login_required_callback
 def to_home_or_univer_handler(call_back):
     user = g.current_tbot_user
@@ -185,8 +193,10 @@ def build_trail_handler(call_back):
         message_id=call_back.message.message_id
     )
     answer, is_tomorrow, is_error = nf.create_suburbans_answer(
-        from_code=nf.get_station_title_from_text(call_back.message.text),
-        to_code=nf.get_station_title_from_text(
+        from_code=nf.get_station_code_from_text(
+            call_back.message.text
+        ),
+        to_code=nf.get_station_code_from_text(
             call_back.message.text, is_end=True
         ),
         for_date=date.today(),
@@ -199,7 +209,7 @@ def build_trail_handler(call_back):
                 bot.answer_callback_query(
                     call_back.id, inline_answer, show_alert=True
                 )
-            inline_keyboard = update_keyboard(is_tomorrow=True)
+            inline_keyboard = update_keyboard(for_tomorrow=True)
         else:
             inline_keyboard = update_keyboard()
     else:

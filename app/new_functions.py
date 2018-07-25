@@ -451,7 +451,7 @@ def create_suburbans_answer(from_code, to_code, for_date, limit=3):
     return answer, is_tomorrow, False
 
 
-def get_station_title_from_text(text, is_end=False):
+def get_station_title_from_text(text, is_end=False, is_full=False):
     """
     Gets start/end station title from bot's answer text
 
@@ -459,10 +459,33 @@ def get_station_title_from_text(text, is_end=False):
     :type text: str
     :param is_end: is get end station title
     :type is_end: bool
+    :param is_full: if the text is full answer created by
+    `create_suburbans_answer` function
+    :type is_full: bool
     :return: station title
     :rtype: str
     """
-    return text.split("\n")[int(is_end)].split(": ")[-1]
+    if is_full:
+        return text.split("\n")[0].split(" => ")[int(is_end)]
+    else:
+        return text.split("\n")[int(is_end)].split(": ")[-1]
+
+
+def get_station_code_from_text(text, is_end=False, is_full=False):
+    """
+    Gets start/end station yandex code from bot's answer text
+
+    :param text: bot's answer text
+    :type text: str
+    :param is_end: is get end station title
+    :type is_end: bool
+    :param is_full: if the text is full answer created by
+    `create_suburbans_answer` function
+    :type is_full: bool
+    :return: yandex station code
+    :rtype: str
+    """
+    return all_stations[get_station_title_from_text(text, is_end, is_full)]
 
 
 def add_end_station(text, end_title):
@@ -481,18 +504,24 @@ def add_end_station(text, end_title):
     )
 
 
-def get_station_code_from_text(text, is_end=False):
+def update_suburbans_answer(text, show_more=False, for_tomorrow=False):
     """
-    Gets start/end station yandex code from bot's answer text
+    Updates suburbans answer created by `create_suburbans_answer` function
 
     :param text: bot's answer text
     :type text: str
-    :param is_end: is get end station title
-    :type is_end: bool
-    :return: yandex station code
-    :rtype: str
+    :param show_more: is need to show future trails
+    :type show_more: bool
+    :param for_tomorrow: is need to show trails for tomorrow
+    :type for_tomorrow: bool
+    :return:
     """
-    return all_stations[get_station_title_from_text(text, is_end)]
+    return create_suburbans_answer(
+        from_code=get_station_code_from_text(text, is_full=True),
+        to_code=get_station_code_from_text(text, is_full=True, is_end=True),
+        for_date=date.today() + timedelta(days=int(for_tomorrow)),
+        limit=100 if show_more else (7 if for_tomorrow else 3)
+    )
 
 
 def send_long_message(bot, text, user_id, split="\n\n"):

@@ -13,8 +13,10 @@ from tg_bot import bot
 
 
 # Schedule sending message
-@bot.message_handler(func=lambda mess: mess.text == emoji["alarm_clock"],
-                     content_types=["text"])
+@bot.message_handler(
+    func=lambda mess: mess.text == emoji["alarm_clock"],
+    content_types=["text"]
+)
 @telebot_login.login_required
 def sending_handler(message):
     user = g.current_tbot_user
@@ -37,10 +39,12 @@ def sending_handler(message):
 
 
 # Subscribe/Unsubscribe for sending callback
-@bot.callback_query_handler(func=lambda call_back:
-                            call_back.data == "Подписаться")
-@bot.callback_query_handler(func=lambda call_back:
-                            call_back.data == "Отписаться")
+@bot.callback_query_handler(
+    func=lambda call_back: call_back.data == "Подписаться"
+)
+@bot.callback_query_handler(
+    func=lambda call_back: call_back.data == "Отписаться"
+)
 @telebot_login.login_required_callback
 def sending_subscribing_handler(call_back):
     user = g.current_tbot_user

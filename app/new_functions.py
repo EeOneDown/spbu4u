@@ -413,7 +413,7 @@ def create_suburbans_answer(from_code, to_code, for_date, limit=3):
     :param to_code: `to` yandex station code
     :type to_code: str
     :param for_date: date for which data should be received
-    :type for_date: datetime.date
+    :type for_date: date
     :param limit: limit of segments in answer
     :type limit: int
     :return: tuple with `answer`, `is_tomorrow` and `is_error` data

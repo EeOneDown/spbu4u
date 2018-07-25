@@ -19,6 +19,7 @@ import requests
 def delete_cancelled_events(events):
     """
     Function to delete all cancelled events.
+
     :param events: all elements of `DayStudyEvents`
     :type events: list
     :return: list of available events
@@ -34,6 +35,7 @@ def delete_cancelled_events(events):
 def create_events_blocks(events):
     """
     Function to create list of events grouped by time.
+
     :param events: all (or available) elements of `DayStudyEvents`
     :type events: list
     :return: list of events grouped by time
@@ -54,6 +56,7 @@ def create_events_blocks(events):
 def datetime_from_string(dt_string):
     """
     Converts string to datetime object
+
     :param dt_string: datetime string
     :type dt_string: str
     :return: datetime object
@@ -67,6 +70,7 @@ def datetime_from_string(dt_string):
 def get_key_by_value(dct, val):
     """
     Gets key by value from input dictionary
+
     :param dct: input dictionary
     :type dct: dict
     :param val: value in input dictionary (MUST BE)
@@ -80,6 +84,7 @@ def get_key_by_value(dct, val):
 def get_work_monday(is_next_week=False):
     """
     Returns date of current  or next monday for Mon-Sat, nex monday for Sunday
+
     :param is_next_week: (Optional) is for next week
     :type is_next_week: bool
     :return: monday date
@@ -95,6 +100,7 @@ def get_work_monday(is_next_week=False):
 def get_date_by_weekday_title(title, is_next_week=False):
     """
     Returns date for current or next week by day title
+
     :param title: weekday title (Russian)
     :type title: str
     :param is_next_week: (Optional) is for next week
@@ -110,6 +116,7 @@ def get_date_by_weekday_title(title, is_next_week=False):
 def datetime_to_string(date_value):
     """
     Converts date object to string
+
     :param date_value: date object
     :type date_value: date
     :return: date string
@@ -125,6 +132,7 @@ def text_to_date(text):
     """
     Checks if the text is a date then converts it to a date object or
     returns False
+
     :param text: some text
     :type text: str
     :return: date object or False
@@ -146,6 +154,7 @@ def text_to_interval(text):
     """
     Checks if text is a dates interval and converts it to two date objects or
     returns False
+
     :param text: some text
     :type text: str
     :return: two date objects
@@ -163,6 +172,7 @@ def text_to_interval(text):
 def create_interval_off_answer(from_date, to_date):
     """
     Creates interval off answer for dates
+
     :param from_date: first date
     :type from_date: date
     :param to_date: second date
@@ -180,6 +190,7 @@ def create_interval_off_answer(from_date, to_date):
 def is_correct_educator_name(text):
     """
     Checks if the text is correct
+
     :param text: input text
     :type text: str
     :return: True or False
@@ -300,6 +311,7 @@ def create_master_schedule_answer(day_info):
 def get_hours_minutes_by_seconds(seconds):
     """
     Gets hours and minutes by input seconds
+
     :param seconds: seconds
     :type seconds: int
     :return: hours and minutes
@@ -313,6 +325,7 @@ def get_hours_minutes_by_seconds(seconds):
 def get_yandex_raw_data(from_station, to_station, for_date):
     """
     Gets yandex raw data and status code
+
     :param from_station: `from` station yandex code
     :type from_station: str
     :param to_station: `to` station yandex code
@@ -339,6 +352,7 @@ def get_yandex_raw_data(from_station, to_station, for_date):
 def parse_yandex_segment(segment, current_datetime=datetime.now()):
     """
     Parses segments data to yandex_segment_answer
+
     :param segment: segment's json data from api.rasp.yandex's search method
     :type segment: dict
     :param current_datetime: current datetime
@@ -393,6 +407,7 @@ def parse_yandex_segment(segment, current_datetime=datetime.now()):
 def create_suburbans_answer(from_code, to_code, for_date, limit=3):
     """
     Creates yandex suburbans answer for date by stations codes
+
     :param from_code: `from` yandex station code
     :type from_code: str
     :param to_code: `to` yandex station code
@@ -439,6 +454,7 @@ def create_suburbans_answer(from_code, to_code, for_date, limit=3):
 def get_station_title_from_text(text, is_end=False):
     """
     Gets start/end station title from bot's answer text
+
     :param text: bot's answer text
     :type text: str
     :param is_end: is get end station title
@@ -452,6 +468,7 @@ def get_station_title_from_text(text, is_end=False):
 def add_end_station(text, end_title):
     """
     Changes answer text by adding end station title
+
     :param text: bot's answer text
     :type text: str
     :param end_title: end station title
@@ -467,6 +484,7 @@ def add_end_station(text, end_title):
 def get_station_code_from_text(text, is_end=False):
     """
     Gets start/end station yandex code from bot's answer text
+
     :param text: bot's answer text
     :type text: str
     :param is_end: is get end station title

@@ -90,6 +90,7 @@ class User(db.Model):
     def _parse_day_events(self, events):
         """
         This method parses the events data from SPBU API
+
         :param events: an element of `DayStudyEvents`
         :type events: dict
         :return: html safe string
@@ -107,6 +108,7 @@ class User(db.Model):
     def create_answer_for_date(self, date):
         """
         This method gets the schedule for date and parses it
+
         :param date: date for schedule
         :type date: datetime.date
         :return: html safe string
@@ -132,6 +134,7 @@ class User(db.Model):
         """
         Method to create answers for interval. if no `to_date` will return for
         7 days
+
         :param from_date: the datetime the events start from
         :type from_date: datetime.date
         :param to_date: (Optional) the datetime the events ends
@@ -168,6 +171,7 @@ class User(db.Model):
     def get_current_status_title(self):
         """
         Gets title of current status (group/educator)
+
         :return: suitable title
         :rtype: str
         """
@@ -179,6 +183,7 @@ class User(db.Model):
     def get_sav_del_button(self):
         """
         Gets `Save` or `Delete` text for templates's button
+
         :return: text
         :rtype: str
         """
@@ -191,6 +196,7 @@ class User(db.Model):
     def save_current_status_into_templates(self):
         """
         Saves current group/educator into templates
+
         :return: None
         """
         if self.is_educator:
@@ -201,6 +207,7 @@ class User(db.Model):
     def delete_current_status_from_templates(self):
         """
         Deletes current group/educator from templates
+
         :return: None
         """
         if self.is_educator:
@@ -220,6 +227,7 @@ class Group(db.Model):
     def get_events(self, from_date=None, to_date=None, lessons_type=None):
         """
         Method to get raw data for group from SPBU
+
         :param from_date: from date
         :param to_date: to date
         :param lessons_type: type of lessons
@@ -244,6 +252,7 @@ class Educator(db.Model):
     def get_term_events(self, is_next_term=False):
         """
         Method to get raw data for educator's term from SPBU
+
         :param is_next_term: whether to show the events for the next term
         :type is_next_term: bool
         :return: raw data
@@ -254,6 +263,7 @@ class Educator(db.Model):
     def create_answers_for_term(self, is_next_term=False):
         """
         Method to create educators's term answers
+
         :param is_next_term: (Optional) is for next term
         :type is_next_term: bool
         :return: list of schedule answers

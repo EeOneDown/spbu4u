@@ -14,7 +14,7 @@ from app.constants import (
 )
 from app.models import Educator
 from tg_bot import bot
-from tg_bot.keyboards import schedule_keyboard
+from tg_bot.keyboards import schedule_keyboard, found_educators
 
 
 # Educator search message
@@ -70,22 +70,15 @@ def write_educator_name_handler(message):
         bot.send_message(user.tg_id, ask_for_input_educator,
                          reply_markup=ForceReply(), parse_mode="HTML")
     else:
-        bot.send_message(user.tg_id, "Готово!",
-                         reply_markup=schedule_keyboard())
-
-        educators_keyboard = InlineKeyboardMarkup(row_width=1)
-        educators_keyboard.add(
-            *[InlineKeyboardButton(
-                text=educator["FullName"][:max_inline_button_text_len],
-                callback_data=str(educator["Id"])
-            ) for educator in educators_data["Educators"]]
+        bot.send_message(
+            user.tg_id, "Готово!", reply_markup=schedule_keyboard()
         )
-        educators_keyboard.row(InlineKeyboardButton(
-            text="Отмена", callback_data="Отмена"))
-
-        answer = "{0} Найденные преподаватели:".format(emoji["mag_right"])
-        bot.send_message(user.tg_id, answer,
-                         reply_markup=educators_keyboard, parse_mode="HTML")
+        bot.send_message(
+            chat_id=user.tg_id,
+            text="{0} Найденные преподаватели:".format(emoji["mag_right"]),
+            reply_markup=found_educators(educators_data),
+            parse_mode="HTML"
+        )
 
 
 # Choose educator callback

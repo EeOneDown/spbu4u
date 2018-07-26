@@ -330,7 +330,30 @@ def special_thanks_keyboard():
     """
     inline_keyboard = InlineKeyboardMarkup()
     inline_keyboard.row(
-        *[InlineKeyboardButton(text=name, callback_data=name) for
-          name in ["Благодарности"]]
+        *[InlineKeyboardButton(text=name, callback_data=name)
+          for name in ["Благодарности"]]
     )
+    return inline_keyboard
+
+
+def found_educators(data, need_cancel=True):
+    """
+    Creates inline keyboard with found educators
+
+    :param data: spbu api json response
+    :type data: dict
+    :param need_cancel: is need to add `cancel` button
+    :return:
+    """
+    inline_keyboard = InlineKeyboardMarkup(row_width=1)
+    inline_keyboard.add(
+        *[InlineKeyboardButton(
+            text=educator["FullName"][:max_inline_button_text_len],
+            callback_data=str(educator["Id"])
+        ) for educator in data["Educators"]]
+    )
+    if need_cancel:
+        inline_keyboard.row(InlineKeyboardButton(
+            text="Отмена", callback_data="Отмена")
+        )
     return inline_keyboard

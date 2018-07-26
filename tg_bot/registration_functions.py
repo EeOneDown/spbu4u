@@ -87,7 +87,7 @@ def select_division(message):
 
 
 def select_study_level(message):
-    from tg_bot.handlers.check_first import start_handler
+    from tg_bot.handlers.start import start_handler
 
     answer = ""
 
@@ -356,7 +356,7 @@ def select_student_group(message):
 
 
 def confirm_choice(message):
-    from tg_bot.handlers.check_first import start_handler
+    from tg_bot.handlers.start import start_handler
 
     if message.text == "Все верно":
         sql_con = functions.get_connection()

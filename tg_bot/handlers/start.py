@@ -5,6 +5,7 @@ from json import dumps
 
 import spbu
 from telebot.types import ReplyKeyboardMarkup, ReplyKeyboardRemove
+from telebot.apihelper import ApiException
 
 import tg_bot.functions as func
 import tg_bot.registration_functions as reg_func
@@ -18,9 +19,10 @@ from flask import current_app
 
 # Start message
 @bot.message_handler(commands=["start"])
-@bot.message_handler(func=lambda mess:
-                     mess.text.capitalize() == "Перезайти",
-                     content_types=["text"])
+@bot.message_handler(
+    func=lambda mess: mess.text.capitalize() == "Перезайти",
+    content_types=["text"]
+)
 def start_handler(message):
     answer = ""
 
@@ -103,8 +105,11 @@ def start_handler(message):
 
 
 # Support message
-@bot.message_handler(func=lambda mess: mess.text.capitalize() == "Поддержка",
-                     content_types=["text"])
+@bot.message_handler(commands=["support"])
+@bot.message_handler(
+    func=lambda mess: mess.text.capitalize() == "Поддержка",
+    content_types=["text"]
+)
 def problem_text_handler(message):
     bot.send_chat_action(message.chat.id, "typing")
     answer = "Если возникла проблема, то:\n" \
@@ -119,8 +124,10 @@ def problem_text_handler(message):
 
 # Exit message
 @bot.message_handler(commands=["exit"])
-@bot.message_handler(func=lambda mess: mess.text.capitalize() == "Завершить",
-                     content_types=["text"])
+@bot.message_handler(
+    func=lambda mess: mess.text.capitalize() == "Завершить",
+    content_types=["text"]
+)
 def exit_handler(message):
     bot.send_chat_action(message.chat.id, "typing")
     User.query.filter_by(telegram_id=message.chat.id).delete()
@@ -128,3 +135,18 @@ def exit_handler(message):
     remove_keyboard = ReplyKeyboardRemove(True)
     answer = "До встречи!"
     bot.send_message(message.chat.id, answer, reply_markup=remove_keyboard)
+
+
+# Cancel callback
+@bot.callback_query_handler(
+    func=lambda call_back: call_back.data == "Отмена"
+)
+def cancel_handler(call_back):
+    try:
+        bot.edit_message_text(
+            text="Отмена",
+            chat_id=call_back.message.chat.id,
+            message_id=call_back.message.message_id
+        )
+    except ApiException:
+        pass

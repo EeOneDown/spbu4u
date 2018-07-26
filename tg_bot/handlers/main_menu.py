@@ -94,6 +94,7 @@ def settings_handler(message):
     bot.send_message(user.tg_id, answer, reply_markup=settings_keyboard())
 
 
+# Rate message
 @bot.message_handler(
     func=lambda mess: mess.text == emoji["star"],
     content_types=["text"]
@@ -102,7 +103,7 @@ def rate_handler(message):
     user = g.current_tbot_user
     bot.send_chat_action(user.tg_id, "typing")
     answer = "Оцените качество сервиса:"
-    # TODO
+    # TODO remove?
     user_rate = func.get_user_rate(message.chat.id)
     rate_keyboard = InlineKeyboardMarkup(row_width=5)
     rate_keyboard.add(*[InlineKeyboardButton(
@@ -114,4 +115,3 @@ def rate_handler(message):
           for name in ["Связь", "Статистика"]])
     bot.send_message(user.tg_id, answer, parse_mode="HTML",
                      reply_markup=rate_keyboard)
-# Rate message

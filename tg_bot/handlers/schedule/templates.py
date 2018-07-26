@@ -8,7 +8,7 @@ import telebot_login
 from app import db
 from app.constants import emoji, templates_answer
 from tg_bot import bot
-from tg_bot.handlers.check_first import start_handler
+from tg_bot.handlers.start import start_handler
 
 
 # Templates message

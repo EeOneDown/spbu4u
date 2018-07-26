@@ -1,4 +1,12 @@
-from tg_bot.handlers import schedule, session_schedule, suburbans, editor, rate, \
-    other_text, inline_handlers
-"""check_first, info, registration, cancellations, \
-    main_menu, """
+from tg_bot.handlers import (
+    start,  # in progress
+    info,
+    main_menu,
+    schedule,
+    # session_schedule,
+    suburbans,
+    # editor,
+    # rate,
+    # other_text,
+    # inline_handlers
+)

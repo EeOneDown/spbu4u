@@ -176,3 +176,18 @@ def update_keyboard(show_less=False, for_tomorrow=False):
     inline_keyboard.row(*buttons)
 
     return inline_keyboard
+
+
+def special_thanks_keyboard():
+    """
+    Creates special thanks keyboard
+
+    :return: special thanks keyboard
+    :rtype: types.InlineKeyboardMarkup
+    """
+    inline_keyboard = types.InlineKeyboardMarkup()
+    inline_keyboard.row(
+        *[types.InlineKeyboardButton(text=name, callback_data=name) for
+          name in ["Благодарности"]]
+    )
+    return inline_keyboard

@@ -1,13 +1,12 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-import tg_bot.functions as func
+import telebot_login
 from tg_bot import bot
 
 
 # Other message
 @bot.message_handler(func=lambda mess: True, content_types=["text"])
+@telebot_login.login_required
 def other_text_handler(message):
-    bot.send_chat_action(message.chat.id, "typing")
-    answer = "Не понимаю"
-    func.send_long_message(bot, answer, message.chat.id)
+    bot.reply_to(message, "Не понимаю")

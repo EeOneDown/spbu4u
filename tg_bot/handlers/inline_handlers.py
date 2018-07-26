@@ -5,48 +5,39 @@ from datetime import datetime
 
 from telebot.types import InlineQueryResultArticle, InputTextMessageContent
 
-import tg_bot.functions as func
+from flask import g
 from tg_bot import bot
 from app.constants import week_day_titles, week_day_number, server_timedelta
+from app import new_functions as nf
+import telebot_login
 
 
-@bot.inline_handler(func=lambda query:
-                    not func.is_user_exist(query.from_user.id))
-def inline_query_not_exist_user(inline_query):
-    text = "Необходимо зарегистрироваться в группу"
-    bot.answer_inline_query(inline_query.id, [], switch_pm_text=text,
-                            switch_pm_parameter="new_from_inline",
-                            cache_time=1, is_personal=True)
-
-
-@bot.inline_handler(func=lambda query:
-                    query.query.title() in week_day_titles.values())
+@bot.inline_handler(
+    func=lambda query: query.query.title() in week_day_titles.values()
+)
+@telebot_login.login_required_inline
 def inline_query_weekday_schedule_handler(inline_query):
-    user_id = inline_query.from_user.id
-    week_day = inline_query.query.title()
+    user = g.current_tbot_user
 
-    day_date = func.get_day_date_by_weekday_title(week_day)
-    json_day = func.get_json_day_data(user_id, day_date)
-    full_place = func.is_full_place(user_id)
-    answer = func.create_schedule_answer(json_day, full_place, user_id)
+    for_date = nf.get_date_by_weekday_title(inline_query.query.title())
 
-    group_info = func.get_current_group(user_id)
-
-    week_num = (datetime.today() + server_timedelta).isocalendar()[1]
+    answer = user.create_answer_for_date(for_date)
 
     r = InlineQueryResultArticle(
-        id="{0}_{1}_{2}_{3}".format(user_id, group_info[0], week_num,
-                                    week_day_number[week_day]),
+        id="{0}_{1}".format(user.id, for_date),
         title=answer.split("\n\n")[0],
         input_message_content=InputTextMessageContent(
             answer, parse_mode="HTML"
         ),
-        description=group_info[1]
+        description=user.get_current_status_title()
     )
     bot.answer_inline_query(inline_query.id, [r], cache_time=1,
                             is_personal=True)
 
 
 @bot.inline_handler(func=lambda query: True)
+@telebot_login.login_required_inline
 def inline_query_other_text_handler(inline_query):
-    bot.answer_inline_query(inline_query.id, [], cache_time=1, is_personal=True)
+    user = g.current_tbot_user
+
+    bot.answer_inline_query(user.tg_id, [], cache_time=1, is_personal=True)

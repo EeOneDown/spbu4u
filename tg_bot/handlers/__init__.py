@@ -8,6 +8,6 @@ from tg_bot.handlers import (
     suburbans,
     # editor,
     # rate,
-    # other_text,
-    # inline_handlers
+    other_text,
+    inline_handlers
 )

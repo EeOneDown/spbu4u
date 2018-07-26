@@ -4,7 +4,7 @@ from __future__ import unicode_literals
 from random import choice
 
 import spbu
-from flask import current_app as ca, g
+from flask import g
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton, ForceReply
 
 import telebot_login
@@ -32,23 +32,9 @@ def educator_schedule_handler(message):
                      reply_markup=ForceReply(), parse_mode="HTML")
 
 
-def waiting_for_educator(msg):
-    """
-    Checks if the message is a reply to ask for input educator
-    :param msg: bot's message
-    :return: True or False
-    :rtype: bool
-    """
-    if msg.reply_to_message:
-        if msg.reply_to_message.from_user.username == ca.config["BOT_NAME"]:
-            if msg.reply_to_message.text == ask_for_input_educator:
-                return True
-    return False
-
-
 # Educator name (Force reply) message
 @bot.message_handler(
-    func=waiting_for_educator,
+    func=lambda mess: nf.bot_waiting_for(mess, ask_for_input_educator),
     content_types=["text"]
 )
 @telebot_login.login_required

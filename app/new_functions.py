@@ -6,6 +6,7 @@ import re
 from datetime import datetime, timedelta, date
 
 from telebot.apihelper import ApiException
+from telebot.types import Message
 
 from app.constants import (
     emoji, subject_short_type, week_day_number, week_day_titles, months,
@@ -522,6 +523,24 @@ def update_suburbans_answer(text, show_more=False, for_tomorrow=False):
         for_date=date.today() + timedelta(days=int(for_tomorrow)),
         limit=100 if show_more else (7 if for_tomorrow else 3)
     )
+
+
+def bot_waiting_for(msg, waiting_bot_text):
+    """
+    Checks if the message is a reply to ask for input educator
+
+    :param msg: bot's message
+    :type msg: Message
+    :param waiting_bot_text: text which bot sent
+    :type waiting_bot_text: str
+    :return: True or False
+    :rtype: bool
+    """
+    if msg.reply_to_message:
+        if msg.reply_to_message.from_user.username == Config.BOT_NAME:
+            if msg.reply_to_message.text == waiting_bot_text:
+                return True
+    return False
 
 
 def send_long_message(bot, text, user_id, split="\n\n"):

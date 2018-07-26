@@ -1,5 +1,6 @@
 from tg_bot.handlers import (
-    start,  # in progress
+    start,
+    registration,
     info,
     main_menu,
     schedule,

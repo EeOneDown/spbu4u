@@ -174,6 +174,19 @@ yandex_segment_answer = "{time_mark} <i>Через</i> {lef_time}\n{train_mark} 
                         "<code>{price}{ruble_sign}</code>\n\n"
 fast_trail_answer_select_day = "Начальная: <b>{from_title}</b>\n" \
                                "Кончная: <b>{to_title}</b>\nВыбери день:"
+support_answer = "Если возникла проблема, то:\n" \
+                 "1. Возможно, информация по этому поводу есть в нашем канале" \
+                 " - @Spbu4u_news;\n" \
+                 "2. Ты всегда можешь связаться с " \
+                 "<a href='https://t.me/eeonedown'>разработчиком</a>."
+main_menu_first_answer = \
+    "Главное меню\n\n{0} - информация о боте\n{1} - оценить бота\n" \
+    "{2} - настройки\n{3} - электрички\n{4} - <b>редактор расписания</b>\n" \
+    "@Spbu4u_news - новости бота".format(
+        emoji["info"], emoji["star"], emoji["settings"], emoji["suburban"],
+        emoji["editor"]
+    )
+ask_for_input_educator_register = ""
 
 # groups: 0 - day, 3 - month, 5 - year
 reg_before_30 = re.compile(r"^(0?[1-9]|[12]\d)((\.| )(0?[1-9]|1[012]|января|февраля|марта|апреля|мая|ию[нл]я|августа|сентября|октября|ноября|декабря)(\3(20(1[8-9]|[2-9]\d)))?)?$")

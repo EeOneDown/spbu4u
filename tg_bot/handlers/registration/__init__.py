@@ -1,0 +1,1 @@
+from tg_bot.handlers.registration import as_sudent, as_educator

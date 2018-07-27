@@ -27,7 +27,7 @@ def place_handler(message):
             "Полностью" if user.is_full_place else "Только аудитория"
         ),
         parse_mode="HTML",
-        reply_markup=place_keyboard
+        reply_markup=place_keyboard(user.is_full_place)
     )
 
 

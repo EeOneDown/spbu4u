@@ -1,13 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-import spbu
-
-from telebot.types import (
-    InlineKeyboardMarkup, InlineKeyboardButton, ReplyKeyboardMarkup
-)
-from datetime import date
-from app.constants import emoji, all_stations, max_inline_button_text_len
+from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 
 def place_keyboard(is_full_place):

@@ -4,7 +4,7 @@ from __future__ import unicode_literals
 from flask import g
 
 import telebot_login
-from app import db, new_functions as nf
+from app import db
 from app.constants import place_editor_answer
 from tg_bot import bot
 from tg_bot.keyboards import place_keyboard
@@ -48,7 +48,7 @@ def full_place_on_handler(call_back):
     db.session.commit()
 
     bot.edit_message_text(
-        text=nf.get_place_edited_answer(user.is_full_place),
+        text=user.get_place_edited_answer(),
         chat_id=user.tg_id,
         message_id=call_back.message.message_id,
         parse_mode="HTML"

@@ -11,8 +11,7 @@ from telebot.types import Message
 from app.constants import (
     emoji, subject_short_type, week_day_number, week_day_titles, months,
     reg_before_30, reg_only_30, reg_only_31, interval_off_answer, urls,
-    yandex_error_answer, yandex_segment_answer, all_stations,
-    changed_to_full_answer, changed_to_class_answer
+    yandex_error_answer, yandex_segment_answer, all_stations
 )
 from config import Config
 import requests
@@ -542,21 +541,6 @@ def bot_waiting_for(msg, waiting_bot_text):
             if msg.reply_to_message.text == waiting_bot_text:
                 return True
     return False
-
-
-def get_place_edited_answer(is_full_place):
-    """
-    Gets place edited answer for place type
-
-    :param is_full_place: new user's `is_full_place` value
-    :type is_full_place: bool
-    :return: suitable answer
-    :rtype: str
-    """
-    if is_full_place:
-        return changed_to_full_answer
-    else:
-        return changed_to_class_answer
 
 
 def send_long_message(bot, text, user_id, split="\n\n"):

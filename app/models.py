@@ -9,8 +9,9 @@ import app.new_functions as nf
 from app import db, new_functions as f
 from app.constants import (
     week_off_answer, weekend_answer, emoji, max_answers_count,
-    interval_exceeded_answer
+    interval_exceeded_answer, changed_to_full_answer, changed_to_class_answer
 )
+
 
 users_groups_templates = db.Table(
     "users_groups",
@@ -214,6 +215,18 @@ class User(db.Model):
             self.educators.remove(self._current_educator)
         else:
             self.groups.remove(self._current_group)
+
+    def get_place_edited_answer(self):
+        """
+        Gets place edited answer for place type
+
+        :return: suitable answer
+        :rtype: str
+        """
+        if self.is_full_place:
+            return changed_to_full_answer
+        else:
+            return changed_to_class_answer
 
 
 class Group(db.Model):

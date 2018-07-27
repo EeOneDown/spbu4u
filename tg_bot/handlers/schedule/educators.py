@@ -5,16 +5,14 @@ from random import choice
 
 import spbu
 from flask import g
-from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton, ForceReply
+from telebot.types import ForceReply
 
 import telebot_login
 from app import new_functions as nf
-from app.constants import (
-    emoji, loading_text, ask_for_input_educator, max_inline_button_text_len
-)
+from app.constants import emoji, loading_text, ask_for_input_educator
 from app.models import Educator
 from tg_bot import bot
-from tg_bot.keyboards import schedule_keyboard, found_educators
+from tg_bot.keyboards import schedule_keyboard, found_educators_keyboard
 
 
 # Educator search message
@@ -76,7 +74,9 @@ def write_educator_name_handler(message):
         bot.send_message(
             chat_id=user.tg_id,
             text="{0} Найденные преподаватели:".format(emoji["mag_right"]),
-            reply_markup=found_educators(educators_data),
+            reply_markup=found_educators_keyboard(
+                educators_data, need_cancel=True
+            ),
             parse_mode="HTML"
         )
 

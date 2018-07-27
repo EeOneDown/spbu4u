@@ -10,7 +10,7 @@ from app.constants import (
 )
 from app.models import User, Educator
 from tg_bot import bot
-from tg_bot.keyboards import found_educators, main_keyboard
+from tg_bot.keyboards import found_educators_keyboard, main_keyboard
 
 
 # Educator status callback
@@ -68,7 +68,7 @@ def select_educator(message):
             bot.send_message(
                 chat_id=message.chat.id,
                 text="Выбери преподавателя:",
-                reply_markup=found_educators(data, need_cancel=False)
+                reply_markup=found_educators_keyboard(data)
             )
     if is_error:
         bot.send_message(

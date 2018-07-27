@@ -19,7 +19,7 @@ import telebot_login
         mess.text == emoji["back"],
     content_types=["text"]
 )
-@telebot_login.login_required
+@telebot_login.login_required_message
 def home_handler(message):
     user = g.current_tbot_user
     bot.send_chat_action(user.tg_id, "typing")
@@ -32,7 +32,7 @@ def home_handler(message):
     func=lambda mess: mess.text.capitalize() == "Расписание",
     content_types=["text"]
 )
-@telebot_login.login_required
+@telebot_login.login_required_message
 def schedule_handler(message):
     user = g.current_tbot_user
     bot.send_chat_action(user.tg_id, "typing")
@@ -45,7 +45,7 @@ def schedule_handler(message):
     func=lambda mess: mess.text == emoji["suburban"],
     content_types=["text"]
 )
-@telebot_login.login_required
+@telebot_login.login_required_message
 def suburban_handler(message):
     user = g.current_tbot_user
     bot.send_chat_action(user.tg_id, "typing")
@@ -69,7 +69,7 @@ def suburban_handler(message):
     func=lambda mess: mess.text == emoji["editor"],
     content_types=["text"]
 )
-@telebot_login.login_required
+@telebot_login.login_required_message
 def schedule_editor_handler(message):
     user = g.current_tbot_user
     bot.send_chat_action(user.tg_id, "typing")
@@ -86,7 +86,7 @@ def schedule_editor_handler(message):
     func=lambda mess: mess.text == emoji["settings"],
     content_types=["text"]
 )
-@telebot_login.login_required
+@telebot_login.login_required_message
 def settings_handler(message):
     user = g.current_tbot_user
     bot.send_chat_action(user.tg_id, "typing")

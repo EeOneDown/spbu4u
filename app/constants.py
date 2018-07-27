@@ -186,7 +186,11 @@ main_menu_first_answer = \
         emoji["info"], emoji["star"], emoji["settings"], emoji["suburban"],
         emoji["editor"]
     )
-ask_for_input_educator_register = ""
+ask_for_input_educator_register = "Введи ФИО преподавателя:"
+place_editor_answer = "Здесь ты можешь выбрать отображаемый формат адреса\n" \
+                      "Сейчас: <b>{0}</b>"
+changed_to_full_answer = "Теперь адрес отображается <b>полностью</b>"
+changed_to_class_answer = "Теперь отображается <b>только аудитория</b>"
 
 # groups: 0 - day, 3 - month, 5 - year
 reg_before_30 = re.compile(r"^(0?[1-9]|[12]\d)((\.| )(0?[1-9]|1[012]|января|февраля|марта|апреля|мая|ию[нл]я|августа|сентября|октября|ноября|декабря)(\3(20(1[8-9]|[2-9]\d)))?)?$")

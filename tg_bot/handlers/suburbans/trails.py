@@ -28,7 +28,7 @@ from tg_bot.keyboards import (
     func=lambda mess: mess.text.title() == "Домой",
     content_types=["text"]
 )
-@telebot_login.login_required
+@telebot_login.login_required_message
 def fast_trail_handler(message):
     user = g.current_tbot_user
 
@@ -66,7 +66,7 @@ def fast_trail_handler(message):
 # Trail message
 @bot.message_handler(func=lambda mess: mess.text.title() == "Маршрут",
                      content_types=["text"])
-@telebot_login.login_required
+@telebot_login.login_required_message
 def own_trail_handler(message):
     user = g.current_tbot_user
 

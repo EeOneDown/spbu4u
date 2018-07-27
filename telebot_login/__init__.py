@@ -10,7 +10,7 @@ from app.models import User
 from tg_bot import bot
 
 
-def login_required(func):
+def login_required_message(func):
     @wraps(func)
     def wrapper(message):
         user = User.query.filter_by(tg_id=message.chat.id).first()

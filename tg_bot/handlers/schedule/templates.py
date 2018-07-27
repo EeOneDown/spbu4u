@@ -16,7 +16,7 @@ from tg_bot.handlers.start import start_handler
     func=lambda mess: mess.text == emoji["arrows_counterclockwise"],
     content_types=["text"]
 )
-@telebot_login.login_required
+@telebot_login.login_required_message
 def templates_handler(message):
     user = g.current_tbot_user
 

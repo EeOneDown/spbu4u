@@ -19,7 +19,7 @@ from tg_bot import bot
     func=lambda mess: mess.text.capitalize() == "Неделя",
     content_types=["text"]
 )
-@telebot_login.login_required
+@telebot_login.login_required_message
 def week_handler(message):
     user = g.current_tbot_user
 

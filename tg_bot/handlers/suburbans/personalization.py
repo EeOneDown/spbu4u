@@ -16,7 +16,7 @@ import telebot_login
 # Personalization message
 @bot.message_handler(func=lambda mess: mess.text.title() == "Персонализация",
                      content_types=["text"])
-@telebot_login.login_required
+@telebot_login.login_required_message
 def personalisation_handler(message):
     user = g.current_tbot_user
 

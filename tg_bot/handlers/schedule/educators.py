@@ -22,7 +22,7 @@ from tg_bot.keyboards import schedule_keyboard, found_educators
     func=lambda mess: mess.text == emoji["bust_in_silhouette"],
     content_types=["text"]
 )
-@telebot_login.login_required
+@telebot_login.login_required_message
 def educator_schedule_handler(message):
     user = g.current_tbot_user
 
@@ -37,7 +37,7 @@ def educator_schedule_handler(message):
     func=lambda mess: nf.bot_waiting_for(mess, ask_for_input_educator),
     content_types=["text"]
 )
-@telebot_login.login_required
+@telebot_login.login_required_message
 def write_educator_name_handler(message):
     user = g.current_tbot_user
 

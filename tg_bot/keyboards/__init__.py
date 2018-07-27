@@ -12,7 +12,7 @@ from tg_bot.keyboards.schedule import (
 )
 from tg_bot.keyboards.suburbans import (
     start_station_keyboard, end_station_keyboard, select_day_keyboard,
-    update_keyboard
+    update_keyboard, stations_keyboard, personalization_keyboard
 )
 from tg_bot.keyboards.editor import (
     place_keyboard

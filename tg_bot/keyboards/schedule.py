@@ -67,10 +67,12 @@ def templates_list_keyboard(items, last_row):
     return inline_keyboard
 
 
-def week_day_keyboard():
+def week_day_keyboard(for_editor=False):
     """
     Gets week day keyboard
 
+    :param for_editor: is need to use `cancel` button instead of `all week`
+    :type for_editor: bool
     :return: week day keyboard
     :rtype: InlineKeyboardMarkup
     """
@@ -79,7 +81,7 @@ def week_day_keyboard():
           for name in week_day_number.keys()]
     ).row(
         *[InlineKeyboardButton(text=name, callback_data=name)
-          for name in ["Вся неделя"]]
+          for name in ["Отмена" if for_editor else "Вся неделя"]]
     )
 
 

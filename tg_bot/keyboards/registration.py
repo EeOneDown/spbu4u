@@ -29,7 +29,7 @@ def divisions_keyboard():
     """
     divisions = spbu.get_study_divisions()
 
-    inline_keyboard = InlineKeyboardMarkup(row_width=1)
+    inline_keyboard = InlineKeyboardMarkup(row_width=2)
     inline_keyboard.add(
         *[InlineKeyboardButton(
             text=d["Name"][:max_inline_button_text_len],
@@ -113,7 +113,7 @@ def years_keyboard(path, program_slice):
                     break
             break
 
-    inline_keyboard = InlineKeyboardMarkup(row_width=1)
+    inline_keyboard = InlineKeyboardMarkup(row_width=3)
     inline_keyboard.add(
         *[InlineKeyboardButton(
             text=y["YearName"],
@@ -134,12 +134,12 @@ def groups_keyboard(program_id):
     """
     groups = spbu.get_groups(program_id)
 
-    inline_keyboard = InlineKeyboardMarkup(row_width=1)
+    inline_keyboard = InlineKeyboardMarkup(row_width=2)
     inline_keyboard.add(
         *[InlineKeyboardButton(
             text=g["StudentGroupName"],
             callback_data=g["StudentGroupId"]
-        ) for g in groups]
+        ) for g in groups["Groups"]]
     )
     return inline_keyboard
 

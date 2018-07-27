@@ -59,7 +59,7 @@ def select_day_keyboard():
     )
 
 
-def update_keyboard(show_less=False, for_tomorrow=False):
+def update_keyboard(show_less=True, for_tomorrow=False):
     """
     Creates suburbans update keyboard
 
@@ -86,3 +86,31 @@ def update_keyboard(show_less=False, for_tomorrow=False):
                        for name in ["Оставшиеся", "Обновить"]]
 
     return InlineKeyboardMarkup().row(*buttons)
+
+
+def stations_keyboard():
+    """
+    Gets stations keyboard
+
+    :return: stations keyboard
+    :rtype: InlineKeyboardMarkup
+    """
+    inline_keyboard = InlineKeyboardMarkup(row_width=1)
+    inline_keyboard.add(
+        *[InlineKeyboardButton(text=item[0], callback_data=item[1])
+          for item in all_stations.items()]
+    )
+    return inline_keyboard
+
+
+def personalization_keyboard():
+    """
+    Gets personalization keyboard
+
+    :return: personalization keyboard
+    :rtype: InlineKeyboardMarkup
+    """
+    return InlineKeyboardMarkup().row(
+        *[InlineKeyboardButton(text=name, callback_data=name)
+          for name in ["Домашняя", "Университетская"]]
+    )

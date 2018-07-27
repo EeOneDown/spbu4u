@@ -147,15 +147,22 @@ def register_student_handler(call_back):
             current_educator_id=0
         )
     else:
-        user.current_group_id = call_back.data,
+        user.current_group_id = call_back.data
         user.current_educator_id = 0
+        user.is_educator = False
     db.session.add(user)
 
     db.session.commit()
 
     bot.edit_message_text(
+        chat_id=user.tg_id,
+        text="Готово!",
+        message_id=bot_msg.message_id
+    )
+
+    bot.send_message(
         text=main_menu_first_answer,
-        chat_id=call_back.message.chat.id,
-        message_id=bot_msg.message_id,
+        parse_mode="HTML",
+        chat_id=user.tg_id,
         reply_markup=main_keyboard()
     )

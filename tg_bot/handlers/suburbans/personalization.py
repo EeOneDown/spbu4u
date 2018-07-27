@@ -11,6 +11,7 @@ from app.constants import (
 from app import new_functions as nf, db
 from flask import g
 import telebot_login
+from tg_bot.keyboards import stations_keyboard, personalization_keyboard
 
 
 # Personalization message
@@ -25,14 +26,12 @@ def personalisation_handler(message):
 
     answer = personalization_answer.format(home_title, univer_title)
 
-    inline_keyboard = InlineKeyboardMarkup()
-    inline_keyboard.row(*[InlineKeyboardButton(
-            text=name, callback_data=name) for name in ["Домашняя"]])
-    inline_keyboard.row(*[InlineKeyboardButton(
-            text=name, callback_data=name) for name in ["Университетская"]])
-
-    bot.send_message(user.tg_id, answer,
-                     reply_markup=inline_keyboard, parse_mode="HTML")
+    bot.send_message(
+        chat_id=user.tg_id,
+        text=answer,
+        reply_markup=personalization_keyboard(),
+        parse_mode="HTML"
+    )
 
 
 # Choose station type callback
@@ -49,18 +48,10 @@ def home_station_handler(call_back):
     else:
         answer = select_univer_station
 
-    stations_keyboard = InlineKeyboardMarkup()
-    stations_keyboard.add(
-        *[
-            InlineKeyboardButton(text=item[0], callback_data=item[1])
-            for item in all_stations.items()
-        ]
-    )
-
     bot.edit_message_text(text=answer,
                           chat_id=user.tg_id,
                           message_id=call_back.message.message_id,
-                          reply_markup=stations_keyboard)
+                          reply_markup=stations_keyboard())
 
 
 # Choose station callback
@@ -98,7 +89,9 @@ def change_home_station_handler(call_back):
                                   text=inline_answer, show_alert=True)
     db.session.commit()
 
-    bot.edit_message_text(text=answer,
-                          chat_id=user.tg_id,
-                          message_id=call_back.message.message_id,
-                          parse_mode="HTML")
+    bot.edit_message_text(
+        text=answer,
+        chat_id=user.tg_id,
+        message_id=call_back.message.message_id,
+        parse_mode="HTML"
+    )

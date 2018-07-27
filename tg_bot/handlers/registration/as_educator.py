@@ -19,7 +19,7 @@ from tg_bot.keyboards import found_educators_keyboard, main_keyboard
 )
 def input_educator_name_handler(call_back):
     bot.edit_message_text(
-        text="",
+        text=call_back.data,
         chat_id=call_back.message.chat.id,
         message_id=call_back.message.message_id
     )
@@ -92,12 +92,13 @@ def register_student_handler(call_back):
         chat_id=call_back.message.chat.id,
         message_id=call_back.message.message_id
     )
-    educator = Educator.query.get(call_back.data)
+    educator_id = int(call_back.data)
+    educator = Educator.query.get(educator_id)
     if not educator:
         educator = Educator(
-            id=call_back.data,
+            id=educator_id,
             title=spbu.get_educator_events(
-                educator_id=call_back.data
+                educator_id=educator_id
             )["EducatorLongDisplayText"]
         )
         db.session.add(educator)
@@ -108,18 +109,24 @@ def register_student_handler(call_back):
             tg_id=call_back.message.chat.id,
             is_educator=True,
             current_group_id=0,
-            current_educator_id=call_back.data
+            current_educator_id=educator_id
         )
     else:
-        user.current_group_id = 0,
-        user.current_educator_id = call_back.data
+        user.current_group_id = 0
+        user.current_educator_id = educator_id
+        user.is_educator = True
     db.session.add(user)
 
     db.session.commit()
 
     bot.edit_message_text(
+        chat_id=user.tg_id,
+        text="Готово!",
+        message_id=bot_msg.message_id
+    )
+    bot.send_message(
         text=main_menu_first_answer,
-        chat_id=call_back.message.chat.id,
-        message_id=bot_msg.message_id,
+        parse_mode="HTML",
+        chat_id=user.tg_id,
         reply_markup=main_keyboard()
     )

@@ -3,42 +3,45 @@ from __future__ import unicode_literals
 
 from datetime import datetime
 
+from flask import g
 from telebot.apihelper import ApiException
-from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 from tg_bot import bot, functions as func
 from app.constants import (
     emoji, max_inline_button_text_len, server_timedelta, subject_short_type,
-    week_day_titles, week_day_number
+    week_day_titles, week_day_number, hide_answer
 )
+import telebot_login
+from tg_bot.keyboards import week_day_keyboard
 
 
 # Hide message
-@bot.message_handler(func=lambda mess:
-                     mess.text.capitalize() == "Скрыть",
-                     content_types=["text"])
+@bot.message_handler(
+    func=lambda mess: mess.text.capitalize() == "Скрыть",
+    content_types=["text"]
+)
+@telebot_login.login_required_message
 def hide_lesson_handler(message):
-    bot.send_chat_action(message.chat.id, "typing")
-    answer = "Здесь ты можешь скрыть любое занятие\n" \
-             "Выбери день, когда есть это занятие:"
-    json_week_data = func.get_json_week_data(message.chat.id)
-    days = json_week_data["Days"]
-    days_keyboard = InlineKeyboardMarkup(True)
-    for day in days:
-        days_keyboard.row(
-            *[InlineKeyboardButton(text=name, callback_data=name)
-              for name in [day["DayString"].split(", ")[0].capitalize()]])
-    days_keyboard.row(
-        *[InlineKeyboardButton(text=name, callback_data=name)
-          for name in ["Отмена"]])
-    bot.send_message(message.chat.id, answer, reply_markup=days_keyboard)
+    user = g.current_tbot_user
+
+    bot.send_chat_action(user.tg_id, "typing")
+
+    bot.send_message(
+        chat_id=user.tg_id,
+        text=hide_answer,
+        reply_markup=week_day_keyboard(for_editor=True)
+    )
 
 
 # Weekday callback
-@bot.callback_query_handler(func=lambda call_back:
-                            "Выбери день, когда есть это занятие:" in
-                            call_back.message.text)
+@bot.callback_query_handler(
+    func=lambda call_back: call_back.message.text == hide_answer
+)
+@telebot_login.login_required_callback
 def select_day_hide_lesson_handler(call_back):
+    user = g.current_tbot_user
+
+
     iso_day_date = list((datetime.today() + server_timedelta).isocalendar())
     if iso_day_date[2] == 7:
         iso_day_date[1] += 1
@@ -47,30 +50,16 @@ def select_day_hide_lesson_handler(call_back):
 
     blocks = func.get_blocks(call_back.message.chat.id, day_date)
     answer = "{0} {1}\n".format(emoji["calendar"], blocks[0])
+
     bot.edit_message_text(text=answer,
                           chat_id=call_back.message.chat.id,
                           message_id=call_back.message.message_id)
+
     first_block = blocks[1][0]
     day_string = blocks[0].split(", ")[0]
     answer = "<b>1 из {0}</b> <i>({1})</i>\n\n{2}".format(len(blocks[1]),
                                                           day_string,
                                                           first_block)
-    events_keyboard = InlineKeyboardMarkup(True)
-    events = [event.split("\n")[0] for event in first_block.split("\n\n")[1:-1]]
-    for event in events:
-        event_name = event.strip(" {0}".format(emoji["cross_mark"]))[
-                     3:-4].split(" - ")
-        button_text = "{0} - {1}".format(event_name[0],
-                                         event_name[1].split(". ")[-1])
-        events_keyboard.row(
-            *[InlineKeyboardButton(
-                text=name, callback_data=name[:max_inline_button_text_len]
-            ) for name in [button_text]]
-        )
-    events_keyboard.row(
-        *[InlineKeyboardButton(text=emoji[name], callback_data=name)
-          for name in ["prev_block", "Отмена", "next_block"]]
-    )
     bot.send_message(chat_id=call_back.message.chat.id, text=answer,
                      reply_markup=events_keyboard, parse_mode="HTML")
 

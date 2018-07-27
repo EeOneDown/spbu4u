@@ -71,8 +71,11 @@ def problem_text_handler(message):
 def exit_handler(message):
     bot.send_chat_action(message.chat.id, "typing")
 
-    User.query.filter_by(telegram_id=message.chat.id).delete()
-    db.session.commit()
+    user = User.query.filter_by(tg_id=message.chat.id).first()
+    if user:
+        user.clear_all()
+        db.session.delete(user)
+        db.session.commit()
 
     bot.send_message(
         chat_id=message.chat.id,

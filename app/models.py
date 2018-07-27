@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from datetime import timedelta
+from datetime import timedelta, date
 
 import spbu
 
@@ -9,7 +9,8 @@ import app.new_functions as nf
 from app import db, new_functions as f
 from app.constants import (
     week_off_answer, weekend_answer, emoji, max_answers_count,
-    interval_exceeded_answer, changed_to_full_answer, changed_to_class_answer
+    interval_exceeded_answer, changed_to_full_answer, changed_to_class_answer,
+    week_day_number
 )
 
 
@@ -84,6 +85,22 @@ class User(db.Model):
     _current_group = db.relationship("Group")
     _current_educator = db.relationship("Educator")
 
+    def _get_events(self, from_date, to_date):
+        """
+
+        :param from_date:
+        :param to_date:
+        :return:
+        """
+        if self.is_educator:
+            return self._current_educator.get_events(
+                from_date=from_date, to_date=to_date
+            )["Days"]
+        else:
+            return self._current_group.get_events(
+                from_date=from_date, to_date=to_date
+            )["Days"]
+
     def _parse_event(self, event):
         # TODO delete hidden lessons
         return f.create_schedule_answer(event, self.is_full_place)
@@ -106,26 +123,21 @@ class User(db.Model):
             answer += self._parse_event(event)
         return answer
 
-    def create_answer_for_date(self, date):
+    def create_answer_for_date(self, for_date):
         """
         This method gets the schedule for date and parses it
 
-        :param date: date for schedule
-        :type date: datetime.date
+        :param for_date: date for schedule
+        :type for_date: date
         :return: html safe string
         :rtype: str
         """
-        if self.is_educator:
-            json_day_events = self._current_educator.get_events(
-                from_date=date, to_date=date + timedelta(days=1)
-            )["Days"]
-        else:
-            json_day_events = self._current_group.get_events(
-                from_date=date, to_date=date + timedelta(days=1)
-            )["Days"]
-
-        if len(json_day_events):
-            answer = self._parse_day_events(json_day_events[0])
+        events = self._get_events(
+            from_date=for_date,
+            to_date=for_date + timedelta(days=1)
+        )
+        if len(events):
+            answer = self._parse_day_events(events[0])
         else:
             answer = weekend_answer
 
@@ -136,10 +148,10 @@ class User(db.Model):
         Method to create answers for interval. if no `to_date` will return for
         7 days
 
-        :param from_date: the datetime the events start from
-        :type from_date: datetime.date
-        :param to_date: (Optional) the datetime the events ends
-        :type to_date: datetime.date
+        :param from_date: the date the events start from
+        :type from_date: date
+        :param to_date: (Optional) the date the events ends
+        :type to_date: date
         :return: list of schedule answers
         :rtype: list of str
         """
@@ -148,16 +160,11 @@ class User(db.Model):
         if not to_date:
             to_date = from_date + timedelta(days=7)
 
-        if self.is_educator:
-            json_day_events = self._current_educator.get_events(
-                from_date=from_date, to_date=to_date
-            )["Days"]
-        else:
-            json_day_events = self._current_group.get_events(
-                from_date=from_date, to_date=to_date
-            )["Days"]
-
-        for event in json_day_events:
+        events = self._get_events(
+            from_date=from_date,
+            to_date=to_date
+        )
+        for event in events:
             answers.append(self._parse_day_events(event))
 
         if len(answers) > max_answers_count:
@@ -168,6 +175,23 @@ class User(db.Model):
             else:
                 answers = [nf.create_interval_off_answer(from_date, to_date)]
         return answers
+
+    def get_block_answer(self, for_date, block_num):
+        """
+        Creates block answer number `block_num` for current `weekday_short` date
+
+        :param for_date: date for schedule
+        :type for_date: date
+        :param block_num:
+        :type block_num: int
+        :return:
+        :rtype: str
+        """
+        events = self._get_events(
+            from_date=for_date,
+            to_date=for_date + timedelta(days=1)
+        )
+        block = nf.create_events_blocks(events)[block_num]
 
     def get_current_status_title(self):
         """
@@ -227,6 +251,18 @@ class User(db.Model):
             return changed_to_full_answer
         else:
             return changed_to_class_answer
+
+    def clear_all(self):
+        """
+        Deletes all personalization
+
+        :return: None
+        """
+        self.groups.all().clear()
+        self.educators.all().clear()
+        self.added_lessons.all().clear()
+        self.hidden_lessons.all().clear()
+        self.chosen_educators.all().clear()
 
 
 class Group(db.Model):
@@ -309,6 +345,20 @@ class Lesson(db.Model):
     educators = db.Column(db.JSON)
     places = db.Column(db.JSON)
 
+    def __eq__(self, other):
+        """
+
+        :param other:
+        :type other: Lesson
+        :return:
+        """
+        return (self.name == other.name
+                and self.types == other.types
+                and self.days == other.days
+                and self.times == other.times
+                and self.educators == other.educators
+                and self.places == other.places)
+
     @staticmethod
     def add_or_get(name, types, days, times, educators, places):
         """
@@ -323,3 +373,25 @@ class Lesson(db.Model):
             lesson = Lesson(name=name, types=types, days=days, times=times,
                             educators=educators, places=places)
         return lesson
+
+    def from_json(self, event):
+        self.name = event["Subject"].split(", ")[0]
+        self.types = [event["Subject"].split(", ")[1]]
+        self.days = [
+            nf.get_key_by_value(
+                dct=week_day_number,
+                val=nf.datetime_from_string(event["Start"]).date().weekday()
+            )
+        ]
+        self.times = [
+            "{0:0>2}:{1:0>2}{2}{3:0>2}:{4:0>2}".format(
+                nf.datetime_from_string(event["Start"]).time().hour,
+                nf.datetime_from_string(event["Start"]).time().minute,
+                emoji["en_dash"],
+                nf.datetime_from_string(event["End"]).time().hour,
+                nf.datetime_from_string(event["End"]).time().minute
+            )
+        ]
+        self.educators = [e["Item2"].split(", ")[0]
+                          for e in event["EducatorIds"]]
+        return self

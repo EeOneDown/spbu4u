@@ -32,7 +32,7 @@ from tg_bot.keyboards import (
 def fast_trail_handler(message):
     user = g.current_tbot_user
 
-    bot.send_chat_action(user, "typing")
+    bot.send_chat_action(user.tg_id, "typing")
 
     if message.text.title() == "В Универ":
         from_code = user.home_station_code
@@ -50,17 +50,20 @@ def fast_trail_handler(message):
     if not is_error:
         if is_tomorrow:
             bot.send_message(
-                user.tg_id, emoji["warning"] + " На сегодня нет электричек"
+                chat_id=user.tg_id,
+                text=emoji["warning"] + " На сегодня нет электричек"
             )
         inline_keyboard = update_keyboard(is_tomorrow)
     else:
         inline_keyboard = InlineKeyboardMarkup()
 
-    bot.send_message(user.tg_id,
-                     answer,
-                     reply_markup=inline_keyboard,
-                     parse_mode='HTML',
-                     disable_web_page_preview=True)
+    bot.send_message(
+        chat_id=user.tg_id,
+        text=answer,
+        reply_markup=inline_keyboard,
+        parse_mode='HTML',
+        disable_web_page_preview=True
+    )
 
 
 # Trail message

@@ -6,6 +6,10 @@ from tg_bot.keyboards.menu import (
     main_keyboard, schedule_keyboard, suburban_keyboard,
     schedule_editor_keyboard, settings_keyboard
 )
+from tg_bot.keyboards.schedule import (
+    sending_keyboard, status_templates_keyboard, templates_list_keyboard,
+    week_day_keyboard, current_next_keyboard
+)
 from tg_bot.keyboards.suburbans import (
     start_station_keyboard, end_station_keyboard, select_day_keyboard,
     update_keyboard

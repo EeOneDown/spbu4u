@@ -14,12 +14,10 @@ def select_status_keyboard():
     :return: select status keyboard
     :rtype: InlineKeyboardMarkup
     """
-    inline_keyboard = InlineKeyboardMarkup()
-    inline_keyboard.row(
+    return InlineKeyboardMarkup().row(
         *[InlineKeyboardButton(text=name, callback_data=name) for
           name in ["Преподаватель", "Студент"]]
     )
-    return inline_keyboard
 
 
 def divisions_keyboard():

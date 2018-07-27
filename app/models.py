@@ -181,7 +181,7 @@ class User(db.Model):
         else:
             return self._current_group.title
 
-    def get_sav_del_button(self):
+    def get_sav_del_button_text(self):
         """
         Gets `Save` or `Delete` text for templates's button
 

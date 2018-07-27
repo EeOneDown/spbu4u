@@ -11,9 +11,7 @@ def special_thanks_keyboard():
     :return: special thanks keyboard
     :rtype: InlineKeyboardMarkup
     """
-    inline_keyboard = InlineKeyboardMarkup()
-    inline_keyboard.row(
+    return InlineKeyboardMarkup().row(
         *[InlineKeyboardButton(text=name, callback_data=name)
           for name in ["Благодарности"]]
     )
-    return inline_keyboard

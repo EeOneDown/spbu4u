@@ -36,15 +36,14 @@ def schedule_keyboard():
     :return: schedule menu keyboard
     :rtype: ReplyKeyboardMarkup
     """
-    keyboard = ReplyKeyboardMarkup(
+    return ReplyKeyboardMarkup(
         resize_keyboard=True, one_time_keyboard=False
-    )
-    keyboard.row("Сегодня", "Завтра", "Неделя")
-    keyboard.row(
+    ).row(
+        "Сегодня", "Завтра", "Неделя"
+    ).row(
         emoji["back"], emoji["bust_in_silhouette"],
         emoji["arrows_counterclockwise"], emoji["alarm_clock"]
     )
-    return keyboard
 
 
 def settings_keyboard():
@@ -54,12 +53,13 @@ def settings_keyboard():
     :return: settings menu keyboard
     :rtype: ReplyKeyboardMarkup
     """
-    keyboard = ReplyKeyboardMarkup(
+    return ReplyKeyboardMarkup(
         resize_keyboard=True, one_time_keyboard=False
+    ).row(
+        "Сменить группу", "Завершить"
+    ).row(
+        "Назад", "Поддержка"
     )
-    keyboard.row("Сменить группу", "Завершить")
-    keyboard.row("Назад", "Поддержка")
-    return keyboard
 
 
 def suburban_keyboard():
@@ -69,12 +69,13 @@ def suburban_keyboard():
     :return: suburbans menu keyboard
     :rtype: ReplyKeyboardMarkup
     """
-    keyboard = ReplyKeyboardMarkup(
+    return ReplyKeyboardMarkup(
         resize_keyboard=True, one_time_keyboard=False
+    ).row(
+        "Домой", "В Универ", "Маршрут"
+    ).row(
+        "Назад", "Персонализация"
     )
-    keyboard.row("Домой", "В Универ", "Маршрут")
-    keyboard.row("Назад", "Персонализация")
-    return keyboard
 
 
 def schedule_editor_keyboard():
@@ -84,9 +85,10 @@ def schedule_editor_keyboard():
     :return: editor menu keyboard
     :rtype: ReplyKeyboardMarkup
     """
-    keyboard = ReplyKeyboardMarkup(
+    return ReplyKeyboardMarkup(
         resize_keyboard=True, one_time_keyboard=False
+    ).row(
+        "Скрыть", "Выбрать", "Вернуть"
+    ).row(
+        "Назад", "Адрес"
     )
-    keyboard.row("Скрыть", "Выбрать", "Вернуть")
-    keyboard.row("Назад", "Адрес")
-    return keyboard

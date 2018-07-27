@@ -2,13 +2,13 @@
 from __future__ import unicode_literals
 
 from flask import g
-from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 import telebot_login
 from app import db
 from app.constants import emoji, templates_answer
 from tg_bot import bot
 from tg_bot.handlers.start import start_handler
+from tg_bot.keyboards import status_templates_keyboard, templates_list_keyboard
 
 
 # Templates message
@@ -25,17 +25,12 @@ def templates_handler(message):
     answer = templates_answer.format(
         user.get_current_status_title()
     )
-    inline_keyboard = InlineKeyboardMarkup()
-    inline_keyboard.row(
-        *[InlineKeyboardButton(text=name, callback_data=name)
-          for name in ["Перезайти"]]
+    bot.send_message(
+        chat_id=user.tg_id,
+        text=answer,
+        reply_markup=status_templates_keyboard(),
+        parse_mode="HTML"
     )
-    inline_keyboard.row(
-        *[InlineKeyboardButton(text=name, callback_data=name)
-          for name in ["Преподаватели", "Группы"]]
-    )
-    bot.send_message(user.tg_id, answer, reply_markup=inline_keyboard,
-                     parse_mode="HTML")
 
 
 # Groups/Educators templates
@@ -55,33 +50,26 @@ def g_e_templates(call_back):
         choose_text = "группу"
         no_items_text = "групп"
         if not user.is_educator:
-            last_row.append(user.get_sav_del_button())
+            last_row.append(user.get_sav_del_button_text())
     else:
         items = user.educators.all()
         choose_text = "преподавателя"
         no_items_text = "преподавателей"
         if user.is_educator:
-            last_row.append(user.get_sav_del_button())
+            last_row.append(user.get_sav_del_button_text())
 
-    inline_keyboard = InlineKeyboardMarkup(row_width=2)
     if items:
         answer = "Выбери {0}:".format(choose_text)
-        inline_keyboard.add(
-            *[InlineKeyboardButton(
-                text=item.title, callback_data=item.id
-            ) for item in items]
-        )
     else:
         answer = "Нет сохраненных {0}.".format(no_items_text)
-    inline_keyboard.row(
-        *[InlineKeyboardButton(text=name, callback_data=name)
-          for name in last_row]
+
+    bot.edit_message_text(
+        text=answer,
+        chat_id=user.tg_id,
+        message_id=call_back.message.message_id,
+        parse_mode="HTML",
+        reply_markup=templates_list_keyboard(items, last_row)
     )
-    bot.edit_message_text(text=answer,
-                          chat_id=user.tg_id,
-                          message_id=call_back.message.message_id,
-                          parse_mode="HTML",
-                          reply_markup=inline_keyboard)
 
 
 # Save/Delete into/from templates callback
@@ -118,10 +106,12 @@ def sav_del_current_status_handler(call_back):
             user.get_current_status_title(),
             sav_del_text
         )
-    bot.edit_message_text(text=answer,
-                          chat_id=user.tg_id,
-                          message_id=call_back.message.message_id,
-                          parse_mode="HTML")
+    bot.edit_message_text(
+        text=answer,
+        chat_id=user.tg_id,
+        message_id=call_back.message.message_id,
+        parse_mode="HTML"
+    )
 
 
 # Choose template callback
@@ -147,10 +137,12 @@ def change_template_handler(call_back):
     )
     db.session.commit()
 
-    bot.edit_message_text(text=answer,
-                          chat_id=user.tg_id,
-                          message_id=call_back.message.message_id,
-                          parse_mode="HTML")
+    bot.edit_message_text(
+        text=answer,
+        chat_id=user.tg_id,
+        message_id=call_back.message.message_id,
+        parse_mode="HTML"
+    )
 
 
 # Relogin callback
@@ -162,10 +154,11 @@ def relogin_callback_handler(call_back):
     user = g.current_tbot_user
 
     answer = "<i>Перезайти</i>\nИспользуй /home для отмены"
-    bot.edit_message_text(text=answer,
-                          chat_id=user.tg_id,
-                          message_id=call_back.message.message_id,
-                          parse_mode="HTML")
+    bot.edit_message_text(
+        text=answer,
+        chat_id=user.tg_id,
+        message_id=call_back.message.message_id,
+        parse_mode="HTML"
+    )
     call_back.message.text = call_back.data
     start_handler(call_back.message)
-    return

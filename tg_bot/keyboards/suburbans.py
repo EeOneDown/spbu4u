@@ -53,12 +53,10 @@ def select_day_keyboard():
     :return: select day keyboard
     :rtype: InlineKeyboardMarkup
     """
-    inline_keyboard = InlineKeyboardMarkup()
-    inline_keyboard.row(
+    return InlineKeyboardMarkup().row(
         *[InlineKeyboardButton(text=name, callback_data=name)
           for name in ["Сегодня", "Завтра"]]
     )
-    return inline_keyboard
 
 
 def update_keyboard(show_less=False, for_tomorrow=False):
@@ -72,8 +70,6 @@ def update_keyboard(show_less=False, for_tomorrow=False):
     :return: suburbans update keyboard
     :rtype: InlineKeyboardMarkup
     """
-    inline_keyboard = InlineKeyboardMarkup()
-
     if for_tomorrow:
         if show_less:
             buttons = [InlineKeyboardButton(text=name, callback_data=name)
@@ -89,6 +85,4 @@ def update_keyboard(show_less=False, for_tomorrow=False):
             buttons = [InlineKeyboardButton(text=name, callback_data=name)
                        for name in ["Оставшиеся", "Обновить"]]
 
-    inline_keyboard.row(*buttons)
-
-    return inline_keyboard
+    return InlineKeyboardMarkup().row(*buttons)

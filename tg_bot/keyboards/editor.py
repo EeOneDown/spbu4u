@@ -13,14 +13,11 @@ def place_keyboard(is_full_place):
     :return: place keyboard
     :rtype: InlineKeyboardMarkup
     """
-    inline_keyboard = InlineKeyboardMarkup()
-
     if is_full_place:
         buttons = [InlineKeyboardButton(text=name, callback_data="Аудитория")
                    for name in ["Только аудитория"]]
     else:
         buttons = [InlineKeyboardButton(text=name, callback_data=name)
                    for name in ["Полностью"]]
-    inline_keyboard.row(*buttons)
 
-    return inline_keyboard
+    return InlineKeyboardMarkup().row(*buttons)

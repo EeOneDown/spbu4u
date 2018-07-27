@@ -5,13 +5,13 @@ from random import choice
 
 from flask import g
 from telebot.apihelper import ApiException
-from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 import telebot_login
 import tg_bot.functions as func
 from app import new_functions as nf
 from app.constants import week_day_number, week_day_titles, loading_text
 from tg_bot import bot
+from tg_bot.keyboards import week_day_keyboard, current_next_keyboard
 
 
 # Week schedule message
@@ -25,17 +25,11 @@ def week_handler(message):
 
     bot.send_chat_action(user.tg_id, "typing")
 
-    answer = "Выбери день:"
-
-    week_day_calendar = InlineKeyboardMarkup()
-    week_day_calendar.row(
-        *[InlineKeyboardButton(text=name, callback_data=name) for
-          name in week_day_number.keys()])
-    week_day_calendar.row(
-        *[InlineKeyboardButton(text=name, callback_data=name) for
-          name in ["Вся неделя"]])
-
-    bot.send_message(user.tg_id, answer, reply_markup=week_day_calendar)
+    bot.send_message(
+        chat_id=user.tg_id,
+        text="Выбери день:",
+        reply_markup=week_day_keyboard()
+    )
 
 
 # Week schedule callback
@@ -54,19 +48,13 @@ def select_week_day_schedule_handler(call_back):
     else:
         day = nf.get_key_by_value(week_day_titles, call_back.data)
 
-    answer = "Расписание на: <i>{0}</i>\n".format(day)
-
-    week_type_keyboard = InlineKeyboardMarkup()
-    week_type_keyboard.row(
-        *[InlineKeyboardButton(text=name, callback_data=name) for
-          name in ["Текущее", "Следующее"]]
+    bot.edit_message_text(
+        text="Расписание на: <i>{0}</i>\n".format(day),
+        chat_id=user.tg_id,
+        message_id=call_back.message.message_id,
+        parse_mode="HTML",
+        reply_markup=current_next_keyboard()
     )
-
-    bot.edit_message_text(text=answer,
-                          chat_id=user.tg_id,
-                          message_id=call_back.message.message_id,
-                          parse_mode="HTML",
-                          reply_markup=week_type_keyboard)
 
 
 # All week schedule callback

@@ -44,7 +44,7 @@ def day_schedule_handler(message):
     if message.text.title() == "Сегодня":
         for_date = date.today()
     elif message.text.title() == "Завтра":
-        for_date = date.today()  + timedelta(days=1)
+        for_date = date.today() + timedelta(days=1)
     elif message.text.title() in week_day_titles.keys():
         for_date = nf.get_date_by_weekday_title(
             title=week_day_titles[message.text.title()]

@@ -2,7 +2,6 @@
 from __future__ import unicode_literals
 
 from flask import g
-from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 import telebot_login
 from app import db
@@ -10,6 +9,7 @@ from app.constants import (
     emoji, sending_off_answer, sending_on_answer, sending_info_answer
 )
 from tg_bot import bot
+from tg_bot.keyboards import sending_keyboard
 
 
 # Schedule sending message
@@ -23,19 +23,12 @@ def sending_handler(message):
 
     bot.send_chat_action(user.tg_id, "typing")
 
-    sending_keyboard = InlineKeyboardMarkup()
-    if user.is_subscribed:
-        sending_keyboard.row(
-            *[InlineKeyboardButton(text=name, callback_data="Отписаться")
-              for name in [emoji["cross_mark"] + " Отписаться"]]
-        )
-    else:
-        sending_keyboard.row(
-            *[InlineKeyboardButton(text=name, callback_data="Подписаться")
-              for name in [emoji["check_mark"] + " Подписаться"]]
-        )
-    bot.send_message(user.tg_id, sending_info_answer, parse_mode="HTML",
-                     reply_markup=sending_keyboard)
+    bot.send_message(
+        chat_id=user.tg_id,
+        text=sending_info_answer,
+        parse_mode="HTML",
+        reply_markup=sending_keyboard(user.is_subscribed)
+    )
 
 
 # Subscribe/Unsubscribe for sending callback
@@ -58,7 +51,9 @@ def sending_subscribing_handler(call_back):
 
     db.session.commit()
 
-    bot.edit_message_text(text=answer,
-                          chat_id=user.tg_id,
-                          message_id=call_back.message.message_id,
-                          parse_mode="HTML")
+    bot.edit_message_text(
+        text=answer,
+        chat_id=user.tg_id,
+        message_id=call_back.message.message_id,
+        parse_mode="HTML"
+    )

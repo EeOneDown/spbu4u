@@ -106,7 +106,11 @@ class User(db.Model):
             )["Days"]
 
     def _parse_event(self, event):
-        # TODO delete hidden lessons
+        lesson = Lesson().de_json(event)
+        suitable_skips = self.hidden_lessons.filter_by(name=lesson.name).all()
+        for skip in suitable_skips:
+            if lesson in skip:
+                return ""
         return f.create_schedule_answer(event, self.is_full_place)
 
     def _parse_day_events(self, events):
@@ -125,6 +129,8 @@ class User(db.Model):
         events = f.delete_cancelled_events(events["DayStudyEvents"])
         for event in events:
             answer += self._parse_event(event)
+        if len(answer.split("\n\n")) == 2:
+            answer += weekend_answer
         return answer
 
     def create_answer_for_date(self, for_date):
@@ -195,6 +201,7 @@ class User(db.Model):
             from_date=for_date,
             to_date=for_date + timedelta(days=1)
         )
+        # TODO
         block = nf.create_events_blocks(events)[block_num]
 
     def get_current_status_title(self):
@@ -347,7 +354,21 @@ class Lesson(db.Model):
     days = db.Column(db.JSON)
     times = db.Column(db.JSON)
     educators = db.Column(db.JSON)
-    places = db.Column(db.JSON)
+    locations = db.Column(db.JSON)
+
+    def __contains__(self, other):
+        """
+
+        :param other:
+        :type other: Lesson
+        :return:
+        """
+        return (other.name == self.name
+                and other.types in self.types if self.types else 1
+                and other.days in self.days if self.days else 1
+                and other.times in self.times if self.times else 1
+                and other.educators in self.educators if self.educators else 1
+                and other.locations in self.locations if self.locations else 1)
 
     def __eq__(self, other):
         """
@@ -361,7 +382,7 @@ class Lesson(db.Model):
                 and self.days == other.days
                 and self.times == other.times
                 and self.educators == other.educators
-                and self.places == other.places)
+                and self.locations == other.locations)
 
     @staticmethod
     def add_or_get(name, types, days, times, educators, places):
@@ -372,30 +393,28 @@ class Lesson(db.Model):
         """
         lesson = Lesson.query.filter_by(name=name, types=types, days=days,
                                         times=times, educators=educators,
-                                        places=places).one_or_none()
+                                        places=places).first()
         if not lesson:
             lesson = Lesson(name=name, types=types, days=days, times=times,
                             educators=educators, places=places)
+            db.session.add(lesson)
         return lesson
 
-    def from_json(self, event):
+    def de_json(self, event):
         self.name = event["Subject"].split(", ")[0]
-        self.types = [event["Subject"].split(", ")[1]]
-        self.days = [
-            nf.get_key_by_value(
-                dct=week_day_number,
-                val=nf.datetime_from_string(event["Start"]).date().weekday()
-            )
-        ]
-        self.times = [
-            "{0:0>2}:{1:0>2}{2}{3:0>2}:{4:0>2}".format(
-                nf.datetime_from_string(event["Start"]).time().hour,
-                nf.datetime_from_string(event["Start"]).time().minute,
-                emoji["en_dash"],
-                nf.datetime_from_string(event["End"]).time().hour,
-                nf.datetime_from_string(event["End"]).time().minute
-            )
-        ]
+        self.types = event["Subject"].split(", ")[1]
+        self.days = nf.get_key_by_value(
+            dct=week_day_number,
+            val=nf.datetime_from_string(event["Start"]).date().weekday()
+        )
+        self.times = "{0:0>2}:{1:0>2}{2}{3:0>2}:{4:0>2}".format(
+            nf.datetime_from_string(event["Start"]).time().hour,
+            nf.datetime_from_string(event["Start"]).time().minute,
+            emoji["en_dash"],
+            nf.datetime_from_string(event["End"]).time().hour,
+            nf.datetime_from_string(event["End"]).time().minute
+        )
         self.educators = [e["Item2"].split(", ")[0]
                           for e in event["EducatorIds"]]
+        self.locations = [p["DisplayName"] for p in event["EventLocations"]]
         return self

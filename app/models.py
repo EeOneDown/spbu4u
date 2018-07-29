@@ -87,10 +87,14 @@ class User(db.Model):
 
     def _get_events(self, from_date, to_date):
         """
+        Gets user's suitable events data
 
-        :param from_date:
-        :param to_date:
-        :return:
+        :param from_date: the date the events start from
+        :type from_date: date
+        :param to_date: (Optional) the date the events ends
+        :type to_date: date
+        :return: list of events data (json)
+        :rtype: list
         """
         if self.is_educator:
             return self._current_educator.get_events(

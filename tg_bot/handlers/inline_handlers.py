@@ -1,15 +1,13 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from datetime import datetime
-
+from flask import g
 from telebot.types import InlineQueryResultArticle, InputTextMessageContent
 
-from flask import g
-from tg_bot import bot
-from app.constants import week_day_titles, week_day_number, server_timedelta
-from app import new_functions as nf
 import telebot_login
+from app import new_functions as nf
+from app.constants import week_day_titles
+from tg_bot import bot
 
 
 @bot.inline_handler(

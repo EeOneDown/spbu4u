@@ -180,19 +180,19 @@ class User(db.Model):
         if len(answers) > max_answers_count:
             answers = [interval_exceeded_answer]
         elif not len(answers):
-            if from_date.weekday() == 1:
+            if from_date.isoweekday() == 1 and (to_date - from_date).days == 7:
                 answers = [week_off_answer]
             else:
                 answers = [nf.create_interval_off_answer(from_date, to_date)]
         return answers
 
-    def get_block_answer(self, for_date, block_num):
+    def get_block_answer(self, for_date, block_num=1):
         """
         Creates block answer number `block_num` for current `weekday_short` date
 
         :param for_date: date for schedule
         :type for_date: date
-        :param block_num:
+        :param block_num: (Optional) wanted block's human number (NOT AN INDEX)
         :type block_num: int
         :return:
         :rtype: str
@@ -200,9 +200,23 @@ class User(db.Model):
         events = self._get_events(
             from_date=for_date,
             to_date=for_date + timedelta(days=1)
+        )[0]
+        blocks = nf.create_events_blocks(events["DayStudyEvents"])
+        block = blocks[block_num - 1]
+        answer = "<b>{0} из {1}</b> <i>({2})</i>\n\n".format(
+            block_num, len(blocks),
+            nf.get_key_by_value(week_day_number, for_date.isoweekday())
         )
-        # TODO
-        block = nf.create_events_blocks(events)[block_num]
+        for event in block:
+            sub_answer = f.create_schedule_answer(event, self.is_full_place)
+
+            lesson = Lesson().de_json(event)
+            for skip in self.hidden_lessons.filter_by(name=lesson.name).all():
+                if lesson in skip:
+                    sub_answer = emoji["cross_mark"] + " " + sub_answer
+                    break
+            answer += sub_answer
+        return answer
 
     def get_current_status_title(self):
         """
@@ -405,7 +419,7 @@ class Lesson(db.Model):
         self.types = event["Subject"].split(", ")[1]
         self.days = nf.get_key_by_value(
             dct=week_day_number,
-            val=nf.datetime_from_string(event["Start"]).date().weekday()
+            val=nf.datetime_from_string(event["Start"]).date().isoweekday()
         )
         self.times = "{0:0>2}:{1:0>2}{2}{3:0>2}:{4:0>2}".format(
             nf.datetime_from_string(event["Start"]).time().hour,

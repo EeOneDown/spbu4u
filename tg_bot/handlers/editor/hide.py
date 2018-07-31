@@ -1,18 +1,16 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from datetime import datetime
-
 from flask import g
-from telebot.apihelper import ApiException
 
 from tg_bot import bot, functions as func
 from app.constants import (
-    emoji, max_inline_button_text_len, server_timedelta, subject_short_type,
-    week_day_titles, week_day_number, hide_answer
+    emoji, max_inline_button_text_len, subject_short_type, hide_answer,
+    hide_lesson_answer
 )
+from app import new_functions as nf
 import telebot_login
-from tg_bot.keyboards import week_day_keyboard
+from tg_bot.keyboards import week_day_keyboard, events_keyboard
 
 
 # Hide message
@@ -41,93 +39,70 @@ def hide_lesson_handler(message):
 def select_day_hide_lesson_handler(call_back):
     user = g.current_tbot_user
 
-
-    iso_day_date = list((datetime.today() + server_timedelta).isocalendar())
-    if iso_day_date[2] == 7:
-        iso_day_date[1] += 1
-    iso_day_date[2] = week_day_number[week_day_titles[call_back.data]]
-    day_date = func.date_from_iso(iso_day_date)
-
-    blocks = func.get_blocks(call_back.message.chat.id, day_date)
-    answer = "{0} {1}\n".format(emoji["calendar"], blocks[0])
-
-    bot.edit_message_text(text=answer,
-                          chat_id=call_back.message.chat.id,
-                          message_id=call_back.message.message_id)
-
-    first_block = blocks[1][0]
-    day_string = blocks[0].split(", ")[0]
-    answer = "<b>1 из {0}</b> <i>({1})</i>\n\n{2}".format(len(blocks[1]),
-                                                          day_string,
-                                                          first_block)
-    bot.send_message(chat_id=call_back.message.chat.id, text=answer,
-                     reply_markup=events_keyboard, parse_mode="HTML")
+    bot_msg = bot.edit_message_text(
+        text="Разбиваю занятия на пары\U00002026",
+        chat_id=call_back.message.chat.id,
+        message_id=call_back.message.message_id
+    )
+    answer = user.get_block_answer(
+        for_date=nf.get_date_by_weekday_title(call_back.data),
+        block_num=1
+    )
+    bot.edit_message_text(
+        text=answer,
+        chat_id=user.tg_id,
+        message_id=bot_msg.message_id,
+        reply_markup=events_keyboard(answer)
+    )
 
 
 # next_block callback
-@bot.callback_query_handler(func=lambda call_back:
-                            call_back.data == "next_block")
-def next_block_handler(call_back):
-    data = func.get_current_block(call_back.message.text,
-                                  call_back.message.chat.id)
-    answer, events = data[0], data[1]
-    events_keyboard = InlineKeyboardMarkup(True)
-    for event in events:
-        event_name = event.strip(" {0}".format(emoji["cross_mark"]))[
-                     3:-4].split(" - ")
-        button_text = "{0} - {1}".format(event_name[0],
-                                         event_name[1].split(". ")[-1])
-        events_keyboard.row(
-            *[InlineKeyboardButton(
-                text=name, callback_data=name[:max_inline_button_text_len]
-            ) for name in [button_text]]
-        )
-    events_keyboard.row(
-        *[InlineKeyboardButton(text=emoji[name], callback_data=name)
-          for name in ["prev_block", "Отмена", "next_block"]]
-    )
-    try:
-        bot.edit_message_text(text=answer, chat_id=call_back.message.chat.id,
-                              message_id=call_back.message.message_id,
-                              parse_mode="HTML", reply_markup=events_keyboard)
-    except ApiException:
-        pass
-
-
+@bot.callback_query_handler(
+    func=lambda call_back: call_back.data == "next_block"
+)
 # prev_block callback
-@bot.callback_query_handler(func=lambda call_back:
-                            call_back.data == "prev_block")
-def prev_block_handler(call_back):
-    data = func.get_current_block(call_back.message.text,
-                                  call_back.message.chat.id,
-                                  is_prev=True)
-    answer, events = data[0], data[1]
-    events_keyboard = InlineKeyboardMarkup(True)
-    for event in events:
-        event_name = event.strip(" {0}".format(emoji["cross_mark"]))[
-                     3:-4].split(" - ")
-        button_text = "{0} - {1}".format(event_name[0],
-                                         event_name[1].split(". ")[-1])
-        events_keyboard.row(
-            *[InlineKeyboardButton(
-                text=name, callback_data=name[:max_inline_button_text_len]
-            ) for name in [button_text]]
-        )
-    events_keyboard.row(
-        *[InlineKeyboardButton(text=emoji[name], callback_data=name)
-          for name in ["prev_block", "Отмена", "next_block"]]
+@bot.callback_query_handler(
+    func=lambda call_back: call_back.data == "prev_block"
+)
+@telebot_login.login_required_callback
+def next_block_handler(call_back):
+    user = g.current_tbot_user
+
+    blocks_count, cur_block_num, for_date = nf.get_data_from_block_answer(
+        call_back.message.text
     )
-    try:
-        bot.edit_message_text(text=answer, chat_id=call_back.message.chat.id,
-                              message_id=call_back.message.message_id,
-                              parse_mode="HTML", reply_markup=events_keyboard)
-    except ApiException:
-        pass
+    if blocks_count == 1:
+        bot.answer_callback_query(
+            call_back.id, "Доступна только одна пара", cache_time=2
+        )
+        return
+
+    is_next_block = call_back.data == "next_block"
+
+    bot_msg = bot.edit_message_text(
+        text="Смотрю {0} пару\U00002026".format(
+            "следующую" if is_next_block else "предыдущую"
+        ),
+        chat_id=call_back.message.chat.id,
+        message_id=call_back.message.message_id
+    )
+    answer = user.get_block_answer(
+        for_date=for_date,
+        block_num=cur_block_num + (1 if is_next_block else -1)
+    )
+    bot.edit_message_text(
+        text=answer,
+        chat_id=user.tg_id,
+        message_id=bot_msg.message_id,
+        reply_markup=events_keyboard(answer)
+    )
 
 
 # Lesson callback
-@bot.callback_query_handler(func=lambda call_back:
-                            "Выбери занятие:" in call_back.message.text)
+@bot.callback_query_handler(
+    func=lambda call_back: hide_lesson_answer in call_back.message.text
+)
+@telebot_login.login_required_callback
 def lesson_selected_handler(call_back):
     message_text_data = call_back.message.text.split("\n\n")
     answer = "{0} ({1})\n\nВыбранное занятие: \n".format(

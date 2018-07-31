@@ -15,7 +15,7 @@ from tg_bot.keyboards.suburbans import (
     update_keyboard, stations_keyboard, personalization_keyboard
 )
 from tg_bot.keyboards.editor import (
-    place_keyboard
+    place_keyboard, events_keyboard
 )
 from tg_bot.keyboards.other import (
     special_thanks_keyboard

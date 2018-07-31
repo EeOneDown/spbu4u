@@ -100,9 +100,9 @@ def get_work_monday(is_next_week=False):
 
 def get_date_by_weekday_title(title, is_next_week=False):
     """
-    Returns date for current or next week by day title
+    Returns date for current or next week by day short title
 
-    :param title: weekday title (Russian)
+    :param title: short weekday title (Russian)
     :type title: str
     :param is_next_week: (Optional) is for next week
     :type is_next_week: bool
@@ -216,11 +216,14 @@ def parse_event_subject(event):
     subject_name = ", ".join(event["Subject"].split(", ")[:-1])
 
     subject_type = event["Subject"].split(", ")[-1]
+    # оставляем только перыве два слова
     stripped_subject_type = " ".join(subject_type.split()[:2])
     if stripped_subject_type in subject_short_type.keys():
-        answer += subject_short_type[stripped_subject_type] + " - "
+        answer += subject_short_type[stripped_subject_type] \
+                  + " " + emoji["en_dash"] + " "
     else:
-        answer += subject_type.upper() + " - "
+        answer += subject_type.upper() \
+                  + " " + emoji["en_dash"] + " "
     answer += subject_name
 
     return answer
@@ -255,16 +258,8 @@ def parse_event_location(location, full_place=True, have_chosen_educator=False,
     return answer
 
 
-def create_schedule_answer(event, full_place):
-    answer = ""
-
-    if event["IsAssigned"]:
-        answer += emoji["new"] + " "
-    answer += parse_event_time(event)
-    if event["TimeWasChanged"]:
-        answer += " " + emoji["warning"]
-
-    answer += "\n<b>" + parse_event_subject(event) + "</b>\n"
+def parse_event_sub_loc_edu(event, full_place):
+    answer = "<b>" + parse_event_subject(event) + "</b>\n"
 
     for location in event["EventLocations"]:
         loc_answer = parse_event_location(location, full_place)
@@ -280,6 +275,19 @@ def create_schedule_answer(event, full_place):
     return answer
 
 
+def create_schedule_answer(event, full_place):
+    answer = ""
+
+    if event["IsAssigned"]:
+        answer += emoji["new"] + " "
+    answer += parse_event_time(event)
+    if event["TimeWasChanged"]:
+        answer += " " + emoji["warning"]
+
+    answer += "\n" + parse_event_sub_loc_edu(event, full_place)
+    return answer
+
+
 def create_master_schedule_answer(day_info):
     answer = "{0} {1}\n\n".format(emoji["calendar"], day_info["DayString"])
 
@@ -292,9 +300,11 @@ def create_master_schedule_answer(day_info):
         subject_type = event["Subject"].split(", ")[-1]
         stripped_subject_type = " ".join(subject_type.split()[:2])
         if stripped_subject_type in subject_short_type.keys():
-            answer += subject_short_type[stripped_subject_type] + " - "
+            answer += subject_short_type[stripped_subject_type] \
+                  + " " + emoji["en_dash"] + " "
         else:
-            answer += subject_type.upper() + " - "
+            answer += subject_type.upper() \
+                  + " " + emoji["en_dash"] + " "
         answer += ", ".join(
             event["Subject"].split(", ")[:-1]
         ) + "</b>\n"
@@ -541,6 +551,23 @@ def bot_waiting_for(msg, waiting_bot_text):
             if msg.reply_to_message.text == waiting_bot_text:
                 return True
     return False
+
+
+def get_data_from_block_answer(text):
+    """
+    Gets count of blocks, current block number and schedule's date from
+    created block answer by `User.get_block_answer()`
+
+    :param text: block answer
+    :type text: str
+    :return: count of blocks, current block number and schedule's date
+    :rtype: tuple
+    """
+    rows = text.split("\n\n")
+
+    current_block_num, blocks_count = list(map(int, rows[0].split()[::2]))
+    for_date = get_date_by_weekday_title(rows[1].split()[-1][1:-1])
+    return blocks_count, current_block_num, for_date
 
 
 def send_long_message(bot, text, user_id, split="\n\n"):

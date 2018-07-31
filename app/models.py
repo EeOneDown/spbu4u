@@ -5,12 +5,11 @@ from datetime import timedelta, date
 
 import spbu
 
-import app.new_functions as nf
-from app import db, new_functions as f
+from app import db, new_functions as nf
 from app.constants import (
     week_off_answer, weekend_answer, emoji, max_answers_count,
     interval_exceeded_answer, changed_to_full_answer, changed_to_class_answer,
-    week_day_number
+    week_day_number, hide_lesson_answer
 )
 
 
@@ -111,7 +110,7 @@ class User(db.Model):
         for skip in suitable_skips:
             if lesson in skip:
                 return ""
-        return f.create_schedule_answer(event, self.is_full_place)
+        return nf.create_schedule_answer(event, self.is_full_place)
 
     def _parse_day_events(self, events):
         """
@@ -126,7 +125,7 @@ class User(db.Model):
             emoji["calendar"], events["DayString"].capitalize()
         )
 
-        events = f.delete_cancelled_events(events["DayStudyEvents"])
+        events = nf.delete_cancelled_events(events["DayStudyEvents"])
         for event in events:
             answer += self._parse_event(event)
         if len(answer.split("\n\n")) == 2:
@@ -188,7 +187,7 @@ class User(db.Model):
 
     def get_block_answer(self, for_date, block_num=1):
         """
-        Creates block answer number `block_num` for current `weekday_short` date
+        Creates block answer number `block_num` for input date
 
         :param for_date: date for schedule
         :type for_date: date
@@ -203,20 +202,24 @@ class User(db.Model):
         )[0]
         blocks = nf.create_events_blocks(events["DayStudyEvents"])
         block = blocks[block_num - 1]
-        answer = "<b>{0} из {1}</b> <i>({2})</i>\n\n".format(
-            block_num, len(blocks),
-            nf.get_key_by_value(week_day_number, for_date.isoweekday())
-        )
-        for event in block:
-            sub_answer = f.create_schedule_answer(event, self.is_full_place)
-
+        answer = "<b>" + str(block_num) + " из " + str(len(blocks)) + "</b>\n\n"
+        answer += nf.parse_event_time(block[0]) + " <i>(" + nf.get_key_by_value(
+            week_day_number, for_date.isoweekday()
+        ) + ")</i>" + "\n\n"
+        for num, event in enumerate(block, start=1):
             lesson = Lesson().de_json(event)
+
+            hide_mark = ""
             for skip in self.hidden_lessons.filter_by(name=lesson.name).all():
                 if lesson in skip:
-                    sub_answer = emoji["cross_mark"] + " " + sub_answer
+                    hide_mark = emoji["cross_mark"] + " "
                     break
-            answer += sub_answer
-        return answer
+
+            answer += str(num) + ". " + hide_mark + nf.parse_event_sub_loc_edu(
+                event=event,
+                full_place=self.is_full_place
+            )
+        return answer + hide_lesson_answer
 
     def get_current_status_title(self):
         """
@@ -421,13 +424,7 @@ class Lesson(db.Model):
             dct=week_day_number,
             val=nf.datetime_from_string(event["Start"]).date().isoweekday()
         )
-        self.times = "{0:0>2}:{1:0>2}{2}{3:0>2}:{4:0>2}".format(
-            nf.datetime_from_string(event["Start"]).time().hour,
-            nf.datetime_from_string(event["Start"]).time().minute,
-            emoji["en_dash"],
-            nf.datetime_from_string(event["End"]).time().hour,
-            nf.datetime_from_string(event["End"]).time().minute
-        )
+        self.times = nf.parse_event_time(event).split()[1]
         self.educators = [e["Item2"].split(", ")[0]
                           for e in event["EducatorIds"]]
         self.locations = [p["DisplayName"] for p in event["EventLocations"]]

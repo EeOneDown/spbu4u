@@ -6,12 +6,12 @@ from datetime import datetime, timedelta, time
 
 import requests
 
-from bots_constants import yandex_key
-from constants import emoji, urls
+from bot.bots_constants import yandex_key
+from bot.constants import emoji, urls
 
 
 def get_yandex_timetable_data(from_station, to_station, date, limit=3):
-    from flask_app import server_timedelta
+    from bot.constants import server_timedelta
     params = {"from": from_station, "to": to_station, "apikey": yandex_key,
               "date": date, "format": "json", "lang": "ru_RU",
               "transport_types": "suburban"}
@@ -61,11 +61,14 @@ def get_yandex_timetable_data(from_station, to_station, date, limit=3):
         else:
             segment_answer += emoji["train"]
 
-        price = str(segment["tickets_info"]["places"][0]["price"]["whole"])
-        if segment["tickets_info"]["places"][0]["price"]["cents"]:
-            price += ",{0}".format(
-                segment["tickets_info"]["places"][0]["price"]["cents"]
-            )
+        if segment["tickets_info"]:
+            price = str(segment["tickets_info"]["places"][0]["price"]["whole"])
+            if segment["tickets_info"]["places"][0]["price"]["cents"]:
+                price += ",{0}".format(
+                    segment["tickets_info"]["places"][0]["price"]["cents"]
+                )
+        else:
+            price = "?"
 
         segment_answer += \
             " Отправление в <b>{0}</b> ({1}) <code>{2}{3}</code>\n\n".format(

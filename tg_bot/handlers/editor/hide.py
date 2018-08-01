@@ -161,6 +161,7 @@ def types_selected_handler(call_back):
 @bot.callback_query_handler(
     func=lambda call_back: ask_to_select_types_answer in call_back.message.text
 )
+@telebot_login.login_required_callback
 def select_types_handler(call_back):
     message_text_data = call_back.message.text.split("\n\n")
     answer = "{0}\n\n{1}\n<b>{2}</b>\n{3}\n\n".format(

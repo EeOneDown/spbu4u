@@ -163,6 +163,8 @@ def types_selected_handler(call_back):
 )
 @telebot_login.login_required_callback
 def select_types_handler(call_back):
+    user = g.current_tbot_user
+
     message_text_data = call_back.message.text.split("\n\n")
     answer = "{0}\n\n{1}\n<b>{2}</b>\n{3}\n\n".format(
         message_text_data[0], message_text_data[1].split("\n")[0],

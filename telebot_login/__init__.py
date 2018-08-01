@@ -5,7 +5,7 @@ from functools import wraps
 
 from flask import g
 
-from app.constants import ask_register_answer
+from app.constants import ask_to_register_answer
 from app.models import User
 from tg_bot import bot
 
@@ -18,7 +18,7 @@ def login_required_message(func):
             g.current_tbot_user = user
             func(message)
         else:
-            bot.reply_to(message, ask_register_answer)
+            bot.reply_to(message, ask_to_register_answer)
     return wrapper
 
 
@@ -31,7 +31,7 @@ def login_required_callback(func):
             func(call_back)
         else:
             bot.edit_message_text(
-                text=ask_register_answer,
+                text=ask_to_register_answer,
                 chat_id=call_back.message.chat.id,
                 message_id=call_back.message.message_id,
                 parse_mode="HTML"
@@ -50,7 +50,7 @@ def login_required_inline(func):
             bot.answer_inline_query(
                 inline_query_id=inline_query.id,
                 results=[],
-                switch_pm_text=ask_register_answer,
+                switch_pm_text=ask_to_register_answer,
                 switch_pm_parameter="new_from_inline",
                 cache_time=1,
                 is_personal=True

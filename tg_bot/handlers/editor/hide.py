@@ -5,12 +5,12 @@ from flask import g
 
 from tg_bot import bot, functions as func
 from app.constants import (
-    emoji, max_inline_button_text_len, subject_short_type, hide_answer,
-    hide_lesson_answer
+    emoji, max_inline_button_text_len, subject_short_types, hide_answer,
+    hide_lesson_answer, selected_lesson_info_answer, ask_to_select_types_answer
 )
 from app import new_functions as nf
 import telebot_login
-from tg_bot.keyboards import week_day_keyboard, events_keyboard
+from tg_bot.keyboards import week_day_keyboard, events_keyboard, types_keyboard
 
 
 # Hide message
@@ -41,7 +41,7 @@ def select_day_hide_lesson_handler(call_back):
 
     bot_msg = bot.edit_message_text(
         text="Разбиваю занятия на пары\U00002026",
-        chat_id=call_back.message.chat.id,
+        chat_id=user.tg_id,
         message_id=call_back.message.message_id
     )
     answer = user.get_block_answer(
@@ -65,10 +65,10 @@ def select_day_hide_lesson_handler(call_back):
     func=lambda call_back: call_back.data == "prev_block"
 )
 @telebot_login.login_required_callback
-def next_block_handler(call_back):
+def select_block_handler(call_back):
     user = g.current_tbot_user
 
-    blocks_count, cur_block_num, for_date = nf.get_data_from_block_answer(
+    blocks_count, cur_block_num, for_date = nf.get_block_data_from_block_answer(
         call_back.message.text
     )
     if blocks_count == 1:
@@ -103,43 +103,24 @@ def next_block_handler(call_back):
     func=lambda call_back: hide_lesson_answer in call_back.message.text
 )
 @telebot_login.login_required_callback
-def lesson_selected_handler(call_back):
-    message_text_data = call_back.message.text.split("\n\n")
-    answer = "{0} ({1})\n\nВыбранное занятие: \n".format(
-        message_text_data[1], message_text_data[0].split(" ")[-1][1:-1])
-    events = message_text_data[2:-1]
-    chosen_event = ". ".join(
-        events[int(call_back.data.split(". ")[0]) - 1].split(". ")[1:])
-    event_title = chosen_event.split("\n")[0].strip(" {0}".format(
-        emoji["cross_mark"]))
-    event_type = event_title.split(" - ")[0]
-    event_title = " - ".join(event_title.split(" - ")[1:])
-    answer += "<b>{0}</b>\n{1}\n\nТипы: <b>Любой тип</b>\n\n".format(
-        event_title, "\n".join(chosen_event.split("\n")[1:]))
-    answer += "Укажи типы занятия, которые скрывать: "
-    types_keyboard = InlineKeyboardMarkup(row_width=3)
-    short_types = list(subject_short_type.values())
-    if event_type in short_types:
-        is_special_type = False
-    else:
-        is_special_type = True
-    types_keyboard.add(
-        *[InlineKeyboardButton(text=name, callback_data=name)
-          for name in short_types])
-    if is_special_type:
-        types_keyboard.row(
-            *[InlineKeyboardButton(
-                text=name, callback_data=name[:max_inline_button_text_len]
-            ) for name in [event_type]]
-        )
-    types_keyboard.row(
-        *[InlineKeyboardButton(text=name, callback_data=name)
-          for name in ["Отмена", "Далее"]])
-    bot.edit_message_text(text=answer,
-                          chat_id=call_back.message.chat.id,
-                          message_id=call_back.message.message_id,
-                          parse_mode="HTML",
-                          reply_markup=types_keyboard)
+def select_lesson_handler(call_back):
+    user = g.current_tbot_user
+
+    event_data = nf.get_event_data_from_block_answer(
+        text=call_back.message.text,
+        idx=int(call_back.data)
+    )
+    answer = selected_lesson_info_answer.format(
+        *event_data
+    ) + ask_to_select_types_answer
+
+    bot.edit_message_text(
+        text=answer,
+        chat_id=user.tg_id,
+        message_id=call_back.message.message_id,
+        parse_mode="HTML",
+        reply_markup=types_keyboard(event_type=event_data[2])
+    )
 
 
 # Next callback
@@ -175,9 +156,9 @@ def types_selected_handler(call_back):
 
 
 # Type callback
-@bot.callback_query_handler(func=lambda call_back:
-                            "Укажи типы занятия, которые скрывать:" in
-                            call_back.message.text)
+@bot.callback_query_handler(
+    func=lambda call_back: ask_to_select_types_answer in call_back.message.text
+)
 def select_types_handler(call_back):
     message_text_data = call_back.message.text.split("\n\n")
     answer = "{0}\n\n{1}\n<b>{2}</b>\n{3}\n\n".format(
@@ -197,7 +178,7 @@ def select_types_handler(call_back):
     answer += "Типы: <b>{0}</b>\n\nУкажи типы занятия, которые " \
               "скрывать:".format("; ".join(all_chosen_types))
     types_keyboard = InlineKeyboardMarkup(row_width=3)
-    short_types = [short_type for short_type in subject_short_type.values()]
+    short_types = [short_type for short_type in subject_short_types.values()]
     is_special_type = chosen_type not in short_types
     for i in range(len(short_types)):
         if short_types[i] in all_chosen_types:
@@ -300,8 +281,8 @@ def confirm_hide_lesson_handler(call_back):
         chosen_types = hide_event_types.split("; ")
         hide_event_types = ""
         for short_type in chosen_types:
-            if short_type in subject_short_type.values():
-                hide_event_types += func.get_key_by_value(subject_short_type,
+            if short_type in subject_short_types.values():
+                hide_event_types += func.get_key_by_value(subject_short_types,
                                                           short_type)
             else:
                 hide_event_types += short_type.lower()

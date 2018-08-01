@@ -22,11 +22,10 @@ def main_keyboard():
         keyboard.row("Сессия", "Расписание")
     else:
         keyboard.row("Расписание")
-        keyboard.row(
-            emoji["info"], emoji["star"], emoji["settings"], emoji["suburban"],
-            emoji["editor"]
-        )
-    return keyboard
+    return keyboard.row(
+        emoji["info"], emoji["star"], emoji["settings"], emoji["suburban"],
+        emoji["editor"]
+    )
 
 
 def schedule_keyboard():

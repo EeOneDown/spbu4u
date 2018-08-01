@@ -9,7 +9,7 @@ import pymysql
 from spbu import get_group_events
 from telebot.apihelper import ApiException
 
-from app.constants import emoji, subject_short_type, months, months_date, \
+from app.constants import emoji, subject_short_types, months, months_date, \
     week_day_number, week_day_titles, max_inline_button_text_len, \
     server_timedelta
 
@@ -69,8 +69,8 @@ def parse_event_subject(event):
 
     subject_type = event["Subject"].split(", ")[-1]
     stripped_subject_type = " ".join(subject_type.split()[:2])
-    if stripped_subject_type in subject_short_type.keys():
-        answer += subject_short_type[stripped_subject_type] + " - "
+    if stripped_subject_type in subject_short_types.keys():
+        answer += subject_short_types[stripped_subject_type] + " - "
     else:
         answer += subject_type.upper() + " - "
     answer += subject_name
@@ -424,8 +424,8 @@ def create_master_schedule_answer(day_info):
         answer += "<b>"
         subject_type = event["Subject"].split(", ")[-1]
         stripped_subject_type = " ".join(subject_type.split()[:2])
-        if stripped_subject_type in subject_short_type.keys():
-            answer += subject_short_type[stripped_subject_type] + " - "
+        if stripped_subject_type in subject_short_types.keys():
+            answer += subject_short_types[stripped_subject_type] + " - "
         else:
             answer += subject_type.upper() + " - "
         answer += ", ".join(

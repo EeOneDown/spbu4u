@@ -34,10 +34,7 @@ def week_handler(message):
 
 # Week schedule callback
 @bot.callback_query_handler(
-    func=lambda call_back: call_back.data in week_day_number.keys()
-)
-@bot.callback_query_handler(
-    func=lambda call_back: call_back.data == "Вся неделя"
+    func=lambda call_back: call_back.message.text == "Выбери день:"
 )
 @telebot_login.login_required_callback
 def select_week_day_schedule_handler(call_back):
@@ -104,7 +101,7 @@ def week_day_schedule_handler(call_back):
     )
     answer = user.create_answer_for_date(
         nf.get_date_by_weekday_title(
-            title=call_back.message.text.split(": ")[-1],
+            title=week_day_titles[call_back.message.text.split(": ")[-1]],
             is_next_week=call_back.data == "Следующее"
         )
     )

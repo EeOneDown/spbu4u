@@ -6,7 +6,7 @@ from telebot.types import ForceReply, ReplyKeyboardMarkup
 
 from app import db, new_functions as nf
 from app.constants import (
-    ask_for_input_educator_register, main_menu_first_answer
+    ask_to_input_educator_register, main_menu_first_answer
 )
 from app.models import User, Educator
 from tg_bot import bot
@@ -24,7 +24,7 @@ def input_educator_name_handler(call_back):
         message_id=call_back.message.message_id
     )
     bot.send_message(chat_id=call_back.message.chat.id,
-                     text=ask_for_input_educator_register,
+                     text=ask_to_input_educator_register,
                      reply_markup=ForceReply(),
                      parse_mode="HTML")
 
@@ -33,7 +33,7 @@ def input_educator_name_handler(call_back):
 @bot.message_handler(
     func=lambda mess: nf.bot_waiting_for(
         msg=mess,
-        waiting_bot_text=ask_for_input_educator_register
+        waiting_bot_text=ask_to_input_educator_register
     ),
     content_types=["text"]
 )
@@ -77,7 +77,7 @@ def select_educator(message):
         )
         bot.send_message(
             chat_id=message.chat.id,
-            text=ask_for_input_educator_register,
+            text=ask_to_input_educator_register,
             reply_markup=ForceReply()
         )
 

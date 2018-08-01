@@ -9,7 +9,7 @@ from telebot.apihelper import ApiException
 from telebot.types import Message
 
 from app.constants import (
-    emoji, subject_short_type, week_day_number, week_day_titles, months,
+    emoji, subject_short_types, week_day_number, week_day_titles, months,
     reg_before_30, reg_only_30, reg_only_31, interval_off_answer, urls,
     yandex_error_answer, yandex_segment_answer, all_stations
 )
@@ -110,7 +110,7 @@ def get_date_by_weekday_title(title, is_next_week=False):
     :rtype: date
     """
     work_monday = get_work_monday(is_next_week=is_next_week)
-    delta = week_day_number[week_day_titles[title]]
+    delta = week_day_number[title] - 1
     return work_monday + timedelta(days=delta)
 
 
@@ -218,8 +218,8 @@ def parse_event_subject(event):
     subject_type = event["Subject"].split(", ")[-1]
     # оставляем только перыве два слова
     stripped_subject_type = " ".join(subject_type.split()[:2])
-    if stripped_subject_type in subject_short_type.keys():
-        answer += subject_short_type[stripped_subject_type] \
+    if stripped_subject_type in subject_short_types.keys():
+        answer += subject_short_types[stripped_subject_type] \
                   + " " + emoji["en_dash"] + " "
     else:
         answer += subject_type.upper() \
@@ -299,9 +299,9 @@ def create_master_schedule_answer(day_info):
         answer += "<b>"
         subject_type = event["Subject"].split(", ")[-1]
         stripped_subject_type = " ".join(subject_type.split()[:2])
-        if stripped_subject_type in subject_short_type.keys():
-            answer += subject_short_type[stripped_subject_type] \
-                  + " " + emoji["en_dash"] + " "
+        if stripped_subject_type in subject_short_types.keys():
+            answer += subject_short_types[stripped_subject_type] \
+                      + " " + emoji["en_dash"] + " "
         else:
             answer += subject_type.upper() \
                   + " " + emoji["en_dash"] + " "
@@ -553,7 +553,7 @@ def bot_waiting_for(msg, waiting_bot_text):
     return False
 
 
-def get_data_from_block_answer(text):
+def get_block_data_from_block_answer(text):
     """
     Gets count of blocks, current block number and schedule's date from
     created block answer by `User.get_block_answer()`
@@ -568,6 +568,39 @@ def get_data_from_block_answer(text):
     current_block_num, blocks_count = list(map(int, rows[0].split()[::2]))
     for_date = get_date_by_weekday_title(rows[1].split()[-1][1:-1])
     return blocks_count, current_block_num, for_date
+
+
+def get_event_data_from_block_answer(text, idx):
+    """
+    Gets event's day short title, time, type, name and educators from
+    created block answer by `User.get_block_answer()`
+
+    :param text: block answer
+    :type text: str
+    :param idx: event index
+    :type idx: int
+    :return: event's day short title, time, type, name and educators
+    :rtype: tuple
+    """
+    rows = text.split("\n\n")
+
+    emoji_time_day = rows[1].split()
+    event_time = emoji_time_day[1]
+    event_day_short = emoji_time_day[-1][1:-1]
+
+    event_data = rows[idx + 2].split("\n")
+    event_type_name = event_data[0].split(" " + emoji["en_dash"] + " ")
+    event_name = (" " + emoji["en_dash"] + " ").join(event_type_name[1:])
+    event_type = event_type_name[0].strip(
+        str(idx + 1) + ". "
+    ).replace(
+        emoji["cross_mark"] + " ", ""
+    )
+    event_educators = [
+        place_edu.split("(")[-1].split(")")[0]
+        for place_edu in event_data[1:]
+    ]
+    return event_day_short, event_time, event_type, event_name, event_educators
 
 
 def send_long_message(bot, text, user_id, split="\n\n"):

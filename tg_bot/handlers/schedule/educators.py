@@ -9,7 +9,7 @@ from telebot.types import ForceReply
 
 import telebot_login
 from app import new_functions as nf
-from app.constants import emoji, loading_text, ask_for_input_educator
+from app.constants import emoji, loading_text, ask_to_input_educator
 from app.models import Educator
 from tg_bot import bot
 from tg_bot.keyboards import schedule_keyboard, found_educators_keyboard
@@ -26,13 +26,13 @@ def educator_schedule_handler(message):
 
     bot.send_chat_action(user.tg_id, "typing")
 
-    bot.send_message(user.tg_id, ask_for_input_educator,
+    bot.send_message(user.tg_id, ask_to_input_educator,
                      reply_markup=ForceReply(), parse_mode="HTML")
 
 
 # Educator name (Force reply) message
 @bot.message_handler(
-    func=lambda mess: nf.bot_waiting_for(mess, ask_for_input_educator),
+    func=lambda mess: nf.bot_waiting_for(mess, ask_to_input_educator),
     content_types=["text"]
 )
 @telebot_login.login_required_message
@@ -65,7 +65,7 @@ def write_educator_name_handler(message):
                  "Пожалуйста, <b>уточни</b>."
         bot.send_message(user.tg_id, answer, parse_mode="HTML")
 
-        bot.send_message(user.tg_id, ask_for_input_educator,
+        bot.send_message(user.tg_id, ask_to_input_educator,
                          reply_markup=ForceReply(), parse_mode="HTML")
     else:
         bot.send_message(

@@ -9,7 +9,7 @@ from app import db, new_functions as nf
 from app.constants import (
     week_off_answer, weekend_answer, emoji, max_answers_count,
     interval_exceeded_answer, changed_to_full_answer, changed_to_class_answer,
-    week_day_number, hide_lesson_answer
+    week_day_number, hide_lesson_answer, no_lessons_answer
 )
 
 
@@ -199,13 +199,21 @@ class User(db.Model):
         events = self._get_events(
             from_date=for_date,
             to_date=for_date + timedelta(days=1)
-        )[0]
+        )
+        if not events:
+            return no_lessons_answer
+        else:
+            events = events[0]
+
         blocks = nf.create_events_blocks(events["DayStudyEvents"])
         block = blocks[block_num - 1]
+
         answer = "<b>" + str(block_num) + " из " + str(len(blocks)) + "</b>\n\n"
+
         answer += nf.parse_event_time(block[0]) + " <i>(" + nf.get_key_by_value(
             week_day_number, for_date.isoweekday()
         ) + ")</i>" + "\n\n"
+
         for num, event in enumerate(block, start=1):
             lesson = Lesson().de_json(event)
 

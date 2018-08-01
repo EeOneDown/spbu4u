@@ -596,10 +596,10 @@ def get_event_data_from_block_answer(text, idx):
     ).replace(
         emoji["cross_mark"] + " ", ""
     )
-    event_educators = [
-        place_edu.split("(")[-1].split(")")[0]
-        for place_edu in event_data[1:]
-    ]
+    event_educators = ", ".join(
+        [place_edu.split("(")[-1].split(")")[0]
+         for place_edu in event_data[1:]]
+    )
     return event_day_short, event_time, event_type, event_name, event_educators
 
 

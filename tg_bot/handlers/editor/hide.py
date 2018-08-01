@@ -124,8 +124,10 @@ def select_lesson_handler(call_back):
 
 
 # Next callback
-@bot.callback_query_handler(func=lambda call_back:
-                            call_back.data == "Далее")
+@bot.callback_query_handler(
+    func=lambda call_back: call_back.data == "Далее"
+)
+@telebot_login.login_required_callback
 def types_selected_handler(call_back):
     message_text_data = call_back.message.text.split("\n\n")
     answer = "{0}\n\n{1}\n<b>{2}</b>\n{3}\n\nТипы: <b>{4}</b>\n\n".format(

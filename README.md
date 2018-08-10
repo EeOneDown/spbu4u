@@ -43,9 +43,6 @@
 - [x] callback
 
 
-## Screenshots
-Try a bot and see for yourself :) Click [here](https://t.me/Spbu4UBot?start=14887) for quick registration in a random group.
-
 ## Special thanks
 1. [@eternnoir](https://github.com/eternnoir) for [pyTelegramBotAPI](https://github.com/eternnoir/pyTelegramBotAPI)
 2. SPbU developer team for [SPbU Timetable API](https://timetable.spbu.ru/help/ui/index#/)

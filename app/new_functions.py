@@ -94,7 +94,7 @@ def get_work_monday(is_next_week=False):
     day = datetime.today().date()
     delta = day.weekday() if day.weekday() != 6 else -1
     if is_next_week:
-        delta += timedelta(days=7)
+        delta += 7
     return day - timedelta(days=delta)
 
 

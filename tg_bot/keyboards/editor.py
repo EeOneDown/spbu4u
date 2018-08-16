@@ -60,12 +60,14 @@ def events_keyboard(answer):
     )
 
 
-def types_keyboard(event_type=None):
+def types_keyboard(types, add=False):
     """
     Creates types keyboard
 
-    :param event_type: (Optional) special event type
-    :type event_type: str
+    :param types: special event type
+    :type types: list of str
+    :param add: (Optional)
+    :type add: bool
     :return: types keyboard
     :rtype: InlineKeyboardMarkup
     """
@@ -73,23 +75,36 @@ def types_keyboard(event_type=None):
 
     short_types = list(subject_short_types.values())
 
-    if event_type and event_type not in short_types:
-        is_special_type = True
-    else:
-        is_special_type = False
-
     inline_keyboard.add(
-        *[InlineKeyboardButton(text=name, callback_data=name)
-          for name in short_types]
+        *[InlineKeyboardButton(
+            text=(emoji["heavy_check_mark"] if not add and st in types else ""
+                  ) + st,
+            callback_data=st
+        ) for st in short_types]
     )
-    if is_special_type:
+    if add and types[0] not in short_types:
         inline_keyboard.row(
             *[InlineKeyboardButton(
                 text=name,
                 callback_data=name[:max_inline_button_text_len]
-            ) for name in [event_type]]
+            ) for name in [types]]
         )
     return inline_keyboard.row(
         *[InlineKeyboardButton(text=name, callback_data=name)
           for name in ["Отмена", "Далее"]]
     )
+
+
+def hide_keyboard():
+    """
+    Creates hide keyboard
+
+    :return: hide keyboard
+    :rtype: InlineKeyboardMarkup
+    """
+    inline_keyboard = InlineKeyboardMarkup(row_width=2)
+    inline_keyboard.add(
+        *[InlineKeyboardButton(text=name, callback_data=name)
+          for name in ["ЛЛЛ", "ЛЛК", "КЛЛ", "КЛК", "ККК", "ККЛ", "ЛКК", "ЛКЛ"]]
+    )
+    return inline_keyboard

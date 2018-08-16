@@ -9,9 +9,10 @@ from telebot.apihelper import ApiException
 from telebot.types import Message
 
 from app.constants import (
-    emoji, subject_short_types, week_day_number, week_day_titles, months,
+    emoji, subject_short_types, week_day_number, months,
     reg_before_30, reg_only_30, reg_only_31, interval_off_answer, urls,
-    yandex_error_answer, yandex_segment_answer, all_stations
+    yandex_error_answer, yandex_segment_answer, all_stations,
+    ask_to_select_types_answer, updated_types_answer
 )
 from config import Config
 import requests
@@ -596,11 +597,64 @@ def get_event_data_from_block_answer(text, idx):
     ).replace(
         emoji["cross_mark"] + " ", ""
     )
-    event_educators = ", ".join(
+    event_educators = "; ".join(
         [place_edu.split("(")[-1].split(")")[0]
          for place_edu in event_data[1:]]
     )
     return event_day_short, event_time, event_type, event_name, event_educators
+
+
+def update_types_answer(text, new_type):
+    """
+    Updates text by adding/removing type
+
+    :param text: bot's ald text
+    :type text: str
+    :param new_type: selected short type
+    :type new_type: str
+    :return: updated answer
+    :rtype: str
+    """
+    lesson_data = text.split("\n\n")[1].split("\n")
+
+    if lesson_data[-1] == "Типы: Все":
+        types = [new_type]
+    else:
+        types = lesson_data[-1][6:].split("; ")
+        if new_type in types:
+            types.remove(new_type)
+        else:
+            types.append(new_type)
+
+    lesson_data[-1] = "Типы: {0}".format("; ".join(types) if types else "Все")
+
+    return "\n\n".join([
+        updated_types_answer,
+        "\n".join(lesson_data),
+        ask_to_select_types_answer
+    ])
+
+
+def get_lesson_data(data, hide_type):
+    """
+    Creates dict with lesson data
+
+    :param data: `selected_lesson_info_answer` with data
+    :type data: str
+    :param hide_type: `ЛЛЛ`, `ЛКК`, etc
+    :type hide_type: str
+    :return: dict with lesson data
+    :rtype: dict
+    """
+    return dict(
+        name=data[2][10:],
+        types=[get_key_by_value(dct=subject_short_types, val=t) for t in
+               data[-1][6:].split("; ")] if "Все" not in data[-1] else None,
+        days=[data[0][6:]] if hide_type[0] == "К" else None,
+        times=[data[1][7:]] if hide_type[1] == "К" else None,
+        educators=data[3][15:].split("; ") if hide_type[2] == "К" else None,
+        places=None
+    )
 
 
 def send_long_message(bot, text, user_id, split="\n\n"):

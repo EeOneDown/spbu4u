@@ -105,11 +105,11 @@ class User(db.Model):
             )["Days"]
 
     def _parse_event(self, event):
-        lesson = Lesson().de_json(event)
-        suitable_skips = self.hidden_lessons.filter_by(name=lesson.name).all()
-        for skip in suitable_skips:
-            if lesson in skip:
-                return ""
+        if not self.is_educator:
+            lesson = Lesson().de_json(event)
+            for skip in self.hidden_lessons.filter_by(name=lesson.name).all():
+                if lesson in skip:
+                    return ""
         return nf.create_schedule_answer(event, self.is_full_place)
 
     def _parse_day_events(self, events):

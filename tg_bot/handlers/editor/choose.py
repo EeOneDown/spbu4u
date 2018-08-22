@@ -1,33 +1,45 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from datetime import datetime
-
-from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
+from flask import g
 
 from tg_bot import bot, functions as func
-from app.constants import emoji, max_inline_button_text_len, server_timedelta, \
-    week_day_titles, week_day_number
+from tg_bot.keyboards import choose_keyboard
+from app.constants import (
+    emoji, max_inline_button_text_len, server_timedelta, week_day_titles,
+    week_day_number, choose_answer
+)
+import telebot_login
+from app import new_functions as nf
 
 
 # Choose message
-@bot.message_handler(func=lambda mess:
-                     mess.text.capitalize() == "Выбрать",
-                     content_types=["text"])
+@bot.message_handler(
+    func=lambda mess: mess.text.capitalize() == "Выбрать",
+    content_types=["text"]
+)
+@telebot_login.login_required_message
+@telebot_login.student_required_message
 def choose_educator_handler(message):
-    bot.send_chat_action(message.chat.id, "typing")
-    answer = "Здесь ты можешь выбрать для отображения занятие или " \
-             "преподавателя:"
-    inline_keyboard = InlineKeyboardMarkup(True)
-    inline_keyboard.row(
-        *[InlineKeyboardButton(text=name, callback_data=name)
-          for name in ["Преподавателя", "Занятие"]])
-    bot.send_message(message.chat.id, answer, reply_markup=inline_keyboard)
+    user = g.current_tbot_user
+
+    bot.send_message(
+        chat_id=user.tg_id,
+        text=choose_answer,
+        reply_markup=choose_keyboard()
+    )
 
 
 # `lesson` callback
-@bot.callback_query_handler(func=lambda call_back: call_back.data == "Занятие")
+@bot.callback_query_handler(
+    func=lambda call_back: call_back.data == "Занятие"
+)
+@telebot_login.login_required_callback
+@telebot_login.student_required_callback
 def editor_choose_lesson_handler(call_back):
+    user = g.current_tbot_user
+
+    # TODO: stopped here
     answer = "Выбери пару с большим количеством занятий:"
     selective_blocks = func.get_selective_blocks(call_back.message.chat.id)
     blocks_keyboard = InlineKeyboardMarkup(True)
@@ -134,6 +146,22 @@ def lesson_chosen_handler(call_back):
     bot.edit_message_text(text=answer, chat_id=call_back.message.chat.id,
                           message_id=call_back.message.message_id,
                           parse_mode="HTML")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 # `educator` callback

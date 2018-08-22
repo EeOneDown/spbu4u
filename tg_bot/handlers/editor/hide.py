@@ -22,6 +22,7 @@ from tg_bot.keyboards import (
     content_types=["text"]
 )
 @telebot_login.login_required_message
+@telebot_login.student_required_message
 def hide_lesson_handler(message):
     user = g.current_tbot_user
 
@@ -39,6 +40,7 @@ def hide_lesson_handler(message):
     func=lambda call_back: call_back.message.text == hide_answer
 )
 @telebot_login.login_required_callback
+@telebot_login.student_required_callback
 def select_day_hide_lesson_handler(call_back):
     user = g.current_tbot_user
 
@@ -68,6 +70,7 @@ def select_day_hide_lesson_handler(call_back):
     func=lambda call_back: call_back.data == "prev_block"
 )
 @telebot_login.login_required_callback
+@telebot_login.student_required_callback
 def select_block_handler(call_back):
     user = g.current_tbot_user
 
@@ -106,6 +109,7 @@ def select_block_handler(call_back):
     func=lambda call_back: hide_lesson_answer in call_back.message.text
 )
 @telebot_login.login_required_callback
+@telebot_login.student_required_callback
 def select_lesson_handler(call_back):
     user = g.current_tbot_user
 
@@ -131,6 +135,7 @@ def select_lesson_handler(call_back):
     func=lambda call_back: call_back.data == "Далее"
 )
 @telebot_login.login_required_callback
+@telebot_login.student_required_callback
 def types_selected_handler(call_back):
     user = g.current_tbot_user
 
@@ -152,6 +157,7 @@ def types_selected_handler(call_back):
     func=lambda call_back: ask_to_select_types_answer in call_back.message.text
 )
 @telebot_login.login_required_callback
+@telebot_login.student_required_callback
 def select_types_handler(call_back):
     user = g.current_tbot_user
 
@@ -174,6 +180,7 @@ def select_types_handler(call_back):
     func=lambda callback: how_to_hide_answer in callback.message.text
 )
 @telebot_login.login_required_callback
+@telebot_login.student_required_callback
 def hide_lesson(call_back):
     user = g.current_tbot_user
 

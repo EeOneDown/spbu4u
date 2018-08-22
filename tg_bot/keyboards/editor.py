@@ -108,3 +108,16 @@ def hide_keyboard():
           for name in ["ЛЛЛ", "ЛЛК", "КЛЛ", "КЛК", "ККК", "ККЛ", "ЛКК", "ЛКЛ"]]
     )
     return inline_keyboard
+
+
+def choose_keyboard():
+    """
+    Creates choose keyboard
+
+    :return: choose keyboard
+    :rtype: InlineKeyboardMarkup
+    """
+    return InlineKeyboardMarkup().row(
+        *[InlineKeyboardButton(text=name, callback_data=name)
+          for name in ["Преподавателя", "Занятие"]]
+    )

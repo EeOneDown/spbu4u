@@ -7,7 +7,6 @@ from flask import g
 from telebot.apihelper import ApiException
 
 import telebot_login
-import tg_bot.functions as func
 from app import new_functions as nf
 from app.constants import week_day_number, week_day_titles, loading_text
 from tg_bot import bot
@@ -80,9 +79,9 @@ def all_week_schedule_handler(call_back):
             parse_mode="HTML"
         )
     except ApiException:
-        func.send_long_message(bot, answers[0], user.tg_id)
+        nf.send_long_message(bot, answers[0], user.tg_id)
     for answer in answers[1:]:
-        func.send_long_message(bot, answer, user.tg_id)
+        nf.send_long_message(bot, answer, user.tg_id)
 
 
 # Week type callback
@@ -115,4 +114,4 @@ def week_day_schedule_handler(call_back):
             parse_mode="HTML"
         )
     except ApiException:
-        func.send_long_message(bot, answer, user.tg_id)
+        nf.send_long_message(bot, answer, user.tg_id)

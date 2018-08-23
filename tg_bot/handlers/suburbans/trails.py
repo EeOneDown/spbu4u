@@ -67,15 +67,19 @@ def fast_trail_handler(message):
 
 
 # Trail message
-@bot.message_handler(func=lambda mess: mess.text.title() == "Маршрут",
-                     content_types=["text"])
+@bot.message_handler(
+    func=lambda mess: mess.text.title() == "Маршрут",
+    content_types=["text"]
+)
 @telebot_login.login_required_message
 def own_trail_handler(message):
     user = g.current_tbot_user
 
-    bot.send_message(chat_id=user.tg_id,
-                     text="Выбери начальную станцию:",
-                     reply_markup=start_station_keyboard())
+    bot.send_message(
+        chat_id=user.tg_id,
+        text="Выбери начальную станцию:",
+        reply_markup=start_station_keyboard()
+    )
 
 
 # personal trails callbacks
@@ -100,11 +104,13 @@ def to_home_or_univer_handler(call_back):
         from_title=nf.get_key_by_value(all_stations, from_code),
         to_title=nf.get_key_by_value(all_stations, to_code)
     )
-    bot.edit_message_text(text=answer,
-                          chat_id=user.tg_id,
-                          message_id=call_back.message.message_id,
-                          reply_markup=select_day_keyboard(),
-                          parse_mode="HTML")
+    bot.edit_message_text(
+        text=answer,
+        chat_id=user.tg_id,
+        message_id=call_back.message.message_id,
+        reply_markup=select_day_keyboard(),
+        parse_mode="HTML"
+    )
 
 
 # From station callback
@@ -118,11 +124,13 @@ def start_station_handler(call_back):
     answer = "Начальная: <b>{0}</b>\nВыбери конечную станцию:".format(
         call_back.data
     )
-    bot.edit_message_text(text=answer,
-                          chat_id=user.tg_id,
-                          message_id=call_back.message.message_id,
-                          reply_markup=end_station_keyboard(call_back.data),
-                          parse_mode="HTML")
+    bot.edit_message_text(
+        text=answer,
+        chat_id=user.tg_id,
+        message_id=call_back.message.message_id,
+        reply_markup=end_station_keyboard(call_back.data),
+        parse_mode="HTML"
+    )
 
 
 # Change start station callback
@@ -135,10 +143,12 @@ def change_start_station_handler(call_back):
 
     answer = "Выбери начальную станцию:"
 
-    bot.edit_message_text(text=answer,
-                          chat_id=user.tg_id,
-                          message_id=call_back.message.message_id,
-                          reply_markup=start_station_keyboard())
+    bot.edit_message_text(
+        text=answer,
+        chat_id=user.tg_id,
+        message_id=call_back.message.message_id,
+        reply_markup=start_station_keyboard()
+    )
 
 
 # To station callback
@@ -156,11 +166,13 @@ def end_station_handler(call_back):
         *[InlineKeyboardButton(text=name, callback_data=name)
           for name in ["Изменить конечную"]]
     )
-    bot.edit_message_text(text=answer,
-                          chat_id=user.tg_id,
-                          message_id=call_back.message.message_id,
-                          reply_markup=inline_keyboard,
-                          parse_mode="HTML")
+    bot.edit_message_text(
+        text=answer,
+        chat_id=user.tg_id,
+        message_id=call_back.message.message_id,
+        reply_markup=inline_keyboard,
+        parse_mode="HTML"
+    )
 
 
 # Change end station callback
@@ -176,10 +188,12 @@ def change_end_station_handler(call_back):
     answer = "Начальная: <b>{0}</b>\nВыбери конечную станцию:".format(
         start_station
     )
-    bot.edit_message_text(text=answer,
-                          chat_id=user.tg_id,
-                          message_id=call_back.message.message_id,
-                          reply_markup=end_station_keyboard(start_station))
+    bot.edit_message_text(
+        text=answer,
+        chat_id=user.tg_id,
+        message_id=call_back.message.message_id,
+        reply_markup=end_station_keyboard(start_station)
+    )
 
 
 # Day callback
@@ -218,8 +232,10 @@ def build_trail_handler(call_back):
     else:
         inline_keyboard = InlineKeyboardMarkup()
 
-    bot.edit_message_text(text=answer,
-                          chat_id=user.tg_id,
-                          message_id=bot_msg.message_id,
-                          reply_markup=inline_keyboard,
-                          parse_mode="HTML")
+    bot.edit_message_text(
+        text=answer,
+        chat_id=user.tg_id,
+        message_id=bot_msg.message_id,
+        reply_markup=inline_keyboard,
+        parse_mode="HTML"
+    )

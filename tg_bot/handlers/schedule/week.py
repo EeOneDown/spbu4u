@@ -73,10 +73,12 @@ def all_week_schedule_handler(call_back):
         )
     )
     try:
-        bot.edit_message_text(text=answers[0],
-                              chat_id=user.tg_id,
-                              message_id=bot_msg.message_id,
-                              parse_mode="HTML")
+        bot.edit_message_text(
+            text=answers[0],
+            chat_id=user.tg_id,
+            message_id=bot_msg.message_id,
+            parse_mode="HTML"
+        )
     except ApiException:
         func.send_long_message(bot, answers[0], user.tg_id)
     for answer in answers[1:]:
@@ -106,9 +108,11 @@ def week_day_schedule_handler(call_back):
         )
     )
     try:
-        bot.edit_message_text(text=answer,
-                              chat_id=user.tg_id,
-                              message_id=bot_msg.message_id,
-                              parse_mode="HTML")
+        bot.edit_message_text(
+            text=answer,
+            chat_id=user.tg_id,
+            message_id=bot_msg.message_id,
+            parse_mode="HTML"
+        )
     except ApiException:
         func.send_long_message(bot, answer, user.tg_id)

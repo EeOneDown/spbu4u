@@ -23,10 +23,12 @@ def input_educator_name_handler(call_back):
         chat_id=call_back.message.chat.id,
         message_id=call_back.message.message_id
     )
-    bot.send_message(chat_id=call_back.message.chat.id,
-                     text=ask_to_input_educator_register,
-                     reply_markup=ForceReply(),
-                     parse_mode="HTML")
+    bot.send_message(
+        chat_id=call_back.message.chat.id,
+        text=ask_to_input_educator_register,
+        reply_markup=ForceReply(),
+        parse_mode="HTML"
+    )
 
 
 # Educator search for register message

@@ -15,8 +15,10 @@ from tg_bot.keyboards import stations_keyboard, personalization_keyboard
 
 
 # Personalization message
-@bot.message_handler(func=lambda mess: mess.text.title() == "Персонализация",
-                     content_types=["text"])
+@bot.message_handler(
+    func=lambda mess: mess.text.title() == "Персонализация",
+    content_types=["text"]
+)
 @telebot_login.login_required_message
 def personalisation_handler(message):
     user = g.current_tbot_user
@@ -35,10 +37,12 @@ def personalisation_handler(message):
 
 
 # Choose station type callback
-@bot.callback_query_handler(func=lambda call_back:
-                            call_back.data == "Домашняя")
-@bot.callback_query_handler(func=lambda call_back:
-                            call_back.data == "Университетская")
+@bot.callback_query_handler(
+    func=lambda call_back: call_back.data == "Домашняя"
+)
+@bot.callback_query_handler(
+    func=lambda call_back: call_back.data == "Университетская"
+)
 @telebot_login.login_required_callback
 def home_station_handler(call_back):
     user = g.current_tbot_user
@@ -48,10 +52,12 @@ def home_station_handler(call_back):
     else:
         answer = select_univer_station
 
-    bot.edit_message_text(text=answer,
-                          chat_id=user.tg_id,
-                          message_id=call_back.message.message_id,
-                          reply_markup=stations_keyboard())
+    bot.edit_message_text(
+        text=answer,
+        chat_id=user.tg_id,
+        message_id=call_back.message.message_id,
+        reply_markup=stations_keyboard()
+    )
 
 
 # Choose station callback
@@ -85,8 +91,11 @@ def change_home_station_handler(call_back):
     )
     if is_both_changed:
         inline_answer = "{0} Изменены обе станции!".format(emoji["warning"])
-        bot.answer_callback_query(callback_query_id=call_back.id,
-                                  text=inline_answer, show_alert=True)
+        bot.answer_callback_query(
+            callback_query_id=call_back.id,
+            text=inline_answer,
+            show_alert=True
+        )
     db.session.commit()
 
     bot.edit_message_text(

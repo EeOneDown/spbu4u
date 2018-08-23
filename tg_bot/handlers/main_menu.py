@@ -14,9 +14,11 @@ import telebot_login
 # Cancel message (main menu)
 @bot.message_handler(commands=["home"])
 @bot.message_handler(
-    func=lambda mess:
-        mess.text.capitalize() == "Назад" or
-        mess.text == emoji["back"],
+    func=lambda mess: mess.text.capitalize() == "Назад",
+    content_types=["text"]
+)
+@bot.message_handler(
+    func=lambda mess: mess.text == emoji["back"],
     content_types=["text"]
 )
 @telebot_login.login_required_message
@@ -24,7 +26,11 @@ def home_handler(message):
     user = g.current_tbot_user
     bot.send_chat_action(user.tg_id, "typing")
     answer = "Главное меню"
-    bot.send_message(user.tg_id, answer, reply_markup=main_keyboard())
+    bot.send_message(
+        chat_id=user.tg_id,
+        text=answer,
+        reply_markup=main_keyboard()
+    )
 
 
 # Schedule menu message
@@ -37,7 +43,11 @@ def schedule_handler(message):
     user = g.current_tbot_user
     bot.send_chat_action(user.tg_id, "typing")
     answer = "Меню расписания"
-    bot.send_message(user.tg_id, answer, reply_markup=schedule_keyboard())
+    bot.send_message(
+        chat_id=user.tg_id,
+        text=answer,
+        reply_markup=schedule_keyboard()
+    )
 
 
 # Suburbans message
@@ -53,11 +63,13 @@ def suburban_handler(message):
     answer = "Меню расписания электричек\n\n" \
              "Данные предоставлены сервисом " \
              "<a href = 'http://rasp.yandex.ru/'>Яндекс.Расписания</a>"
-    bot.send_message(user.tg_id,
-                     answer,
-                     reply_markup=suburban_keyboard(),
-                     parse_mode='HTML',
-                     disable_web_page_preview=True)
+    bot.send_message(
+        chat_id=user.tg_id,
+        text=answer,
+        reply_markup=suburban_keyboard(),
+        parse_mode='HTML',
+        disable_web_page_preview=True
+    )
 
 
 # Editor message
@@ -74,10 +86,12 @@ def schedule_editor_handler(message):
     user = g.current_tbot_user
     bot.send_chat_action(user.tg_id, "typing")
     answer = "Редактор расписания"
-    bot.send_message(user.tg_id,
-                     answer,
-                     reply_markup=schedule_editor_keyboard(),
-                     parse_mode='HTML')
+    bot.send_message(
+        chat_id=user.tg_id,
+        text=answer,
+        reply_markup=schedule_editor_keyboard(),
+        parse_mode='HTML'
+    )
 
 
 # Settings message
@@ -91,7 +105,11 @@ def settings_handler(message):
     user = g.current_tbot_user
     bot.send_chat_action(user.tg_id, "typing")
     answer = "Настройки"
-    bot.send_message(user.tg_id, answer, reply_markup=settings_keyboard())
+    bot.send_message(
+        chat_id=user.tg_id,
+        text=answer,
+        reply_markup=settings_keyboard()
+    )
 
 
 # Rate message

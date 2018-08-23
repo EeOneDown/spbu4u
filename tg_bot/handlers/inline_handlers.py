@@ -29,8 +29,12 @@ def inline_query_weekday_schedule_handler(inline_query):
         ),
         description=user.get_current_status_title()
     )
-    bot.answer_inline_query(inline_query.id, [r], cache_time=1,
-                            is_personal=True)
+    bot.answer_inline_query(
+        inline_query_id=inline_query.id,
+        results=[r],
+        cache_time=1,
+        is_personal=True
+    )
 
 
 @bot.inline_handler(func=lambda query: True)
@@ -38,4 +42,9 @@ def inline_query_weekday_schedule_handler(inline_query):
 def inline_query_other_text_handler(inline_query):
     user = g.current_tbot_user
 
-    bot.answer_inline_query(user.tg_id, [], cache_time=1, is_personal=True)
+    bot.answer_inline_query(
+        inline_query_id=user.tg_id,
+        results=[],
+        cache_time=1,
+        is_personal=True
+    )

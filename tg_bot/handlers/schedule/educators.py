@@ -26,8 +26,12 @@ def educator_schedule_handler(message):
 
     bot.send_chat_action(user.tg_id, "typing")
 
-    bot.send_message(user.tg_id, ask_to_input_educator,
-                     reply_markup=ForceReply(), parse_mode="HTML")
+    bot.send_message(
+        chat_id=user.tg_id,
+        text=ask_to_input_educator,
+        reply_markup=ForceReply(),
+        parse_mode="HTML"
+    )
 
 
 # Educator name (Force reply) message
@@ -44,32 +48,50 @@ def write_educator_name_handler(message):
     name = message.text.strip(". ")
     if not nf.is_correct_educator_name(name):
         answer = "Недопустимые символы."
-        bot.send_message(user.tg_id, answer,
-                         reply_markup=schedule_keyboard())
+        bot.send_message(
+            chat_id=user.tg_id,
+            text=answer,
+            reply_markup=schedule_keyboard()
+        )
         return
 
     try:
         educators_data = spbu.search_educator(name)
     except spbu.ApiException:
         answer = "Во время выполнения запроса произошла ошибка."
-        bot.send_message(user.tg_id, answer,
-                         reply_markup=schedule_keyboard())
+        bot.send_message(
+            chat_id=user.tg_id,
+            text=answer,
+            reply_markup=schedule_keyboard()
+        )
         return
 
     if not educators_data["Educators"]:
         answer = "Никого не найдено."
-        bot.send_message(user.tg_id, answer,
-                         reply_markup=schedule_keyboard())
+        bot.send_message(
+            chat_id=user.tg_id,
+            text=answer,
+            reply_markup=schedule_keyboard()
+        )
     elif len(educators_data["Educators"]) > 10:
         answer = "Слишком много преподавателей.\n" \
                  "Пожалуйста, <b>уточни</b>."
-        bot.send_message(user.tg_id, answer, parse_mode="HTML")
-
-        bot.send_message(user.tg_id, ask_to_input_educator,
-                         reply_markup=ForceReply(), parse_mode="HTML")
+        bot.send_message(
+            chat_id=user.tg_id,
+            text=answer,
+            parse_mode="HTML"
+        )
+        bot.send_message(
+            chat_id=user.tg_id,
+            text=ask_to_input_educator,
+            reply_markup=ForceReply(),
+            parse_mode="HTML"
+        )
     else:
         bot.send_message(
-            user.tg_id, "Готово!", reply_markup=schedule_keyboard()
+            chat_id=user.tg_id,
+            text="Готово!",
+            reply_markup=schedule_keyboard()
         )
         bot.send_message(
             chat_id=user.tg_id,
@@ -96,9 +118,11 @@ def select_master_id_handler(call_back):
         message_id=call_back.message.message_id
     )
     answers = Educator(id=call_back.data).create_answers_for_term()
-    bot.edit_message_text(text=answers[0],
-                          chat_id=user.tg_id,
-                          message_id=bot_msg.message_id,
-                          parse_mode="HTML")
+    bot.edit_message_text(
+        text=answers[0],
+        chat_id=user.tg_id,
+        message_id=bot_msg.message_id,
+        parse_mode="HTML"
+    )
     for answer in answers[1:]:
         nf.send_long_message(bot, answer, user.tg_id)

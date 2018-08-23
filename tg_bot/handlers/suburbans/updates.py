@@ -51,17 +51,20 @@ def update_yandex_handler(call_back):
                 call_back.id, inline_answer, show_alert=True
             )
         inline_keyboard = update_keyboard(
-            show_less=show_more, for_tomorrow=for_tomorrow or is_tomorrow
+            show_less=show_more,
+            for_tomorrow=for_tomorrow or is_tomorrow
         )
     else:
         inline_keyboard = InlineKeyboardMarkup()
 
     try:
-        bot.edit_message_text(text=answer,
-                              chat_id=user.tg_id,
-                              message_id=call_back.message.message_id,
-                              parse_mode="HTML",
-                              reply_markup=inline_keyboard)
+        bot.edit_message_text(
+            text=answer,
+            chat_id=user.tg_id,
+            message_id=call_back.message.message_id,
+            parse_mode="HTML",
+            reply_markup=inline_keyboard
+        )
     except ApiException:
         pass
     finally:

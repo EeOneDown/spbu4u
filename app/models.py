@@ -9,9 +9,11 @@ from app import db, new_functions as nf
 from app.constants import (
     week_off_answer, weekend_answer, emoji, max_answers_count,
     interval_exceeded_answer, changed_to_full_answer, changed_to_class_answer,
-    week_day_number, hide_lesson_answer, no_lessons_answer
+    week_day_number, hide_lesson_answer, no_lessons_answer,
+    ask_to_select_lesson_answer, hidden_lessons_list_answer,
+    no_hidden_lessons_answer, chosen_educators_list_answer,
+    ask_to_select_edu_answer, no_chosen_educators_answer
 )
-
 
 users_groups_templates = db.Table(
     "users_groups",
@@ -299,6 +301,54 @@ class User(db.Model):
         self.added_lessons.all().clear()
         self.hidden_lessons.all().clear()
         self.chosen_educators.all().clear()
+
+    def create_lessons_reset_answer(self):
+        """
+        Method to create lessons reset answer
+
+        :return: answer
+        :rtype: str
+        """
+        lessons = self.hidden_lessons.all()
+        if lessons:
+            answer = hidden_lessons_list_answer
+            for lesson in lessons:
+                answer += "<b>id: {0}</b>\n".format(lesson.id)
+                answer += "<b>Название</b>: {0}\n".format(lesson.name)
+                if lesson.types:
+                    answer += "<b>Типы</b>: {0}\n".format(lesson.types)
+                if lesson.days:
+                    answer += "<b>Дни</b>: {0}\n".format(lesson.days)
+                if lesson.types:
+                    answer += "<b>Время</b>: {0}\n".format(lesson.types)
+                if lesson.educators:
+                    answer += "<b>Преподаватели</b>: {0}\n".format(
+                        lesson.educators
+                    )
+                answer += "\n"
+            return answer + ask_to_select_lesson_answer
+        else:
+            return no_hidden_lessons_answer
+
+    def create_educators_reset_answer(self):
+        """
+        Method to create educators reset answer
+
+        :return: answer
+        :rtype: str
+        """
+        educators = self.chosen_educators.all()
+        if educators:
+            answer = chosen_educators_list_answer
+            for lesson in educators:
+                answer += "<b>id: {0}</b>\n".format(lesson.id)
+                answer += "<b>Название</b>: {0}\n".format(lesson.name)
+                answer += "<b>Преподаватель</b>: {0}\n\n".format(
+                    lesson.educators[0]
+                )
+            return answer + ask_to_select_edu_answer
+        else:
+            return no_chosen_educators_answer
 
 
 class Group(db.Model):

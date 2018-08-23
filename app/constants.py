@@ -206,6 +206,19 @@ how_to_hide_answer = "Как скрыть занятие?\nДень - Время
                      "К - конкретный; Л - любой"
 choose_answer = "Здесь ты можешь выбрать для отображения занятие или " \
                 "преподавателя:"
+ask_to_reset_answer = "Выбери, что ты хочешь вернуть:"
+hidden_lessons_list_answer = "Вот список скрытых тобой занятий:\n\n"
+chosen_educators_list_answer = "Вот список занятий с выбранными " \
+                               "преподавателями:\n\n"
+ask_to_select_lesson_answer = "Выбери то, которое хочешь вернуть:"
+ask_to_select_edu_answer = "Выбери связь, которую хочешь убрать:"
+no_hidden_lessons_answer = "Скрытых занятий нет"
+no_chosen_educators_answer = "Скрытых преподавателей нет"
+reset_all_lessons_answer = "Все занятия возвращены"
+reset_lesson_answer = "Занятие <b>{0}</b> возвращено"
+reset_educator_answer = "Связь <b>{0}</b> убрана"
+full_reset_answer = "Все занятия и преподаватели возвращены"
+reset_all_educators_answer = "Все преподаватели возвращены"
 
 # groups: 0 - day, 3 - month, 5 - year
 reg_before_30 = re.compile(r"^(0?[1-9]|[12]\d)((\.| )(0?[1-9]|1[012]|января|февраля|марта|апреля|мая|ию[нл]я|августа|сентября|октября|ноября|декабря)(\3(20(1[8-9]|[2-9]\d)))?)?$")

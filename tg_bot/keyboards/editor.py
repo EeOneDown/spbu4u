@@ -2,8 +2,10 @@
 from __future__ import unicode_literals
 
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
+
 from app.constants import (
-    emoji, max_inline_button_text_len, subject_short_types, no_lessons_answer
+    emoji, max_inline_button_text_len, subject_short_types, no_lessons_answer,
+    no_hidden_lessons_answer, no_chosen_educators_answer
 )
 
 
@@ -120,4 +122,82 @@ def choose_keyboard():
     return InlineKeyboardMarkup().row(
         *[InlineKeyboardButton(text=name, callback_data=name)
           for name in ["Преподавателя", "Занятие"]]
+    )
+
+
+def reset_keyboard():
+    """
+    Creates reset keyboard
+
+    :return: reset keyboard
+    :rtype: InlineKeyboardMarkup
+    """
+    return InlineKeyboardMarkup().row(
+        *[InlineKeyboardButton(text=name, callback_data=name)
+          for name in ["Преподавателей", "Занятия"]]
+    ).row(
+        *[InlineKeyboardButton(text=name, callback_data=name)
+          for name in ["Полный сброс"]]
+    )
+
+
+def hidden_lessons_keyboard(text):
+    """
+    Creates hidden lessons keyboard
+
+    :param text: bot's answer created by `User.create_lessons_reset_answer()`
+    :type text: str
+    :return: hidden lessons keyboard
+    :rtype: InlineKeyboardMarkup
+    """
+    inline_keyboard = InlineKeyboardMarkup()
+
+    if text == no_hidden_lessons_answer:
+        return inline_keyboard
+
+    for lesson in text.split("\n\n")[1:-1]:
+        lesson_data = lesson.split("\n")
+
+        inline_keyboard.row(
+            *[InlineKeyboardButton(
+                text="{0}. {1}".format(
+                    lesson_data[0][7:-4], lesson_data[1][17:]
+                )[:max_inline_button_text_len],
+                callback_data=lesson_data[0][7:-4]
+            )]
+        )
+    return inline_keyboard.row(
+        *[InlineKeyboardButton(text=name, callback_data=name)
+          for name in ["Отмена", "Вернуть всё"]]
+    )
+
+
+def chosen_educators_keyboard(text):
+    """
+    Creates chosen educators keyboard
+
+    :param text: bot's answer created by `User.create_educators_reset_answer()`
+    :type text: str
+    :return: chosen educators keyboard
+    :rtype: InlineKeyboardMarkup
+    """
+    inline_keyboard = InlineKeyboardMarkup()
+
+    if text == no_chosen_educators_answer:
+        return inline_keyboard
+
+    for lesson in text.split("\n\n")[1:-1]:
+        lesson_data = lesson.split("\n")
+
+        inline_keyboard.row(
+            *[InlineKeyboardButton(
+                text="{0}. {1}".format(
+                    lesson_data[0][7:-4], lesson_data[1][17:]
+                )[:max_inline_button_text_len],
+                callback_data=lesson_data[0][7:-4]
+            )]
+        )
+    return inline_keyboard.row(
+        *[InlineKeyboardButton(text=name, callback_data=name)
+          for name in ["Отмена", "Вернуть всех"]]
     )

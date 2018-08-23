@@ -5,6 +5,7 @@ import json
 import re
 from datetime import datetime, timedelta, date
 
+import requests
 from telebot.apihelper import ApiException
 from telebot.types import Message
 
@@ -15,7 +16,6 @@ from app.constants import (
     ask_to_select_types_answer, updated_types_answer
 )
 from config import Config
-import requests
 
 
 def delete_cancelled_events(events):
@@ -637,7 +637,7 @@ def update_types_answer(text, new_type):
 
 def get_lesson_data(data, hide_type):
     """
-    Creates dict with lesson data
+    Creates dict with lesson data for `Lesson.__init__()`
 
     :param data: `selected_lesson_info_answer` with data
     :type data: str

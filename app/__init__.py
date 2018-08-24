@@ -24,6 +24,9 @@ def create_app(config_class=Config):
     from app.main import bp as main_bp
     app.register_blueprint(main_bp)
 
+    from app.tg import bp as tg_bp
+    app.register_blueprint(tg_bp, url_prefix='/tg')
+
     return app
 
 from app import models

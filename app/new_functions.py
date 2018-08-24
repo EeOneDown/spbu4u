@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 
 import json
+import logging
 import re
 from datetime import datetime, timedelta, date
 
@@ -668,3 +669,20 @@ def send_long_message(bot, text, user_id, split="\n\n"):
             second_part = split.join(text.split(split)[event_count // 2:])
             send_long_message(bot, first_part, user_id, split)
             send_long_message(bot, second_part, user_id, split)
+
+
+def write_log(update, work_time, was_error=False):
+    if update.message is not None:
+        chat_id = update.message.chat.id
+        user_text = update.message.text
+    elif update.callback_query is not None:
+        chat_id = update.callback_query.message.chat.id
+        user_text = update.callback_query.data
+    else:
+        chat_id = "ERROR"
+        user_text = str(update)
+    log = "CHAT: {0} ===== TEXT: {1} ===== TIME: {2}".format(
+        chat_id, user_text, work_time)
+    if was_error:
+        log += "\t\t\tERROR"
+    logging.info(log)

@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
+from app import new_functions as nf
 from app.constants import (
     emoji, max_inline_button_text_len, subject_short_types, no_lessons_answer,
     no_hidden_lessons_answer, no_chosen_educators_answer
@@ -200,4 +201,47 @@ def chosen_educators_keyboard(text):
     return inline_keyboard.row(
         *[InlineKeyboardButton(text=name, callback_data=name)
           for name in ["Отмена", "Вернуть всех"]]
+    )
+
+
+def selectable_blocks_keyboard(selectable_blocks_keys):
+    """
+    Creates selectable blocks keyboard
+
+    :param selectable_blocks_keys: keys from `User.get_selectable_blocks()`
+    :type selectable_blocks_keys: dict_keys
+    :return: selectable blocks keyboard
+    :rtype: InlineKeyboardMarkup
+    """
+    inline_keyboard = InlineKeyboardMarkup()
+    inline_keyboard.add(
+        *[InlineKeyboardButton(text=name, callback_data=name)
+          for name in selectable_blocks_keys]
+    )
+    if selectable_blocks_keys:
+        inline_keyboard.row(
+            *[InlineKeyboardButton(text=name, callback_data=name)
+              for name in ["Отмена"]]
+        )
+    return inline_keyboard
+
+
+def block_lessons_keyboard(block):
+    """
+    Creates block lessons keyboard
+
+    :param block: block from `User.get_selectable_blocks()`
+    :return: block lessons keyboard
+    :rtype: InlineKeyboardMarkup
+    """
+    inline_keyboard = InlineKeyboardMarkup()
+    for num, event in enumerate(block):
+        text = "{0}. {1}".format(
+            num + 1, nf.parse_event_subject(event)[:max_inline_button_text_len]
+        )
+        inline_keyboard.row(
+            InlineKeyboardButton(text=text, callback_data=num)
+        )
+    return inline_keyboard.row(
+        InlineKeyboardButton(text="Отмена", callback_data="Отмена")
     )

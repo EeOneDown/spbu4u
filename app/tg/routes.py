@@ -91,6 +91,7 @@ def reset_webhook():
 @bp.route(webhook_url_path, methods=["POST"])
 def webhook():
     if request.headers.get("content-type") == "application/json":
+        # Запускать бота фоновым процессом в RQ?
         run_bot(
             update=Update.de_json(
                 json_type=request.get_data().decode("utf-8")

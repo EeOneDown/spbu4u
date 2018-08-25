@@ -12,7 +12,8 @@ from app.constants import (
     week_day_number, hide_lesson_answer, no_lessons_answer,
     ask_to_select_lesson_answer, hidden_lessons_list_answer,
     no_hidden_lessons_answer, chosen_educators_list_answer,
-    ask_to_select_edu_answer, no_chosen_educators_answer
+    ask_to_select_edu_answer, no_chosen_educators_answer,
+    selectable_block_answer, ask_to_select_block_lesson_answer
 )
 
 users_groups_templates = db.Table(
@@ -168,12 +169,9 @@ class User(db.Model):
         """
         answers = []
 
-        if not to_date:
-            to_date = from_date + timedelta(days=7)
-
         events = self._get_events(
             from_date=from_date,
-            to_date=to_date
+            to_date=to_date or (from_date + timedelta(days=7))
         )
         for event in events:
             answers.append(self._parse_day_events(event))
@@ -349,6 +347,129 @@ class User(db.Model):
             return answer + ask_to_select_edu_answer
         else:
             return no_chosen_educators_answer
+
+    def get_selectable_blocks(self):
+        """
+        Gets selectable blocks: keys - weekday & time, values - event's data.
+
+        :return: selectable blocks
+        :rtype: dict
+        """
+        from_date = nf.get_work_monday()
+        week_events = self._get_events(
+            from_date=from_date,
+            to_date=from_date + timedelta(days=7)
+        )
+        selectable_blocks = {}
+        for day_events in week_events:
+            for block in nf.create_events_blocks(day_events):
+                if len(block) > 1:
+                    key = "{0} {1}".format(
+                        day_events["DayString"].split(", ")[0].capitalize(),
+                        nf.parse_event_time(block[0])
+                    )
+                    selectable_blocks[key] = block
+        return selectable_blocks
+
+    def parse_selectable_block(self, block):
+        """
+
+        :param block:
+        :return:
+        """
+        answer = selectable_block_answer
+        for num, event in enumerate(block, start=1):
+            subject = nf.parse_event_subject(event)
+
+            lesson = Lesson().de_json(event)
+
+            hide_mark = ""
+            for skip in self.hidden_lessons.filter_by(name=lesson.name).all():
+                if lesson in skip:
+                    hide_mark = emoji["cross_mark"] + " "
+                    break
+
+            locations = ""
+            for location in event["EventLocations"]:
+                locations += nf.parse_event_location(location)
+                locations += "\n"
+
+            answer += "<b>{0}. {1}</b>{2}\n{3}\n".format(
+                num, subject, hide_mark, locations
+            )
+        return answer + ask_to_select_block_lesson_answer
+
+    def hide_block_lessons(self, text, chosen_idx):
+        """
+        Hides all lessons from block (bot's answer) and returns answer
+        with chosen lesson
+
+        :param text: bot's text created by `User.parse_selectable_block()`
+        :type text: str
+        :param chosen_idx: index of chosen lesson
+        :type chosen_idx: int
+        :return: answer with chosen lesson
+        :rtype: str
+        """
+        # Удаляем все метки скрытых занятий
+        bot_message_text = text.replace(old=" " + emoji["cross_mark"], new="")
+        # берем список занятий
+        lessons = bot_message_text.split("\n\n")[1:-1]
+
+        # Получаем название выбранного занятия
+        chosen_lesson_name = " - ".join(
+            lessons[chosen_idx].split("\n")[0].split(" - ")[1:]
+        )
+        # Сразу преподов не заполняем, так как список может не понадобиться
+        chosen_lesson_educators = []
+
+        all_hidden_lessons = self.hidden_lessons.all()
+
+        for lesson in lessons:
+            # Парсим каждое занятие, кроме выбранного
+            if lessons.index(lesson) == chosen_idx:
+                continue
+
+            # Получаем название выбранного занятия
+            hide_event_name = " - ".join(lesson.split("\n")[0].split(" - ")[1:])
+            # Преподов опять же сразу не заполняем
+            hide_educators = []
+
+            # Если несколько одинаковых занятий по названию, то скрываем
+            # вместе с преподавателями
+            if hide_event_name == chosen_lesson_name:
+                # Создаем список преподов оставленного занятия..
+                if not chosen_lesson_educators:
+                    for place_edu in lessons[chosen_idx].split("\n")[
+                                     1:]:
+                        pos = place_edu.find("(")
+                        # ..если это, конечно, возможно
+                        if pos != -1:
+                            chosen_lesson_educators.append(
+                                place_edu[pos + 1:-1])
+
+                # Получаем список преподов у скрываемого занятия..
+                for place_edu in lesson.split("\n")[1:]:
+                    pos = place_edu.find("(")
+                    # ..если это, конечно, возможно
+                    if pos != -1:
+                        hide_educators.append(place_edu[pos + 1:-1])
+
+            # И скрываем его
+            hidden_lesson = Lesson.add_or_get(
+                name=hide_event_name,
+                types=None,
+                days=None,
+                times=None,
+                educators=hide_educators,
+                places=None
+            )
+            if hidden_lesson not in all_hidden_lessons:
+                self.hidden_lessons.append(hidden_lesson)
+
+        return "Выбрано занятие <b>{0}</b> <i>{1}</i>".format(
+            chosen_lesson_name, chosen_lesson_educators
+        )
 
 
 class Group(db.Model):

@@ -1,7 +1,8 @@
 from tg_bot.keyboards.editor import (
     place_keyboard, events_keyboard, types_keyboard, hide_keyboard,
     choose_keyboard, reset_keyboard, hidden_lessons_keyboard,
-    chosen_educators_keyboard
+    chosen_educators_keyboard, selectable_blocks_keyboard,
+    block_lessons_keyboard
 )
 from tg_bot.keyboards.menu import (
     main_keyboard, schedule_keyboard, suburban_keyboard,

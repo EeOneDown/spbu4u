@@ -57,7 +57,8 @@ def select_day_hide_lesson_handler(call_back):
         text=answer,
         chat_id=user.tg_id,
         message_id=bot_msg.message_id,
-        reply_markup=events_keyboard(answer)
+        reply_markup=events_keyboard(answer),
+        parse_mode="HTML"
     )
 
 
@@ -100,7 +101,8 @@ def select_block_handler(call_back):
         text=answer,
         chat_id=user.tg_id,
         message_id=bot_msg.message_id,
-        reply_markup=events_keyboard(answer)
+        reply_markup=events_keyboard(answer),
+        parse_mode="HTML"
     )
 
 

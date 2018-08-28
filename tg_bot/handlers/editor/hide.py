@@ -96,7 +96,7 @@ def select_block_handler(call_back):
     )
     answer = user.get_block_answer(
         for_date=for_date,
-        block_num=cur_bl_n + (1 if is_next_block else -1) % bl_cnt or bl_cnt
+        block_num=(cur_bl_n + (1 if is_next_block else -1)) % bl_cnt or bl_cnt
     )
     bot.edit_message_text(
         text=answer,

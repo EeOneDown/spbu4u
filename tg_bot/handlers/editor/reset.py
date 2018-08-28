@@ -121,7 +121,7 @@ def return_lesson_handler(call_back):
 
     lesson = sql_request.filter_by(id=int(call_back.data)).first()
 
-    sql_request.all().remove(lesson)
+    sql_request.remove(lesson)
 
     db.session.commit()
 

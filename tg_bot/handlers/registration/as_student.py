@@ -1,11 +1,9 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-import spbu
-
-from app import db
+from app import new_functions as nf
 from app.constants import main_menu_first_answer
-from app.models import User, Group
+from app.models import Group
 from tg_bot import bot
 from tg_bot.keyboards import (
     divisions_keyboard, levels_keyboard, programs_keyboard, years_keyboard,
@@ -128,38 +126,17 @@ def register_student_handler(call_back):
         chat_id=call_back.message.chat.id,
         message_id=call_back.message.message_id
     )
-    group = Group.query.get(call_back.data)
-    if not group:
-        group = Group(
-            id=call_back.data,
-            title=spbu.get_group_events(
-                group_id=call_back.data
-            )["StudentGroupDisplayName"]
-        )
-        db.session.add(group)
-
-    user = User.query.filter_by(tg_id=call_back.message.chat.id).first()
-    if not user:
-        user = User(
-            tg_id=call_back.message.chat.id,
-            is_educator=False,
-            current_group_id=call_back.data,
-            current_educator_id=0
-        )
-    else:
-        user.current_group_id = call_back.data
-        user.current_educator_id = 0
-        user.is_educator = False
-    db.session.add(user)
-
-    db.session.commit()
-
+    user = nf.reg_user(
+        model=Group,
+        o_id=int(call_back.data),
+        is_edu=False,
+        tg_id=call_back.message.chat.id
+    )
     bot.edit_message_text(
         chat_id=user.tg_id,
         text="Готово!",
         message_id=bot_msg.message_id
     )
-
     bot.send_message(
         text=main_menu_first_answer,
         parse_mode="HTML",

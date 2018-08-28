@@ -240,3 +240,6 @@ no_edu_days_answer = "Нет занятий с большим количеств
 reg_before_30 = re.compile(r"^(0?[1-9]|[12]\d)((\.| )(0?[1-9]|1[012]|января|февраля|марта|апреля|мая|ию[нл]я|августа|сентября|октября|ноября|декабря)(\3(20(1[8-9]|[2-9]\d)))?)?$")
 reg_only_30 = re.compile(r"^(30)((\.| )(0[13-9]|1[012]|января|марта|апреля|мая|ию[нл]я|августа|сентября|октября|ноября|декабря)(\3(20(1[8-9]|[2-9]\d)))?)?$")
 reg_only_31 = re.compile(r"^(31)((\.| )(0[13578]|1[02]|января|марта|мая|июля|августа|октября|декабря)(\3(20(1[8-9]|[2-9]\d)))?)?$")
+
+reg_tt_g_link = re.compile(r"^https:\/\/timetable\.spbu\.ru\/\w+\/StudentGroupEvents\/(Primary|Online|Attestation|Final|Semester)\/(\d+)(.*)?$")
+reg_tt_e_link = re.compile(r"^https:\/\/timetable\.spbu\.ru\/(EducatorEvents|WeekEducatorEvents)\/(\d+)(.*)?$")

@@ -94,33 +94,12 @@ def register_student_handler(call_back):
         chat_id=call_back.message.chat.id,
         message_id=call_back.message.message_id
     )
-    educator_id = int(call_back.data)
-    educator = Educator.query.get(educator_id)
-    if not educator:
-        educator = Educator(
-            id=educator_id,
-            title=spbu.get_educator_events(
-                educator_id=educator_id
-            )["EducatorLongDisplayText"]
-        )
-        db.session.add(educator)
-
-    user = User.query.filter_by(tg_id=call_back.message.chat.id).first()
-    if not user:
-        user = User(
-            tg_id=call_back.message.chat.id,
-            is_educator=True,
-            current_group_id=0,
-            current_educator_id=educator_id
-        )
-    else:
-        user.current_group_id = 0
-        user.current_educator_id = educator_id
-        user.is_educator = True
-    db.session.add(user)
-
-    db.session.commit()
-
+    user = nf.reg_user(
+        model=Educator,
+        o_id=int(call_back.data),
+        is_edu=True,
+        tg_id=call_back.message.chat.id
+    )
     bot.edit_message_text(
         chat_id=user.tg_id,
         text="Готово!",

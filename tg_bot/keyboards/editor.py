@@ -53,7 +53,7 @@ def events_keyboard(answer):
             ).replace(
                 " " + emoji["cross_mark"], ""
             )[:max_inline_button_text_len],
-            callback_data=i
+            callback_data=str(i)
         )
           for i, event in enumerate(events)]
     )
@@ -240,7 +240,7 @@ def block_lessons_keyboard(block):
             num + 1, nf.parse_event_subject(event)[:max_inline_button_text_len]
         )
         inline_keyboard.row(
-            InlineKeyboardButton(text=text, callback_data=num)
+            InlineKeyboardButton(text=text, callback_data=str(num))
         )
     return inline_keyboard.row(
         InlineKeyboardButton(text="Отмена", callback_data="Отмена")

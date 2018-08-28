@@ -117,7 +117,7 @@ def years_keyboard(path, program_slice):
     inline_keyboard.add(
         *[InlineKeyboardButton(
             text=y["YearName"],
-            callback_data=y["StudyProgramId"]
+            callback_data=str(y["StudyProgramId"])
         ) for y in years]
     )
     return inline_keyboard
@@ -138,7 +138,7 @@ def groups_keyboard(program_id):
     inline_keyboard.add(
         *[InlineKeyboardButton(
             text=g["StudentGroupName"],
-            callback_data=g["StudentGroupId"]
+            callback_data=str(g["StudentGroupId"])
         ) for g in groups["Groups"]]
     )
     return inline_keyboard

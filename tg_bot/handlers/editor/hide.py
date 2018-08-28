@@ -75,10 +75,11 @@ def select_day_hide_lesson_handler(call_back):
 def select_block_handler(call_back):
     user = g.current_tbot_user
 
-    blocks_count, cur_block_num, for_date = nf.get_block_data_from_block_answer(
+    # read bl as block
+    bl_cnt, cur_bl_n, for_date = nf.get_block_data_from_block_answer(
         call_back.message.text
     )
-    if blocks_count == 1:
+    if bl_cnt == 1:
         bot.answer_callback_query(
             call_back.id, "Доступна только одна пара", cache_time=2
         )
@@ -95,7 +96,7 @@ def select_block_handler(call_back):
     )
     answer = user.get_block_answer(
         for_date=for_date,
-        block_num=cur_block_num + (1 if is_next_block else -1)
+        block_num=cur_bl_n + (1 if is_next_block else -1) % bl_cnt or bl_cnt
     )
     bot.edit_message_text(
         text=answer,

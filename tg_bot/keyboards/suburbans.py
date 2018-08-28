@@ -34,7 +34,7 @@ def end_station_keyboard(chosen_station):
     :return: inline keyboard
     :rtype: InlineKeyboardMarkup
     """
-    inline_keyboard = InlineKeyboardMarkup()
+    inline_keyboard = InlineKeyboardMarkup(row_width=1)
     inline_keyboard.add(
         *[InlineKeyboardButton(text=name, callback_data=name)
           for name in all_stations.keys() if name != chosen_station]

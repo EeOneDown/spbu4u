@@ -38,12 +38,12 @@ def events_keyboard(answer):
     :return: events keyboard
     :rtype: InlineKeyboardMarkup
     """
-    inline_keyboard = InlineKeyboardMarkup()
+    inline_keyboard = InlineKeyboardMarkup(row_width=1)
 
     if answer == no_lessons_answer:
         return inline_keyboard
 
-    events = answer.split("\n\n")[2:]
+    events = answer.split("\n\n")[2:-1]
     inline_keyboard.add(
         *[InlineKeyboardButton(
             text=event.split("\n")[0].replace(
@@ -213,7 +213,7 @@ def selectable_blocks_keyboard(selectable_blocks_keys):
     :return: selectable blocks keyboard
     :rtype: InlineKeyboardMarkup
     """
-    inline_keyboard = InlineKeyboardMarkup()
+    inline_keyboard = InlineKeyboardMarkup(row_width=1)
     inline_keyboard.add(
         *[InlineKeyboardButton(text=name, callback_data=name)
           for name in selectable_blocks_keys]

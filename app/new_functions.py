@@ -654,7 +654,7 @@ def get_lesson_data(data, hide_type):
         days=[data[0][6:]] if hide_type[0] == "К" else None,
         times=[data[1][7:]] if hide_type[1] == "К" else None,
         educators=data[3][15:].split("; ") if hide_type[2] == "К" else None,
-        places=None
+        locations=None
     )
 
 

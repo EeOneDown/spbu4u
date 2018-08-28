@@ -514,7 +514,7 @@ class User(db.Model):
                 days=None,
                 times=None,
                 educators=hide_educators,
-                places=None
+                locations=None
             )
             if hidden_lesson not in all_hidden_lessons:
                 self.hidden_lessons.append(hidden_lesson)
@@ -650,7 +650,7 @@ class Lesson(db.Model):
                 and self.locations == other.locations)
 
     @staticmethod
-    def add_or_get(name, types, days, times, educators, places):
+    def add_or_get(name, types, days, times, educators, locations):
         """
         Так как из полей типа JSON сделать уникальный индекс нельзя, то
         приходится проверять наличие элемента в базе перед добавлением.
@@ -658,10 +658,10 @@ class Lesson(db.Model):
         """
         lesson = Lesson.query.filter_by(name=name, types=types, days=days,
                                         times=times, educators=educators,
-                                        places=places).first()
+                                        locations=locations).first()
         if not lesson:
             lesson = Lesson(name=name, types=types, days=days, times=times,
-                            educators=educators, places=places)
+                            educators=educators, locations=locations)
             db.session.add(lesson)
         return lesson
 

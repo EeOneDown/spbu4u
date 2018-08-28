@@ -4,11 +4,11 @@ from __future__ import unicode_literals
 import spbu
 from telebot.types import ForceReply, ReplyKeyboardMarkup
 
-from app import db, new_functions as nf
+from app import new_functions as nf
 from app.constants import (
     ask_to_input_educator_register, main_menu_first_answer
 )
-from app.models import User, Educator
+from app.models import User
 from tg_bot import bot
 from tg_bot.keyboards import found_educators_keyboard, main_keyboard
 
@@ -94,8 +94,7 @@ def register_student_handler(call_back):
         chat_id=call_back.message.chat.id,
         message_id=call_back.message.message_id
     )
-    user = nf.reg_user(
-        model=Educator,
+    user = User.reg_user(
         o_id=int(call_back.data),
         is_edu=True,
         tg_id=call_back.message.chat.id

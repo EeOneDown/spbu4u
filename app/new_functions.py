@@ -7,18 +7,15 @@ import re
 from datetime import datetime, timedelta, date
 
 import requests
-import spbu
 from telebot.apihelper import ApiException
 from telebot.types import Message
 
-from app import db
 from app.constants import (
     emoji, subject_short_types, week_day_number, months,
     reg_before_30, reg_only_30, reg_only_31, interval_off_answer, urls,
     yandex_error_answer, yandex_segment_answer, all_stations,
     ask_to_select_types_answer, updated_types_answer
 )
-from app.models import User, Group, Educator
 from config import Config
 
 
@@ -689,53 +686,3 @@ def write_log(update, work_time, was_error=False):
     if was_error:
         log += "\t\t\tERROR"
     logging.info(log)
-
-
-def reg_user(o_id, is_edu, tg_id):
-    """
-    Registers or updates user
-
-    :param o_id: an object id (educator or group)
-    :type o_id: int
-    :param is_edu: if the user is an educator
-    :type is_edu: bool
-    :param tg_id: the user's telegram chat id
-    :type tg_id: int
-    :return: the new or updated user
-    :rtype: User
-    """
-    obj = (Educator if is_edu else Group).query.get(o_id)
-    if not obj:
-        if is_edu:
-            obj = Educator(
-                id=o_id,
-                title=spbu.get_educator_events(
-                    educator_id=o_id)
-                ["EducatorLongDisplayText"]
-            )
-        else:
-            obj = (Educator if is_edu else Group)(
-                id=o_id,
-                title=spbu.get_group_events(
-                    group_id=o_id
-                )["StudentGroupDisplayName"]
-            )
-        db.session.add(obj)
-
-    user = User.query.filter_by(tg_id=tg_id).first()
-    if not user:
-        user = User(
-            tg_id=tg_id,
-            is_educator=False,
-            current_group_id=0 if is_edu else o_id,
-            current_educator_id=o_id if is_edu else 0
-        )
-    else:
-        user.current_group_id = 0 if is_edu else o_id
-        user.current_educator_id = o_id if is_edu else 0
-        user.is_educator = is_edu
-    db.session.add(user)
-
-    db.session.commit()
-
-    return user

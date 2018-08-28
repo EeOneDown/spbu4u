@@ -8,7 +8,7 @@ from flask import current_app
 from telebot.apihelper import ApiException
 from telebot.types import ReplyKeyboardMarkup, ReplyKeyboardRemove
 
-from app import db, new_functions as nf
+from app import db
 from app.constants import (
     ids, support_answer, main_menu_first_answer, reg_tt_g_link, reg_tt_e_link
 )
@@ -32,7 +32,7 @@ def try_auto_reg(o_id, is_edu, tg_id, bot_msg_id):
     :return:
     """
     try:
-        user = nf.reg_user(
+        user = User.reg_user(
             o_id=o_id,
             is_edu=is_edu,
             tg_id=tg_id

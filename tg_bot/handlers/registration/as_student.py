@@ -1,9 +1,8 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from app import new_functions as nf
 from app.constants import main_menu_first_answer
-from app.models import Group
+from app.models import User
 from tg_bot import bot
 from tg_bot.keyboards import (
     divisions_keyboard, levels_keyboard, programs_keyboard, years_keyboard,
@@ -126,8 +125,7 @@ def register_student_handler(call_back):
         chat_id=call_back.message.chat.id,
         message_id=call_back.message.message_id
     )
-    user = nf.reg_user(
-        model=Group,
+    user = User.reg_user(
         o_id=int(call_back.data),
         is_edu=False,
         tg_id=call_back.message.chat.id

@@ -87,6 +87,56 @@ class User(db.Model):
     _current_group = db.relationship("Group")
     _current_educator = db.relationship("Educator")
 
+    @staticmethod
+    def reg_user(o_id, is_edu, tg_id):
+        """
+        Registers or updates user
+
+        :param o_id: an object id (educator or group)
+        :type o_id: int
+        :param is_edu: if the user is an educator
+        :type is_edu: bool
+        :param tg_id: the user's telegram chat id
+        :type tg_id: int
+        :return: the new or updated user
+        :rtype: User
+        """
+        obj = (Educator if is_edu else Group).query.get(o_id)
+        if not obj:
+            if is_edu:
+                obj = Educator(
+                    id=o_id,
+                    title=spbu.get_educator_events(
+                        educator_id=o_id)
+                    ["EducatorLongDisplayText"]
+                )
+            else:
+                obj = (Educator if is_edu else Group)(
+                    id=o_id,
+                    title=spbu.get_group_events(
+                        group_id=o_id
+                    )["StudentGroupDisplayName"]
+                )
+            db.session.add(obj)
+
+        user = User.query.filter_by(tg_id=tg_id).first()
+        if not user:
+            user = User(
+                tg_id=tg_id,
+                is_educator=False,
+                current_group_id=0 if is_edu else o_id,
+                current_educator_id=o_id if is_edu else 0
+            )
+        else:
+            user.current_group_id = 0 if is_edu else o_id
+            user.current_educator_id = o_id if is_edu else 0
+            user.is_educator = is_edu
+        db.session.add(user)
+
+        db.session.commit()
+
+        return user
+
     def _get_events(self, from_date, to_date):
         """
         Gets user's suitable events data

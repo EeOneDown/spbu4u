@@ -111,7 +111,7 @@ class User(db.Model):
                     ["EducatorLongDisplayText"]
                 )
             else:
-                obj = (Educator if is_edu else Group)(
+                obj = Group(
                     id=o_id,
                     title=spbu.get_group_events(
                         group_id=o_id
@@ -123,7 +123,7 @@ class User(db.Model):
         if not user:
             user = User(
                 tg_id=tg_id,
-                is_educator=False,
+                is_educator=is_edu,
                 current_group_id=0 if is_edu else o_id,
                 current_educator_id=o_id if is_edu else 0
             )

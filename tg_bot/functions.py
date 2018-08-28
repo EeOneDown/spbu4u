@@ -920,8 +920,7 @@ def get_lessons_with_educators(user_id, day_date):
     count = 0
     for event in day_study_events:
         event_text = ""
-        if event["IsCancelled"] or len([loc for loc in event["EventLocations"]
-                                        if loc["HasEducators"]]) < 2:
+        if event["IsCancelled"] or len([loc for loc in event["EventLocations"] if loc["HasEducators"]]) < 2:
             continue
         subject_name = ", ".join(event["Subject"].split(", ")[:-1])
         event_text += "{0}</b>".format(subject_name)
@@ -933,10 +932,12 @@ def get_lessons_with_educators(user_id, day_date):
 
         chosen_educators = get_chosen_educators(user_id)
         have_chosen_educator = False
-        if subject_name in chosen_educators.keys() and \
-                any(ch_edu in [edu["Item2"].split(", ")[0] for edu in
-                               event["EducatorIds"]] for ch_edu in
-                    chosen_educators[subject_name]):
+        if subject_name in chosen_educators.keys() \
+                and any(
+            ch_edu in [
+                edu["Item2"].split(", ")[0] for edu in event["EducatorIds"]
+            ] for ch_edu in chosen_educators[subject_name]
+        ):
             have_chosen_educator = True
         for location in event["EventLocations"]:
             event_text += location["DisplayName"].strip(", ")

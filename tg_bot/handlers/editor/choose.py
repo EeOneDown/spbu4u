@@ -10,7 +10,8 @@ from tg_bot.keyboards import (
 from app.constants import (
     emoji, max_inline_button_text_len, server_timedelta, week_day_titles,
     week_day_number, choose_answer, ask_to_select_block_answer,
-    no_blocks_answer, ask_to_select_block_lesson_answer
+    no_blocks_answer, ask_to_select_block_lesson_answer, no_edu_days_answer,
+    ask_to_select_day_answer
 )
 import telebot_login
 from app import db
@@ -73,7 +74,6 @@ def select_block_choose_lesson_handler(call_back):
     )
 
 
-# Lesson callback
 @bot.callback_query_handler(
     func=lambda call_back:
         ask_to_select_block_lesson_answer in call_back.message.text
@@ -85,7 +85,7 @@ def lesson_chosen_handler(call_back):
 
     answer = user.hide_block_lessons(
         text=call_back.message.text,
-        chosen_idx=int(call_back.data.split(". ")[0])
+        chosen_idx=int(call_back.data)
     )
     db.session.commit()
 
@@ -97,12 +97,15 @@ def lesson_chosen_handler(call_back):
     )
 
 
-# `educator` callback
-@bot.callback_query_handler(func=lambda call_back:
-                            call_back.data == "Преподавателя")
+@bot.callback_query_handler(
+    func=lambda call_back: call_back.data == "Преподавателя"
+)
+@telebot_login.login_required_callback
+@telebot_login.student_required_callback
 def editor_choose_educator_handler(call_back):
-    answer = "Выбери день, в котором есть занятие с большим количеством " \
-             "преподавателей:"
+    user = g.current_tbot_user
+
+    answer = ask_to_select_day_answer
     json_week_data = func.get_json_week_data(call_back.message.chat.id)
     days = json_week_data["Days"]
     days_keyboard = InlineKeyboardMarkup(True)
@@ -120,10 +123,14 @@ def editor_choose_educator_handler(call_back):
             *[InlineKeyboardButton(text=name, callback_data=name)
               for name in ["Отмена"]])
     else:
-        answer = "Нет занятий с большим количеством преподавателей"
-    bot.edit_message_text(text=answer, chat_id=call_back.message.chat.id,
-                          message_id=call_back.message.message_id,
-                          reply_markup=days_keyboard)
+        answer = no_edu_days_answer
+
+    bot.edit_message_text(
+        text=answer,
+        chat_id=user.tg_id,
+        message_id=call_back.message.message_id,
+        reply_markup=days_keyboard
+    )
 
 
 # Day callback

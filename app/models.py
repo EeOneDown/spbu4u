@@ -362,7 +362,9 @@ class User(db.Model):
         )
         selectable_blocks = {}
         for day_events in week_events:
-            for block in nf.create_events_blocks(day_events):
+            for block in nf.create_events_blocks(
+                    nf.delete_cancelled_events(day_events["DayStudyEvents"])
+            ):
                 if len(block) > 1:
                     key = "{0} {1}".format(
                         day_events["DayString"].split(", ")[0].capitalize(),
@@ -470,6 +472,23 @@ class User(db.Model):
         return "Выбрано занятие <b>{0}</b> <i>{1}</i>".format(
             chosen_lesson_name, chosen_lesson_educators
         )
+
+    def get_poliedu_lessons(self):
+        """
+
+        :return:
+        """
+        from_date = nf.get_work_monday()
+        week_events = self._get_events(
+            from_date=from_date,
+            to_date=from_date + timedelta(days=7)
+        )
+        poliedu_lessons = []
+        for day_events in week_events:
+            for event in nf.delete_cancelled_events(
+                    day_events["DayStudyEvents"]
+            ):
+                pass
 
 
 class Group(db.Model):

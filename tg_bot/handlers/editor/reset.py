@@ -80,14 +80,14 @@ def return_all_lessons(call_back):
     user = g.current_tbot_user
 
     if call_back.data == "Вернуть всё":
-        user.hidden_lessons.all().clear()
+        user.clear_hidden_lessons()
         answer = reset_all_lessons_answer
     elif call_back.data == "Вернуть всех":
-        user.chosen_educators.all().clear()
+        user.clear_chosen_educators()
         answer = reset_all_educators_answer
     else:
-        user.hidden_lessons.all().clear()
-        user.chosen_educators.all().clear()
+        user.clear_hidden_lessons()
+        user.clear_chosen_educators()
         answer = full_reset_answer
 
     db.session.commit()

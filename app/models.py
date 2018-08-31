@@ -160,7 +160,7 @@ class User(db.Model):
     def _parse_event(self, event):
         if not self.is_educator:
             lesson = Lesson().de_json(event)
-            for skip in self.hidden_lessons.filter_by(name=lesson.name).all():
+            for skip in self.hidden_lessons.filter_by(name=lesson.name):
                 if lesson.is_skipped_by(skip):
                     return ""
         return nf.create_schedule_answer(event, self.is_full_place)
@@ -268,7 +268,7 @@ class User(db.Model):
             lesson = Lesson().de_json(event)
 
             hide_mark = ""
-            for skip in self.hidden_lessons.filter_by(name=lesson.name).all():
+            for skip in self.hidden_lessons.filter_by(name=lesson.name):
                 if lesson.is_skipped_by(skip):
                     hide_mark = emoji["cross_mark"] + " "
                     break
@@ -344,11 +344,31 @@ class User(db.Model):
 
         :return: None
         """
-        self.groups.all().clear()
-        self.educators.all().clear()
-        self.added_lessons.all().clear()
-        self.hidden_lessons.all().clear()
-        self.chosen_educators.all().clear()
+        self.clear_groups_templates()
+        self.clear_educators_templates()
+        self.clear_added_lessons()
+        self.clear_hidden_lessons()
+        self.clear_chosen_educators()
+
+    def clear_added_lessons(self):
+        for lesson in self.added_lessons:
+            self.added_lessons.remove(lesson)
+
+    def clear_chosen_educators(self):
+        for educator in self.chosen_educators:
+            self.chosen_educators.remove(educator)
+
+    def clear_educators_templates(self):
+        for educator in self.educators:
+            self.educators.remove(educator)
+
+    def clear_groups_templates(self):
+        for group in self.groups:
+            self.groups.remove(group)
+
+    def clear_hidden_lessons(self):
+        for lesson in self.hidden_lessons:
+            self.hidden_lessons.remove(lesson)
 
     def create_lessons_reset_answer(self):
         """
@@ -357,18 +377,17 @@ class User(db.Model):
         :return: answer
         :rtype: str
         """
-        lessons = self.hidden_lessons.all()
-        if lessons:
+        if self.hidden_lessons.count():
             answer = hidden_lessons_list_answer
-            for lesson in lessons:
+            for lesson in self.hidden_lessons:
                 answer += "<b>id: {0}</b>\n".format(lesson.id)
                 answer += "<b>Название</b>: {0}\n".format(lesson.name)
                 if lesson.types:
                     answer += "<b>Типы</b>: {0}\n".format(lesson.types)
                 if lesson.days:
                     answer += "<b>Дни</b>: {0}\n".format(lesson.days)
-                if lesson.types:
-                    answer += "<b>Время</b>: {0}\n".format(lesson.types)
+                if lesson.times:
+                    answer += "<b>Время</b>: {0}\n".format(lesson.times)
                 if lesson.educators:
                     answer += "<b>Преподаватели</b>: {0}\n".format(
                         lesson.educators
@@ -385,10 +404,9 @@ class User(db.Model):
         :return: answer
         :rtype: str
         """
-        educators = self.chosen_educators.all()
-        if educators:
+        if self.chosen_educators.count():
             answer = chosen_educators_list_answer
-            for lesson in educators:
+            for lesson in self.chosen_educators:
                 answer += "<b>id: {0}</b>\n".format(lesson.id)
                 answer += "<b>Название</b>: {0}\n".format(lesson.name)
                 answer += "<b>Преподаватель</b>: {0}\n\n".format(
@@ -436,7 +454,7 @@ class User(db.Model):
             lesson = Lesson().de_json(event)
 
             hide_mark = ""
-            for skip in self.hidden_lessons.filter_by(name=lesson.name).all():
+            for skip in self.hidden_lessons.filter_by(name=lesson.name):
                 if lesson.is_skipped_by(skip):
                     hide_mark = emoji["cross_mark"] + " "
                     break
@@ -474,8 +492,6 @@ class User(db.Model):
         )
         # Сразу преподов не заполняем, так как список может не понадобиться
         chosen_lesson_educators = []
-
-        all_hidden_lessons = self.hidden_lessons.all()
 
         for lesson in lessons:
             # Парсим каждое занятие, кроме выбранного
@@ -516,7 +532,7 @@ class User(db.Model):
                 educators=hide_educators,
                 locations=None
             )
-            if hidden_lesson not in all_hidden_lessons:
+            if hidden_lesson not in self.hidden_lessons:
                 self.hidden_lessons.append(hidden_lesson)
 
         return "Выбрано занятие <b>{0}</b> <i>{1}</i>".format(

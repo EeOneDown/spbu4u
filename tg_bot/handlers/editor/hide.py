@@ -193,7 +193,7 @@ def hide_lesson(call_back):
             hide_type=call_back.data
         )
     )
-    if lesson not in user.hidden_lessons.all():
+    if lesson not in user.hidden_lessons:
         user.hidden_lessons.append(lesson)
 
     db.session.commit()

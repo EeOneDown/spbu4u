@@ -51,7 +51,7 @@ def update_yandex_handler(call_back):
                 call_back.id, inline_answer, show_alert=True
             )
         inline_keyboard = update_keyboard(
-            show_less=show_more,
+            show_less=not show_more,
             for_tomorrow=for_tomorrow or is_tomorrow
         )
     else:

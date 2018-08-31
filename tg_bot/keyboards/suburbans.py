@@ -59,7 +59,7 @@ def select_day_keyboard():
     )
 
 
-def update_keyboard(show_less=True, for_tomorrow=False):
+def update_keyboard(show_less=False, for_tomorrow=False):
     """
     Creates suburbans update keyboard
 

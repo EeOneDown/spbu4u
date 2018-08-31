@@ -53,7 +53,7 @@ def fast_trail_handler(message):
                 chat_id=user.tg_id,
                 text=emoji["warning"] + " На сегодня нет электричек"
             )
-        inline_keyboard = update_keyboard(is_tomorrow)
+        inline_keyboard = update_keyboard(for_tomorrow=is_tomorrow)
     else:
         inline_keyboard = InlineKeyboardMarkup()
 

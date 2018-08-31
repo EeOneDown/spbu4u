@@ -383,8 +383,8 @@ def parse_yandex_segment(segment, current_datetime=datetime.now()):
     if hours:
         time_mark = emoji["blue_diamond"]
         lef_time = "{0} ч {1} мин".format(hours, minutes)
-    elif 15.0 < minutes < 60:
-        time_mark = emoji["orange_diamond"],
+    elif 15.0 < minutes < 60.0:
+        time_mark = emoji["orange_diamond"]
         lef_time = "{0} мин".format(minutes)
     else:
         time_mark = emoji["runner"]

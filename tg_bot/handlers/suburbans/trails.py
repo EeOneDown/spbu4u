@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from datetime import date
+from datetime import date, timedelta
 from random import choice
 
 from flask import g
@@ -216,7 +216,9 @@ def build_trail_handler(call_back):
         to_code=nf.get_station_code_from_text(
             call_back.message.text, is_end=True
         ),
-        for_date=date.today(),
+        for_date=date.today() + timedelta(
+            days=(1 if call_back.data == "Завтра" else 0)
+        ),
         limit=7 if call_back.data == "Завтра" else 3
     )
     if not is_error:

@@ -219,6 +219,8 @@ class User(db.Model):
         """
         answers = []
 
+        to_date = to_date or (from_date + timedelta(days=7))
+
         events = self._get_events(
             from_date=from_date,
             to_date=to_date or (from_date + timedelta(days=7))

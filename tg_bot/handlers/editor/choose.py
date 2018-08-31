@@ -102,6 +102,7 @@ def lesson_chosen_handler(call_back):
 )
 @telebot_login.login_required_callback
 @telebot_login.student_required_callback
+@telebot_login.educator_required_callback   # Убрать
 def editor_choose_educator_handler(call_back):
     user = g.current_tbot_user
 

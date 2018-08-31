@@ -161,7 +161,7 @@ class User(db.Model):
         if not self.is_educator:
             lesson = Lesson().de_json(event)
             for skip in self.hidden_lessons.filter_by(name=lesson.name).all():
-                if lesson in skip:
+                if lesson.is_skipped_by(skip):
                     return ""
         return nf.create_schedule_answer(event, self.is_full_place)
 
@@ -269,7 +269,7 @@ class User(db.Model):
 
             hide_mark = ""
             for skip in self.hidden_lessons.filter_by(name=lesson.name).all():
-                if lesson in skip:
+                if lesson.is_skipped_by(skip):
                     hide_mark = emoji["cross_mark"] + " "
                     break
 
@@ -437,7 +437,7 @@ class User(db.Model):
 
             hide_mark = ""
             for skip in self.hidden_lessons.filter_by(name=lesson.name).all():
-                if lesson in skip:
+                if lesson.is_skipped_by(skip):
                     hide_mark = emoji["cross_mark"] + " "
                     break
 
@@ -524,21 +524,7 @@ class User(db.Model):
         )
 
     def get_poliedu_lessons(self):
-        """
-
-        :return:
-        """
-        from_date = nf.get_work_monday()
-        week_events = self._get_events(
-            from_date=from_date,
-            to_date=from_date + timedelta(days=7)
-        )
-        poliedu_lessons = []
-        for day_events in week_events:
-            for event in nf.delete_cancelled_events(
-                    day_events["DayStudyEvents"]
-            ):
-                pass
+        pass
 
 
 class Group(db.Model):
@@ -621,34 +607,6 @@ class Lesson(db.Model):
     educators = db.Column(db.JSON)
     locations = db.Column(db.JSON)
 
-    def __contains__(self, other):
-        """
-
-        :param other:
-        :type other: Lesson
-        :return:
-        """
-        return (other.name == self.name
-                and other.types in self.types if self.types else 1
-                and other.days in self.days if self.days else 1
-                and other.times in self.times if self.times else 1
-                and other.educators in self.educators if self.educators else 1
-                and other.locations in self.locations if self.locations else 1)
-
-    def __eq__(self, other):
-        """
-
-        :param other:
-        :type other: Lesson
-        :return:
-        """
-        return (self.name == other.name
-                and self.types == other.types
-                and self.days == other.days
-                and self.times == other.times
-                and self.educators == other.educators
-                and self.locations == other.locations)
-
     @staticmethod
     def add_or_get(name, types, days, times, educators, locations):
         """
@@ -667,13 +625,50 @@ class Lesson(db.Model):
 
     def de_json(self, event):
         self.name = event["Subject"].split(", ")[0]
-        self.types = event["Subject"].split(", ")[1]
-        self.days = nf.get_key_by_value(
+        self.types = [event["Subject"].split(", ")[1]]
+        self.days = [nf.get_key_by_value(
             dct=week_day_number,
             val=nf.datetime_from_string(event["Start"]).date().isoweekday()
-        )
-        self.times = nf.parse_event_time(event).split()[1]
+        )]
+        self.times = [nf.parse_event_time(event).split()[1]]
         self.educators = [e["Item2"].split(", ")[0]
                           for e in event["EducatorIds"]]
         self.locations = [p["DisplayName"] for p in event["EventLocations"]]
         return self
+
+    def is_skipped_by(self, skip):
+        """
+
+        :param skip:
+        :type skip: Lesson
+        :return:
+        """
+        return (
+            skip.name == self.name
+            and (set(skip.types).issuperset(set(self.types))
+                 if skip.types else 1)
+            and (set(skip.days).issuperset(set(self.days))
+                 if skip.days else 1)
+            and (set(skip.times).issuperset(set(self.times))
+                 if skip.times else 1)
+            and (set(skip.educators).issuperset(set(self.educators))
+                 if skip.educators else 1)
+            and (set(skip.locations).issuperset(set(self.locations))
+                 if skip.locations else 1)
+        )
+
+    def __eq__(self, other):
+        """
+
+        :param other:
+        :type other: Lesson
+        :return:
+        """
+        return (
+            self.name == other.name
+            and set(self.types) == set(other.types)
+            and set(self.days) == set(other.days)
+            and set(self.times) == set(other.times)
+            and set(self.educators) == set(other.educators)
+            and set(self.locations) == set(other.locations)
+        )

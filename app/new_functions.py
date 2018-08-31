@@ -93,11 +93,11 @@ def get_work_monday(is_next_week=False):
     :return: monday date
     :rtype: date
     """
-    day = datetime.today().date()
-    delta = day.weekday() if day.weekday() != 6 else -1
+    today = date.today()
+    delta = today.weekday() if today.weekday() != 6 else -1
     if is_next_week:
         delta += 7
-    return day - timedelta(days=delta)
+    return today - timedelta(days=delta)
 
 
 def get_date_by_weekday_title(title, is_next_week=False):

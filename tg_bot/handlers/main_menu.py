@@ -117,6 +117,9 @@ def settings_handler(message):
     func=lambda mess: mess.text == emoji["star"],
     content_types=["text"]
 )
+@telebot_login.login_required_message
+@telebot_login.student_required_message     # Убрать
+@telebot_login.educator_required_message    # Убрать
 def rate_handler(message):
     user = g.current_tbot_user
     bot.send_chat_action(user.tg_id, "typing")

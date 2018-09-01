@@ -549,7 +549,7 @@ class User(db.Model):
         # Получаем название выбранного занятия
         chosen_lesson_name = emoji["en_dash"].join(
             lessons[chosen_idx].split("\n")[0].split(emoji["en_dash"])[1:]
-        )
+        ).strip()
         # Сразу преподов не заполняем, так как список может не понадобиться
         chosen_lesson_educators = []
 
@@ -561,7 +561,7 @@ class User(db.Model):
             # Получаем название выбранного занятия
             hide_event_name = emoji["en_dash"].join(
                 lesson.split("\n")[0].split(emoji["en_dash"])[1:]
-            )
+            ).strip()
             # Преподов опять же сразу не заполняем
             hide_educators = []
 

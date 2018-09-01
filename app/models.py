@@ -7,10 +7,9 @@ import spbu
 
 from app import db, new_functions as nf
 from app.constants import (
-    week_off_answer, weekend_answer, emoji, max_answers_count,
-    interval_exceeded_answer, changed_to_full_answer, changed_to_class_answer,
-    week_day_number, hide_lesson_answer, no_lessons_answer,
-    ask_to_select_lesson_answer, hidden_lessons_list_answer,
+    week_off_answer, weekend_answer, emoji, changed_to_full_answer,
+    changed_to_class_answer, week_day_number, hide_lesson_answer,
+    no_lessons_answer, ask_to_select_lesson_answer, hidden_lessons_list_answer,
     no_hidden_lessons_answer, chosen_educators_list_answer,
     ask_to_select_edu_answer, no_chosen_educators_answer,
     selectable_block_answer, ask_to_select_block_lesson_answer,
@@ -146,6 +145,8 @@ class User(db.Model):
         :type from_date: date
         :param to_date: (Optional) the date the events ends
         :type to_date: date
+        :param lessons_type: type of lessons
+        :type lessons_type: str
         :return: list of events data (json)
         :rtype: list
         """
@@ -166,20 +167,29 @@ class User(db.Model):
                     return ""
         return nf.create_schedule_answer(event, self.is_full_place)
 
-    def _parse_day_events(self, events):
+    def _parse_day_events(self, events, lessons_type=None, is_resit=False):
         """
         This method parses the events data from SPBU API
 
         :param events: an element of `DayStudyEvents`
         :type events: dict
+        :param lessons_type: type of lessons
+        :type lessons_type: str
+        :param is_resit: is resit required
+        :type is_resit: bool
         :return: html safe string
         :rtype: str
         """
         answer = "{0} {1}\n\n".format(
             emoji["calendar"], events["DayString"].capitalize()
         )
-
         events = nf.delete_cancelled_events(events["DayStudyEvents"])
+
+        if lessons_type in ["Attestation", "Final"] and is_resit:
+            events = nf.get_resits_events(events)
+        elif lessons_type in ["Attestation", "Final"] and not is_resit:
+            events = nf.delete_resits_events(events)
+
         for event in events:
             answer += self._parse_event(event)
         if len(answer.split("\n\n")) == 2:
@@ -206,7 +216,8 @@ class User(db.Model):
 
         return answer
 
-    def create_answers_for_interval(self, from_date, to_date=None):
+    def create_answers_for_interval(self, from_date, to_date=None,
+                                    lessons_type=None, is_resit=False):
         """
         Method to create answers for interval. if no `to_date` will return for
         7 days
@@ -215,6 +226,10 @@ class User(db.Model):
         :type from_date: date
         :param to_date: (Optional) the date the events ends
         :type to_date: date
+        :param lessons_type: type of lessons
+        :type lessons_type: str
+        :param is_resit: is resit required
+        :type is_resit: bool
         :return: list of schedule answers
         :rtype: list of str
         """
@@ -225,14 +240,19 @@ class User(db.Model):
 
         events = self._get_events(
             from_date=from_date,
-            to_date=to_date
+            to_date=to_date,
+            lessons_type=lessons_type
         )
-        for event in events:
-            answers.append(self._parse_day_events(event))
+        for day_events in events:
+            answers.append(
+                self._parse_day_events(
+                    events=day_events,
+                    lessons_type=lessons_type,
+                    is_resit=is_resit
+                )
+            )
 
-        if len(answers) > max_answers_count:
-            answers = [interval_exceeded_answer]
-        elif not len(answers):
+        if not len(answers):
             if from_date.isoweekday() == 1 and (to_date - from_date).days == 7:
                 answers = [week_off_answer]
             else:

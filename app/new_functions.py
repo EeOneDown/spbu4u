@@ -41,6 +41,40 @@ def get_term_dates():
             date(year=end_year, month=end_month, day=1))
 
 
+def get_resits_events(events):
+    """
+        Deletes all resits from events
+
+        :param events: all elements of `DayStudyEvents`
+        :type events: list
+        :return: list of available events
+        :rtype: list
+        """
+    return [
+        event for event in events
+        if ("пересдача" in event["Subject"]
+            or "консультация" in event["Subject"]
+            or "комиссия" in event["Subject"])
+    ]
+
+
+def delete_resits_events(events):
+    """
+    Deletes all resits from events
+
+    :param events: all elements of `DayStudyEvents`
+    :type events: list
+    :return: list of available events
+    :rtype: list
+    """
+    return [
+        event for event in events
+        if ("пересдача" not in event["Subject"]
+            or "консультация" not in event["Subject"]
+            or "комиссия" not in event["Subject"])
+    ]
+
+
 def delete_cancelled_events(events):
     """
     Function to delete all cancelled events.
@@ -50,11 +84,10 @@ def delete_cancelled_events(events):
     :return: list of available events
     :rtype: list
     """
-    available_day_events = [
+    return [
         event for event in events
         if not event["IsCancelled"]
     ]
-    return available_day_events
 
 
 def create_events_blocks(events):

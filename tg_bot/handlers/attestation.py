@@ -4,14 +4,13 @@ from __future__ import unicode_literals
 from random import choice
 
 from flask import g
-
 from telebot.apihelper import ApiException
-from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
+import telebot_login
+from app import new_functions as nf
+from app.constants import loading_text
 from tg_bot import bot, functions as func
 from tg_bot.keyboards import att_months_keyboard
-from app.constants import loading_text
-import telebot_login
 
 
 # Session message
@@ -93,32 +92,19 @@ def select_months_att_handler(call_back):
         chat_id=call_back.message.chat.id,
         message_id=call_back.message.message_id
     )
-
-    json_attestation = func.get_json_attestation(call_back.message.chat.id)
-    answers = []
-    is_full_place = func.is_full_place(call_back.message.chat.id)
-
-    if call_back.message.text == "Выбери месяц:":
-        schedule_variations = [(True, True, False), (False, True, False)]
-    else:
-        schedule_variations = [(True, False, True), (False, False, True)]
-
-    for personal, session, only_resit in schedule_variations:
-        answers = func.create_session_answers(json_attestation, call_back.data,
-                                              call_back.message.chat.id,
-                                              is_full_place, personal,
-                                              session, only_resit)
-        if answers:
-            break
-    if not answers:
-        answers.append("<i>Нет событий</i>")
+    answers = user.create_answers_for_interval(
+        *nf.get_term_dates(),
+        lessons_type="Attestation",
+        is_resit=call_back.message.text != "Выбери месяц:"
+    )
     try:
-        bot.edit_message_text(text=answers[0],
-                              chat_id=call_back.message.chat.id,
-                              message_id=bot_msg.message_id,
-                              parse_mode="HTML")
+        bot.edit_message_text(
+            text=answers[0],
+            chat_id=user.tg_id,
+            message_id=bot_msg.message_id,
+            parse_mode="HTML"
+        )
     except ApiException:
-        func.send_long_message(bot, answers[0], call_back.message.chat.id)
-    finally:
-        for answer in answers[1:]:
-            func.send_long_message(bot, answer, call_back.message.chat.id)
+        func.send_long_message(bot, answers[0], user.tg_id)
+    for answer in answers[1:]:
+        func.send_long_message(bot, answer, user.tg_id)

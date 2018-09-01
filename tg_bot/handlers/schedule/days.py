@@ -8,7 +8,9 @@ from flask import g
 import app.new_functions as nf
 import telebot_login
 import tg_bot.functions as func
-from app.constants import week_day_titles, emoji
+from app.constants import (
+    week_day_titles, emoji, max_answers_count, interval_exceeded_answer
+)
 from tg_bot import bot
 
 
@@ -75,6 +77,9 @@ def interval_schedule_handler(message):
     answers = user.create_answers_for_interval(
         *nf.text_to_interval(message.text.lower())
     )
+    if len(answers) > max_answers_count:
+        answers = [interval_exceeded_answer]
+
     for answer in answers:
         nf.send_long_message(bot, answer, user.tg_id)
 

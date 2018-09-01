@@ -6,6 +6,5 @@ from app import create_app
 
 
 if __name__ == '__main__':
-    app = create_app()
-    with app.app_context():
+    with create_app().app_context():
         bot.polling(none_stop=True, interval=0)

@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 
 from datetime import date, timedelta
 
-from app import new_functions as nf
+from app import create_app, new_functions as nf
 from app.constants import weekend_answer
 from app.models import User
 from tg_bot import bot
@@ -33,4 +33,5 @@ def schedule_sender():
 
 
 if __name__ == '__main__':
-    print("OK: {0}; ERRORS: {1}".format(*schedule_sender()))
+    with create_app().app_context():
+        print("OK: {0}; ERRORS: {1}".format(*schedule_sender()))

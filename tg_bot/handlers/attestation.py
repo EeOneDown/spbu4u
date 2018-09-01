@@ -28,11 +28,13 @@ def attestation_handler(message):
 
     bot.send_chat_action(user.tg_id, "typing")
 
-    month = user.get_attestation_months()
+    is_resit = message.text.title() == "Допса"
 
-    if month and message.text.title() == "Сессия":
+    month = user.get_attestation_months(is_resit=is_resit)
+
+    if month and not is_resit:
         answer = "Выбери месяц:"
-    elif month and message.text.title() == "Допса":
+    elif month and is_resit:
         answer = "Выбери месяц для <b>допсы</b>:"
     else:
         answer = "<i>Нет событий</i>"
@@ -61,11 +63,13 @@ def switch_session_type_handler(call_back):
         chat_id=call_back.message.chat.id,
         message_id=call_back.message.message_id
     )
-    month = user.get_attestation_months()
+    is_resit = call_back.data == "Допса"
 
-    if month and call_back.data == "Сессия":
+    month = user.get_attestation_months(is_resit=is_resit)
+
+    if month and not is_resit:
         answer = "Выбери месяц:"
-    elif month and call_back.data == "Допса":
+    elif month and is_resit:
         answer = "Выбери месяц для <b>допсы</b>:"
     else:
         answer = "<i>Нет событий</i>"

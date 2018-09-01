@@ -3,7 +3,9 @@ from __future__ import unicode_literals
 
 from datetime import date
 
-from telebot.types import ReplyKeyboardMarkup
+from telebot.types import (
+    ReplyKeyboardMarkup, InlineKeyboardMarkup, InlineKeyboardButton
+)
 
 from app.constants import emoji
 
@@ -90,3 +92,26 @@ def schedule_editor_keyboard():
     ).row(
         "Назад", "Адрес"
     )
+
+
+def rate_keyboard(rate):
+    """
+    Creates rate keyboard
+
+    :param rate: user's rate
+    :type rate: int
+    :return: rate keyboard
+    :rtype: InlineKeyboardMarkup
+    """
+    inline_keyboard = InlineKeyboardMarkup(row_width=5)
+    inline_keyboard.add(
+        *[InlineKeyboardButton(
+            text=emoji["star2"] if rate < count_of_stars else emoji["star"],
+            callback_data=str(count_of_stars)
+        ) for count_of_stars in (1, 2, 3, 4, 5)]
+    )
+    inline_keyboard.add(
+        *[InlineKeyboardButton(text=name, callback_data=name)
+          for name in ["Связь", "Статистика"]]
+    )
+    return inline_keyboard

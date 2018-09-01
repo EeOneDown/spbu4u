@@ -9,7 +9,7 @@ from tg_bot.keyboards.editor import (
 )
 from tg_bot.keyboards.menu import (
     main_keyboard, schedule_keyboard, suburban_keyboard,
-    schedule_editor_keyboard, settings_keyboard
+    schedule_editor_keyboard, settings_keyboard, rate_keyboard
 )
 from tg_bot.keyboards.other import (
     special_thanks_keyboard

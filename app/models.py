@@ -72,6 +72,7 @@ class User(db.Model):
                                     nullable=False)
     current_group_id = db.Column(db.Integer, db.ForeignKey("groups.id"))
     current_educator_id = db.Column(db.Integer, db.ForeignKey("educators.id"))
+    rate = db.Column(db.SmallInteger, default=0)
     groups = db.relationship("Group", secondary=users_groups_templates,
                              back_populates="members", lazy="dynamic")
     educators = db.relationship("Educator",

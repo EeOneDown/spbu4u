@@ -1,13 +1,14 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 from flask import g
 
-from tg_bot import bot, functions as func
+from tg_bot import bot
 from app.constants import emoji
-from tg_bot.keyboards import main_keyboard, settings_keyboard, suburban_keyboard, \
-    schedule_keyboard, schedule_editor_keyboard
+from tg_bot.keyboards import (
+    main_keyboard, settings_keyboard, suburban_keyboard, schedule_keyboard,
+    schedule_editor_keyboard, rate_keyboard
+)
 import telebot_login
 
 
@@ -118,21 +119,12 @@ def settings_handler(message):
     content_types=["text"]
 )
 @telebot_login.login_required_message
-@telebot_login.student_required_message     # Убрать
-@telebot_login.educator_required_message    # Убрать
 def rate_handler(message):
     user = g.current_tbot_user
-    bot.send_chat_action(user.tg_id, "typing")
-    answer = "Оцените качество сервиса:"
-    # TODO remove?
-    user_rate = func.get_user_rate(message.chat.id)
-    rate_keyboard = InlineKeyboardMarkup(row_width=5)
-    rate_keyboard.add(*[InlineKeyboardButton(
-        text=emoji["star2"] if user_rate < count_of_stars else emoji["star"],
-        callback_data=str(count_of_stars))
-        for count_of_stars in (1, 2, 3, 4, 5)])
-    rate_keyboard.add(
-        *[InlineKeyboardButton(text=name, callback_data=name)
-          for name in ["Связь", "Статистика"]])
-    bot.send_message(user.tg_id, answer, parse_mode="HTML",
-                     reply_markup=rate_keyboard)
+
+    bot.send_message(
+        chat_id=user.tg_id,
+        text="Оцените качество сервиса:",
+        parse_mode="HTML",
+        reply_markup=rate_keyboard(user.rate)
+    )

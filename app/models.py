@@ -194,6 +194,7 @@ class User(db.Model):
             answer += self._parse_event(event)
         if len(answer.split("\n\n")) == 2:
             answer += weekend_answer
+
         return answer
 
     def create_answer_for_date(self, for_date):
@@ -303,17 +304,24 @@ class User(db.Model):
             )
         return answer + hide_lesson_answer
 
-    def get_attestation_months(self):
+    def get_attestation_months(self, is_resit=False):
         """
         Gets available attestation months dict: keys - number (int),
         values - human-readable string
 
+        :param is_resit: is resit required
+        :type is_resit: bool
         :return: attestation months
         :rtype: dict
         """
         events = self._get_events(
             *nf.get_term_dates(), lessons_type="Attestation"
         )
+        if is_resit:
+            events = nf.get_resits_events(events)
+        else:
+            events = nf.delete_resits_events(events)
+
         attestation_months = {}
         for event in events:
             event_date = datetime.strptime(event["Day"], "%Y-%m-%dT%H:%M:%S")

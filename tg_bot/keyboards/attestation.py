@@ -20,11 +20,9 @@ def att_months_keyboard(month, text):
         inline_keyboard.row(
             *[InlineKeyboardButton(text=month[key], callback_data=str(key))]
         )
-    if month:
-        inline_keyboard.row(
-            InlineKeyboardButton(
-                text="Допса" if text == "Сессия" else "Сессия",
-                callback_data="Допса" if text == "Сессия" else "Сессия"
-            )
+    return inline_keyboard.row(
+        InlineKeyboardButton(
+            text="Допса" if text == "Сессия" else "Сессия",
+            callback_data="Допса" if text == "Сессия" else "Сессия"
         )
-    return inline_keyboard
+    )

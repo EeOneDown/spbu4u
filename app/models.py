@@ -542,7 +542,7 @@ class User(db.Model):
         :rtype: str
         """
         # Удаляем все метки скрытых занятий
-        bot_message_text = text.replace(old=" " + emoji["cross_mark"], new="")
+        bot_message_text = text.replace(" " + emoji["cross_mark"], "")
         # берем список занятий
         lessons = bot_message_text.split("\n\n")[1:-1]
 

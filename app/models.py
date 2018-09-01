@@ -588,11 +588,11 @@ class User(db.Model):
             # И скрываем его
             hidden_lesson = Lesson.add_or_get(
                 name=hide_event_name,
-                types=None,
-                days=None,
-                times=None,
+                types=[],
+                days=[],
+                times=[],
                 educators=hide_educators,
-                locations=None
+                locations=[]
             )
             if hidden_lesson not in self.hidden_lessons:
                 self.hidden_lessons.append(hidden_lesson)

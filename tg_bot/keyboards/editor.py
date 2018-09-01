@@ -90,7 +90,7 @@ def types_keyboard(types, add=False):
             *[InlineKeyboardButton(
                 text=name,
                 callback_data=name[:max_inline_button_text_len]
-            ) for name in [types]]
+            ) for name in types]
         )
     return inline_keyboard.row(
         *[InlineKeyboardButton(text=name, callback_data=name)

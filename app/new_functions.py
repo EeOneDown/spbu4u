@@ -709,11 +709,11 @@ def get_lesson_data(data, hide_type):
     return dict(
         name=data[2][10:],
         types=[get_key_by_value(dct=subject_short_types, val=t) for t in
-               data[-1][6:].split("; ")] if "Все" not in data[-1] else None,
-        days=[data[0][6:]] if hide_type[0] == "К" else None,
-        times=[data[1][7:]] if hide_type[1] == "К" else None,
-        educators=data[3][15:].split("; ") if hide_type[2] == "К" else None,
-        locations=None
+               data[-1][6:].split("; ")] if "Все" not in data[-1] else [],
+        days=[data[0][6:]] if hide_type[0] == "К" else [],
+        times=[data[1][7:]] if hide_type[1] == "К" else [],
+        educators=data[3][15:].split("; ") if hide_type[2] == "К" else [],
+        locations=[]
     )
 
 

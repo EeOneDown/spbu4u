@@ -129,7 +129,7 @@ def select_lesson_handler(call_back):
         chat_id=user.tg_id,
         message_id=call_back.message.message_id,
         parse_mode="HTML",
-        reply_markup=types_keyboard(types=event_data[2], add=True)
+        reply_markup=types_keyboard(types=[event_data[2]], add=True)
     )
 
 

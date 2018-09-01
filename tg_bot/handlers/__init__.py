@@ -4,9 +4,9 @@ from tg_bot.handlers import (
     info,
     main_menu,
     schedule,
-    # session_schedule,
+    # attestation,
     suburbans,
-    # editor,
+    editor,
     # rate,
     other_text,
     inline_handlers

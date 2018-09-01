@@ -19,6 +19,28 @@ from app.constants import (
 from config import Config
 
 
+def get_term_dates():
+    """
+
+    :return: Returns current term's start and end dates
+    :rtype: tuple
+    """
+    today = datetime.today()
+    if today.month in range(2, 8):
+        start_year = today.year
+        end_year = today.year
+        start_month = 2
+        end_month = 8
+    else:
+        start_year = today.year - 1 if today.month < 2 else today.year
+        end_year = today.year + 1 if today.month > 7 else today.year
+        start_month = 8
+        end_month = 2
+
+    return (date(year=start_year, month=start_month, day=1),
+            date(year=end_year, month=end_month, day=1))
+
+
 def delete_cancelled_events(events):
     """
     Function to delete all cancelled events.

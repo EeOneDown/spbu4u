@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from datetime import timedelta, date
+from datetime import timedelta, date, datetime
 
 import spbu
 
@@ -13,7 +13,8 @@ from app.constants import (
     ask_to_select_lesson_answer, hidden_lessons_list_answer,
     no_hidden_lessons_answer, chosen_educators_list_answer,
     ask_to_select_edu_answer, no_chosen_educators_answer,
-    selectable_block_answer, ask_to_select_block_lesson_answer
+    selectable_block_answer, ask_to_select_block_lesson_answer,
+    months_date
 )
 
 users_groups_templates = db.Table(
@@ -137,7 +138,7 @@ class User(db.Model):
 
         return user
 
-    def _get_events(self, from_date, to_date):
+    def _get_events(self, from_date, to_date, lessons_type=None):
         """
         Gets user's suitable events data
 
@@ -150,11 +151,11 @@ class User(db.Model):
         """
         if self.is_educator:
             return self._current_educator.get_events(
-                from_date=from_date, to_date=to_date
+                from_date=from_date, to_date=to_date, lessons_type=lessons_type
             )["Days"]
         else:
             return self._current_group.get_events(
-                from_date=from_date, to_date=to_date
+                from_date=from_date, to_date=to_date, lessons_type=lessons_type
             )["Days"]
 
     def _parse_event(self, event):
@@ -281,6 +282,26 @@ class User(db.Model):
                 full_place=self.is_full_place
             )
         return answer + hide_lesson_answer
+
+    def get_attestation_months(self):
+        """
+        Gets available attestation months dict: keys - number (int),
+        values - human-readable string
+
+        :return: attestation months
+        :rtype: dict
+        """
+        events = self._get_events(
+            *nf.get_term_dates(), lessons_type="Attestation"
+        )
+        attestation_months = {}
+        for event in events:
+            event_date = datetime.strptime(event["Day"], "%Y-%m-%dT%H:%M:%S")
+            attestation_months[event_date.month] = "{0} {1}".format(
+                months_date[event_date.month],
+                event_date.year
+            )
+        return attestation_months
 
     def get_current_status_title(self):
         """

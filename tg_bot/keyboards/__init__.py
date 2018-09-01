@@ -1,3 +1,6 @@
+from tg_bot.keyboards.attestation import (
+    att_months_keyboard
+)
 from tg_bot.keyboards.editor import (
     place_keyboard, events_keyboard, types_keyboard, hide_keyboard,
     choose_keyboard, reset_keyboard, hidden_lessons_keyboard,

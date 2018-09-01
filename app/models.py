@@ -516,7 +516,7 @@ class User(db.Model):
             hide_mark = ""
             for skip in self.hidden_lessons.filter_by(name=lesson.name):
                 if lesson.is_skipped_by(skip):
-                    hide_mark = emoji["cross_mark"] + " "
+                    hide_mark = " " + emoji["cross_mark"]
                     break
 
             locations = ""
@@ -559,7 +559,9 @@ class User(db.Model):
                 continue
 
             # Получаем название выбранного занятия
-            hide_event_name = " - ".join(lesson.split("\n")[0].split(" - ")[1:])
+            hide_event_name = emoji["en_dash"].join(
+                lesson.split("\n")[0].split(emoji["en_dash"])[1:]
+            )
             # Преподов опять же сразу не заполняем
             hide_educators = []
 
@@ -596,7 +598,7 @@ class User(db.Model):
                 self.hidden_lessons.append(hidden_lesson)
 
         return "Выбрано занятие <b>{0}</b> <i>{1}</i>".format(
-            chosen_lesson_name, chosen_lesson_educators
+            chosen_lesson_name, chosen_lesson_educators or ""
         )
 
     def get_poliedu_lessons(self):

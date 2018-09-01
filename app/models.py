@@ -323,7 +323,9 @@ class User(db.Model):
             event_filter = nf.delete_resits_events
 
         for day_events in events:
-            day_events["Days"] = event_filter(day_events["Days"])
+            day_events["DayStudyEvents"] = event_filter(
+                day_events["DayStudyEvents"]
+            )
 
         attestation_months = {}
         for day_events in events:

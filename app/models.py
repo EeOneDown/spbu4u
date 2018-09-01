@@ -318,13 +318,18 @@ class User(db.Model):
             *nf.get_term_dates(), lessons_type="Attestation"
         )
         if is_resit:
-            events = nf.get_resits_events(events)
+            event_filter = nf.get_resits_events
         else:
-            events = nf.delete_resits_events(events)
+            event_filter = nf.delete_resits_events
+
+        for day_events in events:
+            day_events["Days"] = event_filter(day_events["Days"])
 
         attestation_months = {}
-        for event in events:
-            event_date = datetime.strptime(event["Day"], "%Y-%m-%dT%H:%M:%S")
+        for day_events in events:
+            event_date = datetime.strptime(
+                day_events["Day"], "%Y-%m-%dT%H:%M:%S"
+            )
             attestation_months[event_date.month] = "{0} {1}".format(
                 months_date[event_date.month],
                 event_date.year

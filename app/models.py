@@ -547,8 +547,8 @@ class User(db.Model):
         lessons = bot_message_text.split("\n\n")[1:-1]
 
         # Получаем название выбранного занятия
-        chosen_lesson_name = " - ".join(
-            lessons[chosen_idx].split("\n")[0].split(" - ")[1:]
+        chosen_lesson_name = emoji["en_dash"].join(
+            lessons[chosen_idx].split("\n")[0].split(emoji["en_dash"])[1:]
         )
         # Сразу преподов не заполняем, так как список может не понадобиться
         chosen_lesson_educators = []

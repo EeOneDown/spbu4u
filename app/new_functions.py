@@ -41,21 +41,30 @@ def get_term_dates():
             date(year=end_year, month=end_month, day=1))
 
 
-def get_resits_events(events):
+def is_resit(event):
     """
-        Deletes all resits from events
+    Checks event for resit type
 
-        :param events: all elements of `DayStudyEvents`
-        :type events: list
-        :return: list of available events
-        :rtype: list
-        """
-    return [
-        event for event in events
-        if ("пересдача" in event["Subject"]
+    :param event: an elements of `DayStudyEvents`
+    :type event: dict
+    :return: is resit
+    :rtype: bool
+    """
+    return ("пересдача" in event["Subject"]
             or "консультация" in event["Subject"]
             or "комиссия" in event["Subject"])
-    ]
+
+
+def get_resits_events(events):
+    """
+    Deletes all resits from events
+
+    :param events: all elements of `DayStudyEvents`
+    :type events: list
+    :return: list of available events
+    :rtype: list
+    """
+    return [event for event in events if is_resit(event)]
 
 
 def delete_resits_events(events):
@@ -67,12 +76,7 @@ def delete_resits_events(events):
     :return: list of available events
     :rtype: list
     """
-    return [
-        event for event in events
-        if ("пересдача" not in event["Subject"]
-            or "консультация" not in event["Subject"]
-            or "комиссия" not in event["Subject"])
-    ]
+    return [event for event in events if not is_resit(event)]
 
 
 def delete_cancelled_events(events):

@@ -18,10 +18,9 @@ def main_keyboard():
     keyboard = ReplyKeyboardMarkup(
         resize_keyboard=True, one_time_keyboard=False
     )
-    if date.today().month in [12, 1, 5, 6]:
-        keyboard.row("Сессия", "Расписание")
-    else:
-        keyboard.row("Расписание")
+    keyboard.row(
+        "Допса" if date.today().month in [2, 9] else "Сессия", "Расписание"
+    )
     return keyboard.row(
         emoji["info"], emoji["star"], emoji["settings"], emoji["suburban"],
         emoji["editor"]

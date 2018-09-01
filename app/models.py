@@ -742,9 +742,9 @@ class Lesson(db.Model):
         """
         return (
             self.name == other.name
-            and set(self.types) == set(other.types)
-            and set(self.days) == set(other.days)
-            and set(self.times) == set(other.times)
-            and set(self.educators) == set(other.educators)
-            and set(self.locations) == set(other.locations)
+            and set(self.types or []) == set(other.types or [])
+            and set(self.days or []) == set(other.days or [])
+            and set(self.times or []) == set(other.times or [])
+            and set(self.educators or []) == set(other.educators or [])
+            and set(self.locations or []) == set(other.locations or [])
         )

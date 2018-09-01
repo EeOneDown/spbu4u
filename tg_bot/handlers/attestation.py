@@ -15,11 +15,11 @@ from tg_bot.keyboards import att_months_keyboard
 
 # Session message
 @bot.message_handler(
-    func=lambda mess: mess.text.capitalize() == "Сессия",
+    func=lambda mess: mess.text.title() == "Сессия",
     content_types=["text"]
 )
 @bot.message_handler(
-    func=lambda mess: mess.text.capitalize() == "Допса",
+    func=lambda mess: mess.text.title() == "Допса",
     content_types=["text"]
 )
 @telebot_login.login_required_message
@@ -30,9 +30,9 @@ def attestation_handler(message):
 
     month = user.get_attestation_months()
 
-    if month and message.text == "Сессия":
+    if month and message.text.title() == "Сессия":
         answer = "Выбери месяц:"
-    elif month and message.text == "Допса":
+    elif month and message.text.title() == "Допса":
         answer = "Выбери месяц для <b>допсы</b>:"
     else:
         answer = "<i>Нет событий</i>"

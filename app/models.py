@@ -329,13 +329,14 @@ class User(db.Model):
 
         attestation_months = {}
         for day_events in events:
-            event_date = datetime.strptime(
-                day_events["Day"], "%Y-%m-%dT%H:%M:%S"
-            )
-            attestation_months[event_date.month] = "{0} {1}".format(
-                months_date[event_date.month],
-                event_date.year
-            )
+            if day_events["DayStudyEvents"]:
+                event_date = datetime.strptime(
+                    day_events["Day"], "%Y-%m-%dT%H:%M:%S"
+                )
+                attestation_months[event_date.month] = "{0} {1}".format(
+                    months_date[event_date.month],
+                    event_date.year
+                )
         return attestation_months
 
     def get_current_status_title(self):

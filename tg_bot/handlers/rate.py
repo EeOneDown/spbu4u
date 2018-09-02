@@ -90,7 +90,7 @@ def feedback_handler(call_back):
     )
     bot.send_message(
         chat_id=user.tg_id,
-        answer=ask_to_feedback,
+        text=ask_to_feedback,
         reply_markup=ForceReply()
     )
 

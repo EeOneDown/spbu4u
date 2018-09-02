@@ -5,6 +5,8 @@ from datetime import timedelta, date, datetime
 
 import spbu
 
+from sqlalchemy import func
+
 from app import db, new_functions as nf
 from app.constants import (
     week_off_answer, weekend_answer, emoji, changed_to_full_answer,
@@ -137,6 +139,38 @@ class User(db.Model):
         db.session.commit()
 
         return user
+
+    @staticmethod
+    def get_rates():
+        """
+        Gets users rates dict: keys - rate value, Values - count of users
+
+        :return: users rates
+        :rtype: dict
+        """
+        q = User.query.filter(User.rate != 0).group_by(User.rate)
+
+        rates = {}
+        for i in range(1, 6):
+            rates[i] = q.filter_by(rate=i).count(User.id).scalar()
+        return rates
+
+    @staticmethod
+    def get_admin_statistics():
+        """
+        Gets statistics for admins: counts of users, groups, educators and
+        subscribed users
+
+        :return: admin statistics
+        :rtype: tuple
+        """
+
+        return (
+            User.query.count(User.id).scalar(),
+            Group.query.count(User.id).scalar(),
+            Educator.query.count(User.id).scalar(),
+            User.query.filter_by(is_subscribed=True).count(User.id).scalar()
+        )
 
     def _get_events(self, from_date, to_date, lessons_type=None):
         """

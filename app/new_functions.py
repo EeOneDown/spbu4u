@@ -598,7 +598,7 @@ def update_suburbans_answer(text, show_more=False, for_tomorrow=False):
 
 def bot_waiting_for(msg, waiting_bot_text):
     """
-    Checks if the message is a reply to ask for input educator
+    Checks if the message is a reply to `waiting_bot_text`
 
     :param msg: bot's message
     :type msg: Message

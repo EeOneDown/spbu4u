@@ -1,50 +1,71 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+from flask import g
 from telebot.apihelper import ApiException
-from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton, ForceReply
+from telebot.types import ForceReply
 
-from tg_bot import bot, functions as func
-from app.constants import emoji, ids
-from tg_bot.keyboards import main_keyboard
+import telebot_login
+from app import db, new_functions as nf
+from app.constants import emoji, ids, ask_to_feedback, rate_answers
+from tg_bot import bot
+from tg_bot.keyboards import main_keyboard, rate_keyboard
 
-
-bot_name = "tt202_bot"
 
 # Feedback text message
 @bot.message_handler(
-    func=lambda mess:
-        mess.reply_to_message is not None and
-        mess.reply_to_message.from_user.username == bot_name and
-        mess.reply_to_message.text == "Напиши мне что-нибудь:",
-    content_types=["text"])
+    func=lambda mess: nf.bot_waiting_for(mess, ask_to_feedback),
+    content_types=["text"]
+)
+@telebot_login.login_required_message
 def users_callback_handler(message):
+    user = g.current_tbot_user
+
     bot.send_chat_action(message.chat.id, "typing")
-    bot.forward_message(ids["my"], message.chat.id, message.message_id)
-    bot.send_message(message.chat.id, "Записал", reply_markup=main_keyboard,
-                     reply_to_message_id=message.message_id)
+
+    bot.forward_message(
+        chat_id=ids["my"],
+        from_chat_id=user.tg_id,
+        message_id=message.message_id
+    )
+    bot.send_message(
+        chat_id=user.tg_id,
+        answer="Записал",
+        reply_markup=main_keyboard(),
+        reply_to_message_id=message.message_id
+    )
 
 
 # Statistics callback
-@bot.callback_query_handler(func=lambda call_back:
-                            call_back.data == "Статистика")
+@bot.callback_query_handler(
+    func=lambda call_back: call_back.data == "Статистика"
+)
+@telebot_login.login_required_callback
 def statistics_handler(call_back):
-    data = func.get_rate_statistics()
-    if data is None:
+    user = g.current_tbot_user
+
+    rates = user.get_rates()
+
+    if len(rates):
         answer = "Пока что нет оценок."
     else:
-        rate = emoji["star"] * int(round(data[0]))
+        avg_rate = sum([r * rates[r] for r in rates]) / sum(rates.values())
+        stars = emoji["star"] * int(round(avg_rate))
         answer = "Средняя оценка: {0}\n{1} ({2})".format(
-                                            round(data[0], 1), rate, data[1])
-    if call_back.message.chat.id in ids.values():
-        admin_data = func.get_statistics_for_admin()
-        admin_answer = "\n\nКолличество пользователей: {0}\n" \
-                       "Колличество групп: {1}\nКолличество пользователей с " \
-                       "активной рассылкой: {2}".format(
-                                    admin_data["count_of_users"],
-                                    admin_data["count_of_groups"],
-                                    admin_data["count_of_sending"])
-        bot.send_message(call_back.message.chat.id, admin_answer)
+            round(avg_rate, 1), stars, sum(rates.values())
+        )
+    if user.tg_id in ids.values():
+        admin_statistics = user.get_admin_statistics()
+        admin_answer = (
+            "Количество пользователей: {0}\n" 
+            "Количество групп: {1}\n" 
+            "Количество преподавателей: {2}\n"
+            "Количество пользователей с активной рассылкой: {3}"
+        ).format(*admin_statistics)
+        bot.send_message(
+            chat_id=user.tg_id,
+            answer=admin_answer
+        )
     try:
         bot.edit_message_text(text=answer,
                               chat_id=call_back.message.chat.id,
@@ -55,61 +76,45 @@ def statistics_handler(call_back):
 
 
 # Feedback callback
-@bot.callback_query_handler(func=lambda call_back:
-                            call_back.data == "Связь")
+@bot.callback_query_handler(
+    func=lambda call_back: call_back.data == "Связь"
+)
+@telebot_login.login_required_callback
 def feedback_handler(call_back):
-    markup = ForceReply(False)
-    try:
-        bot.edit_message_text(text="Обратная связь",
-                              chat_id=call_back.message.chat.id,
-                              message_id=call_back.message.message_id)
-    except ApiException:
-        pass
-    finally:
-        answer = "Напиши мне что-нибудь:"
-        bot.send_message(call_back.message.chat.id, answer,
-                         reply_markup=markup)
+    user = g.current_tbot_user
+
+    bot.edit_message_text(
+        chat_id=user.tg_id,
+        text="Обратная связь",
+        message_id=call_back.message.message_id
+    )
+    bot.send_message(
+        chat_id=user.tg_id,
+        answer=ask_to_feedback,
+        reply_markup=ForceReply()
+    )
 
 
 # Rate mark callback
-@bot.callback_query_handler(func=lambda call_back:
-                            call_back.data in ["1", "2", "3", "4", "5"])
+@bot.callback_query_handler(
+    func=lambda call_back: call_back.data in ["1", "2", "3", "4", "5"]
+)
+@telebot_login.login_required_callback
 def set_rate_handler(call_back):
-    rate = call_back.data
-    answer = ""
-    func.set_rate(call_back.message.chat.id, rate)
-    if rate == "5":
-        answer += "{0} Пятёрка! Супер! Спасибо большое!".format(emoji["smile"])
-    elif rate == "4":
-        answer += "{0} Стабильная четверочка. Спасибо!".format(emoji["halo"])
-    elif rate == "3":
-        answer += "{0} Удовлетворительно? Ничего... тоже оценка. " \
-                  "Буду стараться лучше.".format(emoji["cold_sweat"])
-    elif rate == "2":
-        answer += "{0} Двойка? Быть может, я могу что-то исправить? " \
-                  "Сделать лучше?\n\nОпиши проблему " \
-                  "<a href='https://t.me/eeonedown'>разработчику</a>, " \
-                  "и вместе мы ее решим!".format(emoji["disappointed"])
-    elif rate == "1":
-        answer += "{0} Единица? Быть может, я могу что-то исправить? " \
-                  "Сделать лучше?\n\nОпиши проблему " \
-                  "<a href='https://t.me/eeonedown'>разработчику</a>, " \
-                  "и вместе мы ее решим!".format(emoji["disappointed"])
-    user_rate = func.get_user_rate(call_back.message.chat.id)
-    rate_keyboard = InlineKeyboardMarkup(row_width=5)
-    rate_keyboard.add(*[InlineKeyboardButton(
-        text=emoji["star2"] if user_rate < count_of_stars else emoji["star"],
-        callback_data=str(count_of_stars))
-        for count_of_stars in (1, 2, 3, 4, 5)])
-    rate_keyboard.add(
-        *[InlineKeyboardButton(text=name, callback_data=name)
-          for name in ["Связь", "Статистика"]])
+    user = g.current_tbot_user
+
+    user.rate = int(call_back.data)
+
+    db.session.commit()
+
     try:
-        bot.edit_message_text(text=answer,
-                              chat_id=call_back.message.chat.id,
-                              message_id=call_back.message.message_id,
-                              parse_mode="HTML",
-                              reply_markup=rate_keyboard,
-                              disable_web_page_preview=True)
+        bot.edit_message_text(
+            chat_id=user.tg_id,
+            text=rate_answers[user.rate],
+            message_id=call_back.message.message_id,
+            parse_mode="HTML",
+            reply_markup=rate_keyboard(user.rate),
+            disable_web_page_preview=True
+        )
     except ApiException:
         pass

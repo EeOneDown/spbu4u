@@ -150,7 +150,7 @@ class User(db.Model):
 
         rates = {}
         for i in range(1, 6):
-            rates[i] = q.filter_by(rate=i).count(User.id).scalar()
+            rates[i] = q.filter_by(rate=i).count().scalar()
         return rates
 
     @staticmethod
@@ -164,10 +164,10 @@ class User(db.Model):
         """
 
         return (
-            User.query.count(User.id).scalar(),
-            Group.query.count(User.id).scalar(),
-            Educator.query.count(User.id).scalar(),
-            User.query.filter_by(is_subscribed=True).count(User.id).scalar()
+            User.query.count().scalar(),
+            Group.query.count().scalar(),
+            Educator.query.count().scalar(),
+            User.query.filter_by(is_subscribed=True).count().scalar()
         )
 
     def _get_events(self, from_date, to_date, lessons_type=None):

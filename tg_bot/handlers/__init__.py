@@ -7,7 +7,7 @@ from tg_bot.handlers import (
     attestation,
     suburbans,
     editor,
-    # rate,
+    rate,
     other_text,
     inline_handlers
 )

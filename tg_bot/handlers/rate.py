@@ -46,7 +46,7 @@ def statistics_handler(call_back):
 
     rates = user.get_rates()
 
-    if not len(rates):
+    if not sum(rates.values()):
         answer = "Пока что нет оценок."
     else:
         avg_rate = sum([r * rates[r] for r in rates]) / sum(rates.values())

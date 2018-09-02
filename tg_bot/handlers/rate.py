@@ -30,7 +30,7 @@ def users_callback_handler(message):
     )
     bot.send_message(
         chat_id=user.tg_id,
-        answer="Записал",
+        text="Записал",
         reply_markup=main_keyboard(),
         reply_to_message_id=message.message_id
     )
@@ -64,7 +64,7 @@ def statistics_handler(call_back):
         ).format(*admin_statistics)
         bot.send_message(
             chat_id=user.tg_id,
-            answer=admin_answer
+            text=admin_answer
         )
     try:
         bot.edit_message_text(text=answer,

@@ -9,7 +9,7 @@ from telebot.apihelper import ApiException
 import telebot_login
 from app import new_functions as nf
 from app.constants import loading_text
-from tg_bot import bot, functions as func
+from tg_bot import bot
 from tg_bot.keyboards import att_months_keyboard
 
 
@@ -109,6 +109,6 @@ def select_months_att_handler(call_back):
             parse_mode="HTML"
         )
     except ApiException:
-        func.send_long_message(bot, answers[0], user.tg_id)
+        nf.send_long_message(bot, answers[0], user.tg_id)
     for answer in answers[1:]:
-        func.send_long_message(bot, answer, user.tg_id)
+        nf.send_long_message(bot, answer, user.tg_id)

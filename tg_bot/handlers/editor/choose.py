@@ -97,6 +97,11 @@ def lesson_chosen_handler(call_back):
     )
 
 
+"""
+    Дальше не работает!
+"""
+
+
 @bot.callback_query_handler(
     func=lambda call_back: call_back.data == "Преподавателя"
 )

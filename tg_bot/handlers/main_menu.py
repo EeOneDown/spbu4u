@@ -126,5 +126,5 @@ def rate_handler(message):
         chat_id=user.tg_id,
         text="Оцените качество сервиса:",
         parse_mode="HTML",
-        reply_markup=rate_keyboard(user.rate)
+        reply_markup=rate_keyboard(user.rate or 0)
     )

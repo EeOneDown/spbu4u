@@ -5,8 +5,6 @@ from datetime import timedelta, date, datetime
 
 import spbu
 
-from sqlalchemy import func
-
 from app import db, new_functions as nf
 from app.constants import (
     week_off_answer, weekend_answer, emoji, changed_to_full_answer,

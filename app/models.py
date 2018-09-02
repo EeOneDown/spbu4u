@@ -146,7 +146,7 @@ class User(db.Model):
         :return: users rates
         :rtype: dict
         """
-        q = User.query.filter(User.rate != 0).group_by(User.rate)
+        q = User.query.filter(User.rate, User.rate > 0)
 
         rates = {}
         for i in range(1, 6):

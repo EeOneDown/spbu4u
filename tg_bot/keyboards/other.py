@@ -12,6 +12,22 @@ def special_thanks_keyboard():
     :rtype: InlineKeyboardMarkup
     """
     return InlineKeyboardMarkup().row(
-        *[InlineKeyboardButton(text=name, callback_data=name)
-          for name in ["Благодарности"]]
+        InlineKeyboardButton(
+            text="Благодарности", callback_data="Благодарности"
+        )
+    )
+
+
+def check_spbu_status():
+    """
+    Create keyboard with button with url
+
+    :return: keyboard
+    :rtype: InlineKeyboardMarkup
+    """
+    return InlineKeyboardMarkup().row(
+        InlineKeyboardButton(
+            text="Проверить сайт",
+            url="https://timetable.spbu.ru"
+        )
     )

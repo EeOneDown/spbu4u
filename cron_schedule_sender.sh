@@ -6,4 +6,4 @@ if ! [ -d "$dir_path/logs/" ]; then
     mkdir "$dir_path/logs"
 fi
 
-${dir_path}/venv/bin/python ${dir_path}/schedule_sender.py 1>>${dir_path}/logs/schedule_sender_log.txt 2>>${dir_path}/logs/schedule_sender_err.txt
+${dir_path}/venv/bin/python ${dir_path}/tg_bot/schedule_sender.py 1>>${dir_path}/logs/schedule_sender_out.log 2>>${dir_path}/logs/schedule_sender_err.log

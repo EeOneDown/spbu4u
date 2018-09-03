@@ -104,14 +104,14 @@ def create_events_blocks(events):
     :rtype: list of list
     """
     event_blocks = []
-    for i in range(len(events)):
+    for i, event in enumerate(events):
         if i and (
-                events[i]["Start"] == events[i - 1]["Start"]
-                and events[i]["End"] == events[i - 1]["End"]
+                event["Start"] == events[i - 1]["Start"]
+                and event["End"] == events[i - 1]["End"]
         ):
-            event_blocks[-1].append(events[i])
+            event_blocks[-1].append(event)
         else:
-            event_blocks.append([events[i]])
+            event_blocks.append([event])
     return event_blocks
 
 
@@ -313,7 +313,7 @@ def parse_event_location(location, full_place=True, have_chosen_educator=False,
         educators = [educator["Item2"].split(", ")[0] for educator in
                      location["EducatorIds"]]
 
-        if len(educators):
+        if educators:
             answer += " <i>({0})</i>".format("; ".join(educators))
 
     return answer
@@ -536,9 +536,11 @@ def get_station_title_from_text(text, is_end=False, is_full=False):
     :rtype: str
     """
     if is_full:
-        return text.split("\n")[0].split(" => ")[int(is_end)]
+        first_i, last_i, split_by = 0, int(is_end), " => "
     else:
-        return text.split("\n")[int(is_end)].split(": ")[-1]
+        first_i, last_i, split_by = int(is_end), -1, ": "
+
+    return text.split("\n")[first_i].split(split_by)[last_i]
 
 
 def get_station_code_from_text(text, is_end=False, is_full=False):

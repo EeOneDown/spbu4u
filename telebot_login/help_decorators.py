@@ -110,6 +110,10 @@ def expected_failure_spbu_inline(func):
     def wrapper(inline_query):
         try:
             func(inline_query)
-        except Exception:
+        except ConnectTimeout:
+            pass
+        except ReadTimeout:
+            pass
+        except spbu.ApiException:
             pass
     return wrapper

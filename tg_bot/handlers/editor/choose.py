@@ -44,7 +44,7 @@ def editor_choose_lesson_handler(call_back):
     blocks = user.get_selectable_blocks()
 
     bot.edit_message_text(
-        text=ask_to_select_block_answer if len(blocks) else no_blocks_answer,
+        text=ask_to_select_block_answer if blocks else no_blocks_answer,
         chat_id=user.tg_id,
         message_id=call_back.message.message_id,
         reply_markup=selectable_blocks_keyboard(blocks.keys())

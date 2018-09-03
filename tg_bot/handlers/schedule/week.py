@@ -8,7 +8,7 @@ from telebot.apihelper import ApiException
 
 import telebot_login
 from app import new_functions as nf
-from app.constants import week_day_number, week_day_titles, loading_text
+from app.constants import week_day_titles, loading_text
 from tg_bot import bot
 from tg_bot.keyboards import week_day_keyboard, current_next_keyboard
 

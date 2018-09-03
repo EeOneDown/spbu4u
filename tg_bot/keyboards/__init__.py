@@ -12,7 +12,7 @@ from tg_bot.keyboards.menu import (
     schedule_editor_keyboard, settings_keyboard, rate_keyboard
 )
 from tg_bot.keyboards.other import (
-    special_thanks_keyboard
+    special_thanks_keyboard, check_spbu_status
 )
 from tg_bot.keyboards.registration import (
     select_status_keyboard, divisions_keyboard, levels_keyboard,

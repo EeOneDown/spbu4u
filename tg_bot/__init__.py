@@ -7,7 +7,10 @@ from telebot import TeleBot, logger
 from config import Config
 
 
-bot = TeleBot(Config.TELEGRAM_BOT_RELEASE_TOKEN, threaded=False)
+bot = TeleBot(
+    token=Config.TELEGRAM_BOT_RELEASE_TOKEN,
+    threaded=Config.IS_THREADED_BOT
+)
 
 logger.setLevel(logging.INFO)
 

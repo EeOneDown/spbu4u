@@ -41,6 +41,7 @@ def hide_lesson_handler(message):
 )
 @telebot_login.login_required_callback
 @telebot_login.student_required_callback
+@telebot_login.help_decorators.expected_failure_spbu_callback
 def select_day_hide_lesson_handler(call_back):
     user = g.current_tbot_user
 
@@ -72,6 +73,7 @@ def select_day_hide_lesson_handler(call_back):
 )
 @telebot_login.login_required_callback
 @telebot_login.student_required_callback
+@telebot_login.help_decorators.expected_failure_spbu_callback
 def select_block_handler(call_back):
     user = g.current_tbot_user
 

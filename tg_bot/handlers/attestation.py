@@ -23,6 +23,7 @@ from tg_bot.keyboards import att_months_keyboard
     content_types=["text"]
 )
 @telebot_login.login_required_message
+@telebot_login.help_decorators.expected_failure_spbu_message
 def attestation_handler(message):
     user = g.current_tbot_user
 
@@ -55,6 +56,7 @@ def attestation_handler(message):
     func=lambda call_back: call_back.data == "Сессия"
 )
 @telebot_login.login_required_callback
+@telebot_login.help_decorators.expected_failure_spbu_callback
 def switch_session_type_handler(call_back):
     user = g.current_tbot_user
 
@@ -88,6 +90,7 @@ def switch_session_type_handler(call_back):
     func=lambda call_back: "Выбери месяц" in call_back.message.text
 )
 @telebot_login.login_required_callback
+@telebot_login.help_decorators.expected_failure_spbu_callback
 def select_months_att_handler(call_back):
     user = g.current_tbot_user
 

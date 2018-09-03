@@ -1,5 +1,5 @@
 [![Build Status](https://travis-ci.org/EeOneDown/spbu4u.svg?branch=master)](https://travis-ci.org/EeOneDown/spbu4u)
-
+[![CodeFactor](https://www.codefactor.io/repository/github/eeonedown/spbu4u/badge)](https://www.codefactor.io/repository/github/eeonedown/spbu4u)
 ![spbu4u_bot](http://telegra.ph/file/60cc87dcb04e9b5ffe0f8.png "Spbu4UBot")
 
 ## Getting started

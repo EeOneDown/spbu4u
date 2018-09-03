@@ -9,10 +9,11 @@ load_dotenv(os.path.join(basedir, '.env'))
 
 
 class Config(object):
-    SECRET_KEY = os.environ.get('SECRET_KEY')
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL')
+    SECRET_KEY = os.getenv('SECRET_KEY')
+    SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL')
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-    TELEGRAM_BOT_RELEASE_TOKEN = os.environ.get('TELEGRAM_BOT_RELEASE_TOKEN')
-    OTHER_SECRET_KEY = os.environ.get('OTHER_SECRET_KEY')
-    YANDEX_API_KEY = os.environ.get('YANDEX_API_KEY')
-    BOT_NAME = os.environ.get('BOT_NAME')
+    TELEGRAM_BOT_RELEASE_TOKEN = os.getenv('TELEGRAM_BOT_RELEASE_TOKEN')
+    OTHER_SECRET_KEY = os.getenv('OTHER_SECRET_KEY')
+    YANDEX_API_KEY = os.getenv('YANDEX_API_KEY')
+    BOT_NAME = os.getenv('BOT_NAME')
+    IS_THREADED_BOT = True if os.getenv('IS_THREADED_BOT') == "True" else False

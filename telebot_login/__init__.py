@@ -142,3 +142,6 @@ def educator_required_inline(func):
                 is_personal=True
             )
     return wrapper
+
+
+from telebot_login import help_decorators

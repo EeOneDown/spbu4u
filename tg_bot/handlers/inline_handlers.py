@@ -14,6 +14,7 @@ from tg_bot import bot
     func=lambda query: query.query.title() in week_day_titles.values()
 )
 @telebot_login.login_required_inline
+@telebot_login.help_decorators.expected_failure_spbu_inline
 def inline_query_weekday_schedule_handler(inline_query):
     user = g.current_tbot_user
 

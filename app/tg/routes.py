@@ -8,12 +8,10 @@ from time import time
 from flask import request, abort
 from telebot.apihelper import ApiException
 from telebot.types import Update
-from requests.exceptions import ReadTimeout, ConnectTimeout
 
 from app import db, new_functions as nf
 from app.constants import (
-    webhook_url_base, webhook_url_path, ids, connect_timeout_answer,
-    read_timeout_answer, other_error_answer
+    webhook_url_base, webhook_url_path, ids, other_error_answer
 )
 from app.models import User
 from app.tg import bp
@@ -26,20 +24,6 @@ def run_bot(update):
     answer = "No error"
     try:
         bot.process_new_updates([update])
-    except ConnectTimeout as err:
-        was_error = True
-        answer = connect_timeout_answer
-        bot.send_message(
-            chat_id=ids["my"],
-            text=str(err)
-        )
-    except ReadTimeout as err:
-        was_error = True
-        answer = read_timeout_answer
-        bot.send_message(
-            chat_id=ids["my"],
-            text=str(err)
-        )
     except ApiException as ApiExcept:
         was_error = True
         json_err = loads(ApiExcept.result.text)

@@ -38,6 +38,7 @@ def choose_educator_handler(message):
 )
 @telebot_login.login_required_callback
 @telebot_login.student_required_callback
+@telebot_login.help_decorators.expected_failure_spbu_callback
 def editor_choose_lesson_handler(call_back):
     user = g.current_tbot_user
 
@@ -56,6 +57,7 @@ def editor_choose_lesson_handler(call_back):
 )
 @telebot_login.login_required_callback
 @telebot_login.student_required_callback
+@telebot_login.help_decorators.expected_failure_spbu_callback
 def select_block_choose_lesson_handler(call_back):
     user = g.current_tbot_user
 
@@ -105,9 +107,9 @@ def lesson_chosen_handler(call_back):
 @bot.callback_query_handler(
     func=lambda call_back: call_back.data == "Преподавателя"
 )
+@telebot_login.help_decorators.access_denied_callback   # Убрать
 @telebot_login.login_required_callback
 @telebot_login.student_required_callback
-@telebot_login.educator_required_callback   # Убрать
 def editor_choose_educator_handler(call_back):
     user = g.current_tbot_user
 
@@ -143,6 +145,7 @@ def editor_choose_educator_handler(call_back):
 @bot.callback_query_handler(func=lambda call_back:
                             "Выбери день, в котором есть занятие с большим " in
                             call_back.message.text)
+@telebot_login.help_decorators.access_denied_callback   # Убрать
 def select_day_choose_educator_handler(call_back):
     iso_day_date = list((datetime.today() + server_timedelta).isocalendar())
     if iso_day_date[2] == 7:
@@ -178,6 +181,7 @@ def select_day_choose_educator_handler(call_back):
 # Lesson (for educator) callback
 @bot.callback_query_handler(func=lambda call_back: "Выбери необходиое занятие:"
                                                    in call_back.message.text)
+@telebot_login.help_decorators.access_denied_callback   # Убрать
 def select_educator_handler(call_back):
     message_text_data = call_back.message.text.split("\n\n")[1:-1]
     chosen_event_number = int(call_back.data.split(". ")[0]) - 1
@@ -214,6 +218,7 @@ def select_educator_handler(call_back):
 @bot.callback_query_handler(func=lambda call_back:
                             "Выбери преподавателя, которого оставить:" in
                             call_back.message.text)
+@telebot_login.help_decorators.access_denied_callback   # Убрать
 def educator_chosen_handler(call_back):
     event_name = call_back.message.text.split("\n")[1]
     chosen_educators = call_back.data

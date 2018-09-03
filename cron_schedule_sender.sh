@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
 
-dir_path=$1
+cd $1
 
-if ! [ -d "$dir_path/logs/" ]; then
-    mkdir "$dir_path/logs"
+if [ ! -d logs ]; then
+    mkdir logs
+    touch schedule_sender_out.log schedule_sender_err.log
 fi
 
-${dir_path}/venv/bin/python ${dir_path}/tg_schedule_sender.py 1>>${dir_path}/logs/schedule_sender_out.log 2>>${dir_path}/logs/schedule_sender_err.log
+venv/bin/python tg_schedule_sender.py 1>>logs/schedule_sender_out.log 2>>logs/schedule_sender_err.log

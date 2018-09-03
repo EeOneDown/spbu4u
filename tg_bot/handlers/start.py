@@ -10,7 +10,8 @@ from telebot.types import ReplyKeyboardMarkup, ReplyKeyboardRemove
 
 from app import db
 from app.constants import (
-    ids, support_answer, main_menu_first_answer, reg_tt_g_link, reg_tt_e_link
+    ids, support_answer, main_menu_first_answer, reg_tt_g_link, reg_tt_e_link,
+    alt_reg_text, alt_reg_answer
 )
 from app.models import User
 from tg_bot import bot
@@ -85,15 +86,14 @@ def start_handler(message):
             bot_msg_id=bot_msg.message_id
         )
     else:
-        if message.text == "/start":
-            bot.send_message(
-                chat_id=message.chat.id,
-                text="Приветствую!",
-                reply_markup=ReplyKeyboardMarkup(
-                    resize_keyboard=True,
-                    one_time_keyboard=False
-                ).row("Завершить", "Поддержка")
-            )
+        bot.send_message(
+            chat_id=message.chat.id,
+            text="Приветствую!" if message.text == "/start" else "Перезайти",
+            reply_markup=ReplyKeyboardMarkup(
+                resize_keyboard=True,
+                one_time_keyboard=False
+            ).row(alt_reg_text).row("Завершить", "Поддержка")
+        )
         bot.send_message(
             chat_id=message.chat.id,
             text="Для начала выбери в качестве кого ты хочешь зайти:",
@@ -126,6 +126,20 @@ def exit_handler(message):
         is_edu=is_edu,
         tg_id=message.chat.id,
         bot_msg_id=bot_msg.message_id
+    )
+
+
+@bot.message_handler(
+    func=lambda mess: mess.text.capitalize() == alt_reg_text
+)
+def alt_reg_handler(message):
+    bot.send_chat_action(message.chat.id, "typing")
+
+    bot.send_message(
+        chat_id=message.chat.id,
+        text=alt_reg_answer,
+        disable_web_page_preview=True,
+        parse_mode="HTML"
     )
 
 

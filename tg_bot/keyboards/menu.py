@@ -56,7 +56,7 @@ def settings_keyboard():
     return ReplyKeyboardMarkup(
         resize_keyboard=True, one_time_keyboard=False
     ).row(
-        "Сменить группу", "Завершить"
+        "Перезайти", "Завершить"
     ).row(
         "Назад", "Поддержка"
     )

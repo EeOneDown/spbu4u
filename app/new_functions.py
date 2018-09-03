@@ -421,14 +421,12 @@ def get_yandex_raw_data(from_station, to_station, for_date):
     return req.status_code, req.json()
 
 
-def parse_yandex_segment(segment, current_datetime=datetime.now()):
+def parse_yandex_segment(segment):
     """
-    Parses segments data to yandex_segment_answer
+    Parses segments data to `yandex_segment_answer`
 
     :param segment: segment's json data from api.rasp.yandex's search method
     :type segment: dict
-    :param current_datetime: current datetime
-    :type current_datetime: datetime
     :return: parsed yandex segment answer
     :rtype: str
     """
@@ -436,7 +434,7 @@ def parse_yandex_segment(segment, current_datetime=datetime.now()):
     arrival_datetime = datetime_from_string(segment["arrival"])
 
     hours, minutes = get_hours_minutes_by_seconds(
-        (departure_datetime - current_datetime).seconds
+        (departure_datetime - datetime.now()).seconds
     )
 
     if hours:

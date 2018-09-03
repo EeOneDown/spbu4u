@@ -2,8 +2,9 @@
 from __future__ import unicode_literals
 
 from functools import wraps
-from requests import ConnectTimeout, ReadTimeout
+
 import spbu
+from requests import ConnectTimeout, ReadTimeout
 
 from app.constants import (
     access_denied_answer, read_timeout_answer, connect_timeout_answer,

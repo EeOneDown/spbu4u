@@ -37,6 +37,7 @@ from tg_bot import bot
     content_types=["text"]
 )
 @telebot_login.login_required_message
+@telebot_login.help_decorators.expected_failure_spbu_message
 def day_schedule_handler(message):
     user = g.current_tbot_user
 
@@ -68,6 +69,7 @@ def day_schedule_handler(message):
     content_types=["text"]
 )
 @telebot_login.login_required_message
+@telebot_login.help_decorators.expected_failure_spbu_message
 def interval_schedule_handler(message):
     user = g.current_tbot_user
 

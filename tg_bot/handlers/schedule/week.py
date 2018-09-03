@@ -58,6 +58,7 @@ def select_week_day_schedule_handler(call_back):
     func=lambda call_back: "Расписание на: Неделя" in call_back.message.text
 )
 @telebot_login.login_required_callback
+@telebot_login.help_decorators.expected_failure_spbu_callback
 def all_week_schedule_handler(call_back):
     user = g.current_tbot_user
 
@@ -91,6 +92,7 @@ def all_week_schedule_handler(call_back):
 @bot.callback_query_handler(
     func=lambda call_back: call_back.data == "Следующее"
 )
+@telebot_login.help_decorators.expected_failure_spbu_callback
 @telebot_login.login_required_callback
 def week_day_schedule_handler(call_back):
     user = g.current_tbot_user

@@ -109,6 +109,7 @@ def write_educator_name_handler(message):
         "Найденные преподаватели:" in call_back.message.text
 )
 @telebot_login.login_required_callback
+@telebot_login.help_decorators.expected_failure_spbu_callback
 def select_master_id_handler(call_back):
     user = g.current_tbot_user
 

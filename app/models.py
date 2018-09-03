@@ -183,14 +183,10 @@ class User(db.Model):
         :return: list of events data (json)
         :rtype: list
         """
-        if self.is_educator:
-            return self._current_educator.get_events(
-                from_date=from_date, to_date=to_date, lessons_type=lessons_type
-            )["Days"]
-        else:
-            return self._current_group.get_events(
-                from_date=from_date, to_date=to_date, lessons_type=lessons_type
-            )["Days"]
+        q = self._current_educator if self.is_educator else self._current_group
+        return q.get_events(
+            from_date=from_date, to_date=to_date, lessons_type=lessons_type
+        )["Days"]
 
     def _parse_event(self, event):
         if not self.is_educator:
@@ -243,7 +239,7 @@ class User(db.Model):
             from_date=for_date,
             to_date=for_date + timedelta(days=1)
         )
-        if len(events):
+        if events:
             answer = self._parse_day_events(events[0])
         else:
             answer = weekend_answer
@@ -286,7 +282,7 @@ class User(db.Model):
                 )
             )
 
-        if not len(answers):
+        if not answers:
             if from_date.isoweekday() == 1 and (to_date - from_date).days == 7:
                 answers = [week_off_answer]
             else:
@@ -379,10 +375,8 @@ class User(db.Model):
         :return: suitable title
         :rtype: str
         """
-        if self.is_educator:
-            return self._current_educator.title
-        else:
-            return self._current_group.title
+        q = self._current_educator if self.is_educator else self._current_group
+        return q.title
 
     def get_sav_del_button_text(self):
         """
@@ -391,11 +385,11 @@ class User(db.Model):
         :return: text
         :rtype: str
         """
-        if self.is_educator and self._current_educator in self.educators \
-                or not self.is_educator and self._current_group in self.groups:
-            return "Удалить"
-        else:
-            return "Сохранить"
+        is_saved = (
+                self.is_educator and self._current_educator in self.educators
+                or not self.is_educator and self._current_group in self.groups
+        )
+        return "Удалить" if is_saved else "Сохранить"
 
     def save_current_status_into_templates(self):
         """
@@ -426,10 +420,10 @@ class User(db.Model):
         :return: suitable answer
         :rtype: str
         """
-        if self.is_full_place:
-            return changed_to_full_answer
-        else:
-            return changed_to_class_answer
+        return (
+            changed_to_full_answer if self.is_full_place
+            else changed_to_class_answer
+        )
 
     def clear_all(self):
         """
@@ -486,9 +480,10 @@ class User(db.Model):
                         lesson.educators
                     )
                 answer += "\n"
-            return answer + ask_to_select_lesson_answer
+            answer += ask_to_select_lesson_answer
         else:
-            return no_hidden_lessons_answer
+            answer = no_hidden_lessons_answer
+        return answer
 
     def create_educators_reset_answer(self):
         """
@@ -505,9 +500,10 @@ class User(db.Model):
                 answer += "<b>Преподаватель</b>: {0}\n\n".format(
                     lesson.educators[0]
                 )
-            return answer + ask_to_select_edu_answer
+            answer += ask_to_select_edu_answer
         else:
-            return no_chosen_educators_answer
+            answer = no_chosen_educators_answer
+        return answer
 
     def get_selectable_blocks(self):
         """

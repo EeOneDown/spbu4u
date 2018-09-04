@@ -21,7 +21,7 @@ def schedule_sender():
 
         try:
             answer = "Расписание на завтра:\n\n" + answer
-            nf.send_long_message(bot, answer, user.tg_id)
+            nf.tgbot_send_long_message(bot, answer, user.tg_id)
             send_cnt += 1
         except Exception as err:
             print("---------------ERROR START---------------")

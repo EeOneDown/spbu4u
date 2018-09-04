@@ -126,4 +126,4 @@ def select_master_id_handler(call_back):
         parse_mode="HTML"
     )
     for answer in answers[1:]:
-        nf.send_long_message(bot, answer, user.tg_id)
+        nf.tgbot_send_long_message(bot, answer, user.tg_id)

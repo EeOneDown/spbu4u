@@ -28,9 +28,6 @@ webhook_url_path = "/{0}/".format(sha_string)
 max_inline_button_text_len = 32
 max_answers_count = 10
 
-# TODO remove
-server_timedelta = timedelta(hours=0)
-
 urls = {
     "ya_search": "https://api.rasp.yandex.net/v3.0/search/"
 }

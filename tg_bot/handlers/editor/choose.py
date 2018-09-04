@@ -3,18 +3,18 @@ from __future__ import unicode_literals
 
 from flask import g
 
-from tg_bot import bot, functions as func
-from tg_bot.keyboards import (
-    choose_keyboard, selectable_blocks_keyboard, block_lessons_keyboard
-)
+import telebot_login
+from app import db
 from app.constants import (
-    emoji, max_inline_button_text_len, server_timedelta, week_day_titles,
+    emoji, max_inline_button_text_len, week_day_titles,
     week_day_number, choose_answer, ask_to_select_block_answer,
     no_blocks_answer, ask_to_select_block_lesson_answer, no_edu_days_answer,
     ask_to_select_day_answer
 )
-import telebot_login
-from app import db
+from tg_bot import bot, functions as func
+from tg_bot.keyboards import (
+    choose_keyboard, selectable_blocks_keyboard, block_lessons_keyboard
+)
 
 
 @bot.message_handler(

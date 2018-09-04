@@ -7,7 +7,10 @@ from datetime import datetime, date, timedelta
 import pymysql
 import spbu
 
-from app.constants import emoji, subject_short_types, server_timedelta
+from app.constants import emoji, subject_short_types
+
+
+server_timedelta = timedelta(hours=0)
 
 
 def parse_event_time(event):

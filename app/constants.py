@@ -258,7 +258,7 @@ alt_reg_answer = (
     "(занятия, аттестация, на сееместр и тд);\n"
     "3. Дождись окончания входа."
 )
-access_denied_answer = "Доступ к этой функции запрещен."
+access_denied_answer = "Функция временно отключена."
 spbu_api_exception_answer = (
     "Произошла ошибка во время запроса к "
     "<a href='https://timetable.spbu.ru'>сайту расписания</a>."

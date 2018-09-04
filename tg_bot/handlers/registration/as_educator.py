@@ -18,7 +18,6 @@ import telebot_login
 @bot.callback_query_handler(
     func=lambda call_back: call_back.data == "Преподаватель"
 )
-@telebot_login.help_decorators.access_denied_callback   # Убрать
 def input_educator_name_handler(call_back):
     bot.edit_message_text(
         text=call_back.data,
@@ -41,7 +40,6 @@ def input_educator_name_handler(call_back):
     ),
     content_types=["text"]
 )
-@telebot_login.help_decorators.access_denied_callback   # Убрать
 def select_educator(message):
     bot.send_chat_action(message.chat.id, "typing")
 
@@ -91,7 +89,6 @@ def select_educator(message):
 @bot.callback_query_handler(
     func=lambda call_back: call_back.message.text == "Выбери преподавателя:"
 )
-@telebot_login.help_decorators.access_denied_callback   # Убрать
 def register_student_handler(call_back):
     bot_msg = bot.edit_message_text(
         text="Почти готово! Запоминаю твой выбор\U00002026",

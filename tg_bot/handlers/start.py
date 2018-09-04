@@ -102,7 +102,10 @@ def start_handler(message):
         )
 
 
-# Добавить re.search(reg_tt_g_link, mess.text)
+@bot.message_handler(
+    func=lambda mess: re.search(reg_tt_e_link, mess.text),
+    content_types=["text"]
+)
 @bot.message_handler(
     func=lambda mess: re.search(reg_tt_g_link, mess.text),
     content_types=["text"]

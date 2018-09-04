@@ -5,13 +5,9 @@ import spbu
 from telebot.types import ForceReply, ReplyKeyboardMarkup
 
 from app import new_functions as nf
-from app.constants import (
-    ask_to_input_educator_register, main_menu_first_answer
-)
-from app.models import User
+from app.constants import ask_to_input_educator_register
 from tg_bot import bot
-from tg_bot.keyboards import found_educators_keyboard, main_keyboard
-import telebot_login
+from tg_bot.keyboards import found_educators_keyboard
 
 
 # Educator status callback
@@ -83,31 +79,3 @@ def select_educator(message):
             text=ask_to_input_educator_register,
             reply_markup=ForceReply()
         )
-
-
-# Educator choose message
-@bot.callback_query_handler(
-    func=lambda call_back: call_back.message.text == "Выбери преподавателя:"
-)
-def register_student_handler(call_back):
-    bot_msg = bot.edit_message_text(
-        text="Почти готово! Запоминаю твой выбор\U00002026",
-        chat_id=call_back.message.chat.id,
-        message_id=call_back.message.message_id
-    )
-    user = User.reg_user(
-        o_id=int(call_back.data),
-        is_edu=True,
-        tg_id=call_back.message.chat.id
-    )
-    bot.edit_message_text(
-        chat_id=user.tg_id,
-        text="Готово!",
-        message_id=bot_msg.message_id
-    )
-    bot.send_message(
-        text=main_menu_first_answer,
-        parse_mode="HTML",
-        chat_id=user.tg_id,
-        reply_markup=main_keyboard()
-    )

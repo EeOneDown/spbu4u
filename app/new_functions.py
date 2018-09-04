@@ -717,7 +717,7 @@ def get_lesson_data(data, hide_type):
     )
 
 
-def send_long_message(bot, text, user_id, split="\n\n"):
+def tgbot_send_long_message(bot, text, user_id, split="\n\n"):
     try:
         bot.send_message(user_id, text, parse_mode="HTML")
     except ApiException as ApiExcept:
@@ -726,8 +726,22 @@ def send_long_message(bot, text, user_id, split="\n\n"):
             event_count = len(text.split(split))
             first_part = split.join(text.split(split)[:event_count // 2])
             second_part = split.join(text.split(split)[event_count // 2:])
-            send_long_message(bot, first_part, user_id, split)
-            send_long_message(bot, second_part, user_id, split)
+            tgbot_send_long_message(bot, first_part, user_id, split)
+            tgbot_send_long_message(bot, second_part, user_id, split)
+
+
+def tgbot_edit_first_and_send_messages(bot, texts, bot_msg, split="\n\n"):
+    try:
+        bot.edit_message_text(
+            text=texts[0],
+            chat_id=bot_msg.chat.id,
+            message_id=bot_msg.message_id,
+            parse_mode="HTML"
+        )
+    except ApiException:
+        tgbot_send_long_message(bot, texts[0], bot_msg.chat.id, split)
+    for text in texts[1:]:
+        tgbot_send_long_message(bot, text, bot_msg.chat.id, split)
 
 
 def write_log(update, work_time, was_error=False):

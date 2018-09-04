@@ -60,7 +60,7 @@ def day_schedule_handler(message):
 
     answer = user.create_answer_for_date(for_date)
 
-    nf.send_long_message(bot, answer, user.tg_id)
+    nf.tgbot_send_long_message(bot, answer, user.tg_id)
 
 
 # Schedule for interval message
@@ -82,5 +82,5 @@ def interval_schedule_handler(message):
         answers = [interval_exceeded_answer]
 
     for answer in answers:
-        nf.send_long_message(bot, answer, user.tg_id)
+        nf.tgbot_send_long_message(bot, answer, user.tg_id)
 

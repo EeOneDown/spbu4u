@@ -72,17 +72,7 @@ def all_week_schedule_handler(call_back):
             is_next_week=call_back.data == "Следующее"
         )
     )
-    try:
-        bot.edit_message_text(
-            text=answers[0],
-            chat_id=user.tg_id,
-            message_id=bot_msg.message_id,
-            parse_mode="HTML"
-        )
-    except ApiException:
-        nf.send_long_message(bot, answers[0], user.tg_id)
-    for answer in answers[1:]:
-        nf.send_long_message(bot, answer, user.tg_id)
+    nf.tgbot_edit_first_and_send_messages(bot, answers, bot_msg)
 
 
 # Week type callback
@@ -116,4 +106,4 @@ def week_day_schedule_handler(call_back):
             parse_mode="HTML"
         )
     except ApiException:
-        nf.send_long_message(bot, answer, user.tg_id)
+        nf.tgbot_send_long_message(bot, answer, user.tg_id)

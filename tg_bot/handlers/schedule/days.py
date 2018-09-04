@@ -83,4 +83,3 @@ def interval_schedule_handler(message):
 
     for answer in answers:
         nf.tgbot_send_long_message(bot, answer, user.tg_id)
-

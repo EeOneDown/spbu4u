@@ -33,14 +33,14 @@ def access_denied_callback(func):
     return wrapper
 
 
-def login_required_inline(func):
+def access_denied_inline(func):
     @wraps(func)
     def wrapper(inline_query):
         bot.answer_inline_query(
             inline_query_id=inline_query.id,
             results=[],
             switch_pm_text=access_denied_answer,
-            switch_pm_parameter="new_from_inline",
+            switch_pm_parameter="access_denied_inline",
             cache_time=1,
             is_personal=True
         )
@@ -56,19 +56,22 @@ def expected_failure_spbu_message(func):
             bot.send_message(
                 chat_id=message.chat.id,
                 text=connect_timeout_answer,
-                reply_markup=check_spbu_status()
+                reply_markup=check_spbu_status(),
+                parse_mode="HTML"
             )
         except ReadTimeout:
             bot.send_message(
                 chat_id=message.chat.id,
                 text=read_timeout_answer,
-                reply_markup=check_spbu_status()
+                reply_markup=check_spbu_status(),
+                parse_mode="HTML"
             )
         except spbu.ApiException:
             bot.send_message(
                 chat_id=message.chat.id,
                 text=spbu_api_exception_answer,
-                reply_markup=check_spbu_status()
+                reply_markup=check_spbu_status(),
+                parse_mode="HTML"
             )
     return wrapper
 

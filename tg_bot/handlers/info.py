@@ -1,6 +1,3 @@
-# -*- coding: utf-8 -*-
-from __future__ import unicode_literals
-
 from app.constants import emoji, briefly_info_answer, special_thanks
 from tg_bot import bot
 from tg_bot.keyboards import special_thanks_keyboard

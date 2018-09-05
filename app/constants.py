@@ -1,10 +1,6 @@
-# -*- coding: utf-8 -*-
-from __future__ import unicode_literals
-
 import hmac
 import re
 from collections import OrderedDict
-from datetime import timedelta
 from hashlib import sha256
 
 from config import Config

@@ -1,9 +1,4 @@
-# -*- coding: utf-8 -*-
-from __future__ import unicode_literals
-
-from app.constants import (
-    main_menu_first_answer
-)
+from app.constants import main_menu_first_answer
 from app.models import User
 from tg_bot import bot
 from tg_bot.keyboards import main_keyboard

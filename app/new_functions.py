@@ -752,10 +752,10 @@ def tgbot_edit_first_and_send_messages(bot, texts, bot_msg, split="\n\n"):
 
 
 def write_log(update, work_time, was_error=False):
-    if update.message is not None:
+    if update.message:
         chat_id = update.message.chat.id
-        user_text = update.message.text
-    elif update.callback_query is not None:
+        user_text = update.message.text or "NO TEXT"
+    elif update.callback_query:
         chat_id = update.callback_query.message.chat.id
         user_text = update.callback_query.data
     else:

@@ -1,8 +1,3 @@
-# -*- coding: utf-8 -*-
-from __future__ import unicode_literals
-
-from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
-
 from tg_bot import bot
 from app.constants import (
     emoji, all_stations, personalization_answer, select_home_station,

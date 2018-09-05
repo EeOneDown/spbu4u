@@ -1,6 +1,3 @@
-# -*- coding: utf-8 -*-
-from __future__ import unicode_literals
-
 from tg_bot import bot
 from tg_bot.keyboards import (
     divisions_keyboard, levels_keyboard, programs_keyboard, years_keyboard,

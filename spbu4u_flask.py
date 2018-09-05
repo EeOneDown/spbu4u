@@ -1,6 +1,3 @@
-# -*- coding: utf-8 -*-
-from __future__ import unicode_literals
-
 from app import create_app, db
 from app.models import User, Group, Educator, Lesson
 

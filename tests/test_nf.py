@@ -14,7 +14,7 @@ def is_usual_year(y):
 
 class TestNewFunctions(unittest.TestCase):
     def test_leap_years(self):
-        for y in range(1880, 2073):
+        for y in range(2018, 2073):
             if y in [2020, 2024, 2028, 2032, 2036, 2040, 2044,
                      2048, 2052, 2056, 2060, 2064, 2068, 2072]:
                 self.assertFalse(is_usual_year(y))

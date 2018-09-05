@@ -3,7 +3,7 @@ import sys
 sys.path.append('../')
 
 import unittest
-from datetime import date
+from datetime import date, datetime, timedelta
 
 from app import constants as const, new_functions as nf
 
@@ -15,12 +15,8 @@ def is_usual_year(y):
 class TestNewFunctions(unittest.TestCase):
     def test_leap_years(self):
         for y in range(1880, 2073):
-            if y in [1880, 1884, 1888, 1892, 1896, 1904, 1908, 1912, 1916,
-                     1920, 1924, 1928, 1932, 1936, 1940, 1944, 1948, 1952,
-                     1956, 1960, 1964, 1968, 1972, 1976, 1980, 1984, 1988,
-                     1992, 1996, 2000, 2004, 2008, 2012, 2016, 2020, 2024,
-                     2028, 2032, 2036, 2040, 2044, 2048, 2052, 2056, 2060,
-                     2064, 2068, 2072]:
+            if y in [2020, 2024, 2028, 2032, 2036, 2040, 2044,
+                     2048, 2052, 2056, 2060, 2064, 2068, 2072]:
                 self.assertFalse(is_usual_year(y))
             else:
                 self.assertTrue(is_usual_year(y))
@@ -84,6 +80,143 @@ class TestNewFunctions(unittest.TestCase):
         for s in [" ", "."]:
             for y in range(2018, 2100):
                 self.test_text_to_date_dm(text_t, y, s)
+
+    def test_text_to_interval(self):
+        self.assertEqual(
+            nf.text_to_interval("2 05 2018 - 3 10 2018"),
+            (date(2018, 5, 2), date(2018, 10, 3))
+        )
+        self.assertEqual(
+            nf.text_to_interval("2 05 - 3 10"),
+            (date(date.today().year, 5, 2), date(date.today().year, 10, 3))
+        )
+        self.assertEqual(
+            nf.text_to_interval("2 - 10"),
+            (date(date.today().year, date.today().month, 2),
+             date(date.today().year, date.today().month, 10))
+        )
+        self.assertFalse(
+            nf.text_to_interval("10 - 2"),
+        )
+        self.assertFalse(
+            nf.text_to_interval("3.10 - 2.05")
+        )
+        self.assertFalse(
+            nf.text_to_interval("3.10.2019 - 2.05.2018")
+        )
+
+    def test_get_term_dates(self):
+        terms = (
+            (date(2018, 8, 1), date(2019, 2, 1)),
+            (date(2019, 2, 1), date(2019, 8, 1)),
+            (date(2019, 8, 1), date(2020, 2, 1))
+        )
+        self.assertTrue(nf.get_term_dates() in terms)
+
+    def test_datetime_from_string(self):
+        self.assertEqual(
+            nf.datetime_from_string("2018-09-03T09:30:00"),
+            datetime(2018, 9, 3, 9, 30, 0)
+        )
+        self.assertEqual(
+            nf.datetime_from_string("2018-09-07T15:15:00Z"),
+            datetime(2018, 9, 7, 15, 15, 0)
+        )
+        self.assertEqual(
+            nf.datetime_from_string("2017-03-28T06:00:00+03:00"),
+            datetime(2017, 3, 28, 6, 0, 0)
+        )
+
+    def test_get_work_monday(self):
+        mondays = [date(2018, 9, 3)]
+        for i in range(500):
+            mondays.append(mondays[i] + timedelta(days=7))
+        self.assertTrue(nf.get_work_monday() in mondays)
+
+    def test_get_date_by_weekday_title(self):
+        mondays = [date(2018, 9, 3)]
+        tuesdays = [date(2018, 9, 4)]
+        wednesdays = [date(2018, 9, 5)]
+        thursdays = [date(2018, 9, 6)]
+        fridays = [date(2018, 9, 7)]
+        saturdays = [date(2018, 9, 8)]
+        for i in range(500):
+            mondays.append(mondays[i] + timedelta(days=7))
+            tuesdays.append(tuesdays[i] + timedelta(days=7))
+            wednesdays.append(wednesdays[i] + timedelta(days=7))
+            thursdays.append(thursdays[i] + timedelta(days=7))
+            fridays.append(fridays[i] + timedelta(days=7))
+            saturdays.append(saturdays[i] + timedelta(days=7))
+        self.assertTrue(nf.get_date_by_weekday_title("Пн") in mondays)
+        self.assertTrue(nf.get_date_by_weekday_title("Вт") in tuesdays)
+        self.assertTrue(nf.get_date_by_weekday_title("Ср") in wednesdays)
+        self.assertTrue(nf.get_date_by_weekday_title("Чт") in thursdays)
+        self.assertTrue(nf.get_date_by_weekday_title("Пт") in fridays)
+        self.assertTrue(nf.get_date_by_weekday_title("Сб") in saturdays)
+
+    def test_datetime_to_string(self):
+        self.assertEqual(
+            nf.datetime_to_string(date(2018, 1, 1)),
+            "1 января 2018"
+        )
+        self.assertEqual(
+            nf.datetime_to_string(date(2018, 2, 1)),
+            "1 февраля 2018"
+        )
+        self.assertEqual(
+            nf.datetime_to_string(date(2018, 3, 1)),
+            "1 марта 2018"
+        )
+        self.assertEqual(
+            nf.datetime_to_string(date(2018, 4, 1)),
+            "1 апреля 2018"
+        )
+        self.assertEqual(
+            nf.datetime_to_string(date(2022, 5, 15)),
+            "15 мая 2022"
+        )
+        self.assertEqual(
+            nf.datetime_to_string(date(2018, 6, 1)),
+            "1 июня 2018"
+        )
+        self.assertEqual(
+            nf.datetime_to_string(date(2018, 7, 1)),
+            "1 июля 2018"
+        )
+        self.assertEqual(
+            nf.datetime_to_string(date(2018, 8, 1)),
+            "1 августа 2018"
+        )
+        self.assertEqual(
+            nf.datetime_to_string(date(2018, 9, 1)),
+            "1 сентября 2018"
+        )
+        self.assertEqual(
+            nf.datetime_to_string(date(2018, 10, 1)),
+            "1 октября 2018"
+        )
+        self.assertEqual(
+            nf.datetime_to_string(date(2018, 11, 1)),
+            "1 ноября 2018"
+        )
+        self.assertEqual(
+            nf.datetime_to_string(date(2018, 12, 1)),
+            "1 декабря 2018"
+        )
+
+    def test_get_hours_minutes_by_seconds(self):
+        self.assertEqual(
+            nf.get_hours_minutes_by_seconds(600),
+            (0, 10)
+        )
+        self.assertEqual(
+            nf.get_hours_minutes_by_seconds(-600),
+            (-1, 50)
+        )
+        self.assertEqual(
+            nf.get_hours_minutes_by_seconds(0),
+            (0, 0)
+        )
 
 
 if __name__ == '__main__':

@@ -1,9 +1,14 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+import sys
+
+sys.path.append('../')
+
 import unittest
-from app import constants as const, new_functions as nf
 from datetime import date
+
+from app import constants as const, new_functions as nf
 
 
 def is_usual_year(y):

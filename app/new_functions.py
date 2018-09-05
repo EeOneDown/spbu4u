@@ -206,9 +206,19 @@ def text_to_date(text):
         if res:
             groups = res.groups()
             day = int(groups[0])
-            month = int(groups[3]) if groups[3] else date.today().month
+            if groups[3]:
+                if groups[3].isdecimal():
+                    month = int(groups[3])
+                else:
+                    month = months[groups[3]]
+            else:
+                month = date.today().month
             year = int(groups[5]) if groups[5] else date.today().year
-            return date(day=day, month=month, year=year)
+
+            try:
+                return date(day=day, month=month, year=year)
+            except ValueError:
+                return False
     return False
 
 

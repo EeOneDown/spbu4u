@@ -1,6 +1,7 @@
 from datetime import timedelta, date, datetime
 
 import spbu
+from werkzeug.security import check_password_hash, generate_password_hash
 
 from app import db, new_functions as nf
 from app.constants import (
@@ -636,8 +637,19 @@ class Group(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(128))
+    schedule_hash = db.Column(db.String(128))
     members = db.relationship("User", secondary=users_groups_templates,
                               back_populates="groups", lazy="dynamic")
+
+    def update_hash(self, schedule):
+        was_changed = False
+        if not self.check_hash(schedule):
+            self.schedule_hash = generate_password_hash(schedule)
+            was_changed = True
+        return was_changed
+
+    def check_hash(self, schedule):
+        return check_password_hash(self.schedule_hash, schedule)
 
     def get_events(self, from_date=None, to_date=None, lessons_type=None):
         """
@@ -657,8 +669,19 @@ class Educator(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(128))
+    schedule_hash = db.Column(db.String(128))
     members = db.relationship("User", secondary=users_educators_templates,
                               back_populates="educators", lazy="dynamic")
+
+    def update_hash(self, schedule):
+        was_changed = False
+        if not self.check_hash(schedule):
+            self.schedule_hash = generate_password_hash(schedule)
+            was_changed = True
+        return was_changed
+
+    def check_hash(self, schedule):
+        return check_password_hash(self.schedule_hash, schedule)
 
     def get_events(self, from_date=None, to_date=None, lessons_type=None):
         # TODO change spbu method in future

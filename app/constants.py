@@ -25,7 +25,8 @@ max_inline_button_text_len = 32
 max_answers_count = 10
 
 urls = {
-    "ya_search": "https://api.rasp.yandex.net/v3.0/search/"
+    "ya_search": "https://api.rasp.yandex.net/v3.0/search/",
+    "tt": "https://timetable.spbu.ru"
 }
 
 emoji = {"info": "\U00002139", "star": "\U00002B50",

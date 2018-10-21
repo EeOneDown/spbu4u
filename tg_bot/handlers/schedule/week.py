@@ -55,7 +55,7 @@ def select_week_day_schedule_handler(call_back):
     func=lambda call_back: "Расписание на: Неделя" in call_back.message.text
 )
 @bot.callback_query_handler(
-    func=lambda call_back: current_week_text in call_back.message.text
+    func=lambda call_back: call_back.data == current_week_text
 )
 @telebot_login.login_required_callback
 @telebot_login.help_decorators.expected_failure_spbu_callback

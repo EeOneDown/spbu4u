@@ -1,5 +1,5 @@
 from tg_bot import bot
-from app import create_app
+from app import create_app, db
 from app.models import Group, Educator
 from app.constants import schedule_changed_answer
 import requests
@@ -14,6 +14,7 @@ def watcher():
                         chat_id=user.tg_id,
                         text=schedule_changed_answer
                     )
+    db.session.commit()
 
 
 if __name__ == '__main__':

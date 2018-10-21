@@ -640,6 +640,7 @@ class Group(db.Model):
     schedule_hash = db.Column(db.String(128))
     members = db.relationship("User", secondary=users_groups_templates,
                               back_populates="groups", lazy="dynamic")
+    current_members = db.relationship("User")
 
     def update_hash(self, schedule):
         was_changed = False
@@ -672,6 +673,7 @@ class Educator(db.Model):
     schedule_hash = db.Column(db.String(128))
     members = db.relationship("User", secondary=users_educators_templates,
                               back_populates="educators", lazy="dynamic")
+    current_members = db.relationship("User")
 
     def update_hash(self, schedule):
         was_changed = False

@@ -124,7 +124,7 @@ def sav_del_current_status_handler(call_back):
 def change_template_handler(call_back):
     user = g.current_tbot_user
 
-    if "Выбери группу:" in call_back.message.text:
+    if "группу" in call_back.message.text:
         user.current_group_id = call_back.data
         user.current_educator_id = 0
     else:

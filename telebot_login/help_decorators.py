@@ -1,6 +1,7 @@
 from functools import wraps
 
 import spbu
+from flask import g
 from requests import ConnectTimeout, ReadTimeout
 
 from app.constants import (
@@ -47,61 +48,55 @@ def access_denied_inline(func):
 def expected_failure_spbu_message(func):
     @wraps(func)
     def wrapper(message):
+        was_error, answer = False, "None"
         try:
             func(message)
         except ConnectTimeout:
-            bot.send_message(
-                chat_id=message.chat.id,
-                text=connect_timeout_answer,
-                reply_markup=check_spbu_status(),
-                parse_mode="HTML"
-            )
+            was_error, answer = True, connect_timeout_answer
         except ReadTimeout:
-            bot.send_message(
-                chat_id=message.chat.id,
-                text=read_timeout_answer,
-                reply_markup=check_spbu_status(),
-                parse_mode="HTML"
-            )
+            was_error, answer = True, read_timeout_answer
         except spbu.ApiException:
-            bot.send_message(
-                chat_id=message.chat.id,
-                text=spbu_api_exception_answer,
-                reply_markup=check_spbu_status(),
-                parse_mode="HTML"
-            )
+            was_error, answer = True, spbu_api_exception_answer
+        finally:
+            if was_error:
+                if g.current_tbot_user:
+                    link = g.current_tbot_user.get_current_tt_link()
+                else:
+                    link = None
+                bot.send_message(
+                    chat_id=message.chat.id,
+                    text=answer,
+                    reply_markup=check_spbu_status(link),
+                    parse_mode="HTML"
+                )
     return wrapper
 
 
 def expected_failure_spbu_callback(func):
     @wraps(func)
     def wrapper(call_back):
+        was_error, answer = False, "None"
         try:
             func(call_back)
         except ConnectTimeout:
-            bot.edit_message_text(
-                text=connect_timeout_answer,
-                chat_id=call_back.message.chat.id,
-                message_id=call_back.message.message_id,
-                parse_mode="HTML",
-                reply_markup=check_spbu_status()
-            )
+            was_error, answer = True, connect_timeout_answer
         except ReadTimeout:
-            bot.edit_message_text(
-                text=read_timeout_answer,
-                chat_id=call_back.message.chat.id,
-                message_id=call_back.message.message_id,
-                parse_mode="HTML",
-                reply_markup=check_spbu_status()
-            )
+            was_error, answer = True, read_timeout_answer
         except spbu.ApiException:
-            bot.edit_message_text(
-                text=spbu_api_exception_answer,
-                chat_id=call_back.message.chat.id,
-                message_id=call_back.message.message_id,
-                parse_mode="HTML",
-                reply_markup=check_spbu_status()
-            )
+            was_error, answer = True, spbu_api_exception_answer
+        finally:
+            if was_error:
+                if g.current_tbot_user:
+                    link = g.current_tbot_user.get_current_tt_link()
+                else:
+                    link = None
+                bot.edit_message_text(
+                    text=connect_timeout_answer,
+                    chat_id=call_back.message.chat.id,
+                    message_id=call_back.message.message_id,
+                    parse_mode="HTML",
+                    reply_markup=check_spbu_status(link)
+                )
     return wrapper
 
 

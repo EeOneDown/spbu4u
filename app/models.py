@@ -10,7 +10,7 @@ from app.constants import (
     no_hidden_lessons_answer, chosen_educators_list_answer,
     ask_to_select_edu_answer, no_chosen_educators_answer,
     selectable_block_answer, ask_to_select_block_lesson_answer,
-    months_date
+    months_date, urls
 )
 
 users_groups_templates = db.Table(
@@ -630,6 +630,18 @@ class User(db.Model):
     def get_poliedu_lessons(self):
         pass
 
+    def get_current_tt_link(self):
+        """
+        Creates timetable.spbu.ru link for current schedule
+
+        :return: link
+        """
+        if self.is_educator:
+            link = self._current_educator.get_tt_link()
+        else:
+            link = self._current_group.get_tt_link()
+        return link
+
 
 class Group(db.Model):
     __tablename__ = "groups"
@@ -664,12 +676,11 @@ class Group(db.Model):
         return spbu.get_group_events(self.id, from_date, to_date, lessons_type)
 
     def get_tt_link(self, is_api: bool = False):
-        main = "https://timetable.spbu.ru"
         if is_api:
             path = "/api/v1/groups/{0}/events"
         else:
             path = "/AGSM/StudentGroupEvents/Primary/{0}"
-        return main + path.format(self.id)
+        return urls["tt"] + path.format(self.id)
 
 
 class Educator(db.Model):
@@ -693,12 +704,11 @@ class Educator(db.Model):
         return nf.check_hash(self.schedule_hash, schedule)
 
     def get_tt_link(self, is_api: bool = False):
-        main = "https://timetable.spbu.ru"
         if is_api:
             path = "/api/v1/educators/{0}/events"
         else:
             path = "/EducatorEvents/{0}"
-        return main + path.format(self.id)
+        return urls["tt"] + path.format(self.id)
 
     def get_events(self, from_date=None, to_date=None, lessons_type=None):
         # TODO change spbu method in future

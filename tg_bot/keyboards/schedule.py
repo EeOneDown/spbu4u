@@ -32,7 +32,7 @@ def status_templates_keyboard():
     """
     return InlineKeyboardMarkup().row(
         *[InlineKeyboardButton(text=name, callback_data=name)
-          for name in ["Перезайти"]]
+          for name in ["Перезайти", "Ссылка"]]
     ).row(
         *[InlineKeyboardButton(text=name, callback_data=name)
           for name in ["Преподаватели", "Группы"]]

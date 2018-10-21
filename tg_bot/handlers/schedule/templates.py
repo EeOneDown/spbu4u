@@ -163,3 +163,20 @@ def relogin_callback_handler(call_back):
     )
     call_back.message.text = call_back.data
     start_handler(call_back.message)
+
+
+# Current link callback
+@bot.callback_query_handler(
+    func=lambda call_back: call_back.data == "Ссылка"
+)
+@telebot_login.login_required_callback
+def current_link_callback_handler(call_back):
+    user = g.current_tbot_user
+
+    answer = "Ссылка на текущее расписание: {0}"
+    bot.edit_message_text(
+        text=answer.format(user.get_current_tt_link()),
+        chat_id=user.tg_id,
+        message_id=call_back.message.message_id,
+        parse_mode="HTML"
+    )

@@ -17,9 +17,12 @@ def special_thanks_keyboard():
     )
 
 
-def check_spbu_status():
+def check_spbu_status(link: str = None):
     """
     Create keyboard with button with url
+
+    :param link: custom link
+    :type link: str
 
     :return: keyboard
     :rtype: InlineKeyboardMarkup
@@ -27,7 +30,7 @@ def check_spbu_status():
     return InlineKeyboardMarkup().row(
         InlineKeyboardButton(
             text="Проверить сайт",
-            url="https://timetable.spbu.ru"
+            url=link or "https://timetable.spbu.ru"
         )
     )
 
@@ -39,4 +42,9 @@ def current_week_keyboard():
     :return: keyboard
     :rtype: InlineKeyboardMarkup
     """
-    return InlineKeyboardMarkup().row(InlineKeyboardButton(text=current_week_text, callback_data=current_week_text))
+    return InlineKeyboardMarkup().row(
+        InlineKeyboardButton(
+            text=current_week_text,
+            callback_data=current_week_text
+        )
+    )

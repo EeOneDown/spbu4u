@@ -56,7 +56,7 @@ def g_e_templates(call_back):
             last_row.append(user.get_sav_del_button_text())
 
     if items:
-        answer = "Выбери {0}:".format(choose_text)
+        answer = "Выбери {0} для переключения:".format(choose_text)
     else:
         answer = "Нет сохраненных {0}.".format(no_items_text)
 
@@ -113,10 +113,12 @@ def sav_del_current_status_handler(call_back):
 
 # Choose template callback
 @bot.callback_query_handler(
-    func=lambda call_back: "Выбери группу:" in call_back.message.text
+    func=lambda call_back:
+        "Выбери группу для переключения:" in call_back.message.text
 )
 @bot.callback_query_handler(
-    func=lambda call_back: "Выбери преподавателя:" in call_back.message.text
+    func=lambda call_back:
+        "Выбери преподавателя для переключения:" in call_back.message.text
 )
 @telebot_login.login_required_callback
 def change_template_handler(call_back):

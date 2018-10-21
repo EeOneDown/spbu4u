@@ -643,7 +643,7 @@ class Group(db.Model):
 
     def update_hash(self, schedule):
         was_changed = False
-        if not self.check_hash(schedule):
+        if not self.schedule_hash or not self.check_hash(schedule):
             self.schedule_hash = generate_password_hash(schedule)
             was_changed = True
         return was_changed
@@ -675,7 +675,7 @@ class Educator(db.Model):
 
     def update_hash(self, schedule):
         was_changed = False
-        if not self.check_hash(schedule):
+        if not self.schedule_hash or not self.check_hash(schedule):
             self.schedule_hash = generate_password_hash(schedule)
             was_changed = True
         return was_changed

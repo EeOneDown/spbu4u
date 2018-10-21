@@ -9,7 +9,7 @@ from app.constants import (
     spbu_api_exception_answer
 )
 from tg_bot import bot
-from tg_bot.keyboards import check_spbu_status
+from tg_bot.keyboards import link_button
 
 
 def access_denied_message(func):
@@ -66,7 +66,7 @@ def expected_failure_spbu_message(func):
                 bot.send_message(
                     chat_id=message.chat.id,
                     text=answer,
-                    reply_markup=check_spbu_status(link),
+                    reply_markup=link_button(link),
                     parse_mode="HTML"
                 )
     return wrapper
@@ -95,7 +95,7 @@ def expected_failure_spbu_callback(func):
                     chat_id=call_back.message.chat.id,
                     message_id=call_back.message.message_id,
                     parse_mode="HTML",
-                    reply_markup=check_spbu_status(link)
+                    reply_markup=link_button(link)
                 )
     return wrapper
 

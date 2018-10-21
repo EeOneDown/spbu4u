@@ -66,7 +66,7 @@ def expected_failure_spbu_message(func):
                 bot.send_message(
                     chat_id=message.chat.id,
                     text=answer,
-                    reply_markup=link_button(link),
+                    reply_markup=link_button(link=link),
                     parse_mode="HTML"
                 )
     return wrapper
@@ -95,7 +95,7 @@ def expected_failure_spbu_callback(func):
                     chat_id=call_back.message.chat.id,
                     message_id=call_back.message.message_id,
                     parse_mode="HTML",
-                    reply_markup=link_button(link)
+                    reply_markup=link_button(link=link)
                 )
     return wrapper
 

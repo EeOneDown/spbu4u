@@ -1,5 +1,7 @@
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
+from app.constants import current_week_text
+
 
 def special_thanks_keyboard():
     """
@@ -28,3 +30,13 @@ def check_spbu_status():
             url="https://timetable.spbu.ru"
         )
     )
+
+
+def current_week_keyboard():
+    """
+    Creates keyboard with current_week_text
+
+    :return: keyboard
+    :rtype: InlineKeyboardMarkup
+    """
+    return InlineKeyboardMarkup().row(InlineKeyboardButton(text=current_week_text, callback_data=current_week_text))

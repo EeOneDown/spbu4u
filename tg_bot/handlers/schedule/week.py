@@ -5,7 +5,7 @@ from telebot.apihelper import ApiException
 
 import telebot_login
 from app import new_functions as nf
-from app.constants import week_day_titles, loading_text
+from app.constants import week_day_titles, loading_text, current_week_text
 from tg_bot import bot
 from tg_bot.keyboards import week_day_keyboard, current_next_keyboard
 
@@ -53,6 +53,9 @@ def select_week_day_schedule_handler(call_back):
 # All week schedule callback
 @bot.callback_query_handler(
     func=lambda call_back: "Расписание на: Неделя" in call_back.message.text
+)
+@bot.callback_query_handler(
+    func=lambda call_back: current_week_text in call_back.message.text
 )
 @telebot_login.login_required_callback
 @telebot_login.help_decorators.expected_failure_spbu_callback

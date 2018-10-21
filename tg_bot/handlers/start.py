@@ -12,7 +12,7 @@ from app.constants import (
 )
 from app.models import User
 from tg_bot import bot
-from tg_bot.keyboards import select_status_keyboard, main_keyboard
+from tg_bot.keyboards import select_status_keyboard, main_keyboard, link_button
 
 
 def try_auto_reg(o_id, is_edu, tg_id, bot_msg_id):
@@ -136,7 +136,8 @@ def alt_reg_handler(message):
         chat_id=message.chat.id,
         text=alt_reg_answer,
         disable_web_page_preview=True,
-        parse_mode="HTML"
+        parse_mode="HTML",
+        reply_markup=link_button(text="Открыть сайт")
     )
 
 

@@ -1,8 +1,10 @@
-from tg_bot import bot
-from app import create_app, db
-from app.models import Group, Educator
-from app.constants import schedule_changed_answer
 import requests
+
+from app import create_app, db
+from app.constants import schedule_changed_answer
+from app.models import Group, Educator
+from tg_bot import bot
+from tg_bot.keyboards import current_week_keyboard
 
 
 def watcher():
@@ -12,7 +14,8 @@ def watcher():
                 for user in obj.current_members.filter_by(is_subscribed=True):
                     bot.send_message(
                         chat_id=user.tg_id,
-                        text=schedule_changed_answer
+                        text=schedule_changed_answer,
+                        reply_markup=current_week_keyboard()
                     )
     db.session.commit()
 

@@ -640,7 +640,7 @@ class Group(db.Model):
     schedule_hash = db.Column(db.String(128))
     members = db.relationship("User", secondary=users_groups_templates,
                               back_populates="groups", lazy="dynamic")
-    current_members = db.relationship("User")
+    current_members = db.relationship("User", lazy="dynamic")
 
     def update_hash(self, schedule):
         was_changed = False
@@ -664,6 +664,14 @@ class Group(db.Model):
         """
         return spbu.get_group_events(self.id, from_date, to_date, lessons_type)
 
+    def get_tt_link(self, is_api: bool = False):
+        main = "https://timetable.spbu.ru"
+        if is_api:
+            path = "/api/v1/groups/{0}/events"
+        else:
+            path = "/AGSM/StudentGroupEvents/Primary/{0}"
+        return main + path.format(self.id)
+
 
 class Educator(db.Model):
     __tablename__ = "educators"
@@ -673,7 +681,7 @@ class Educator(db.Model):
     schedule_hash = db.Column(db.String(128))
     members = db.relationship("User", secondary=users_educators_templates,
                               back_populates="educators", lazy="dynamic")
-    current_members = db.relationship("User")
+    current_members = db.relationship("User", lazy="dynamic")
 
     def update_hash(self, schedule):
         was_changed = False
@@ -684,6 +692,14 @@ class Educator(db.Model):
 
     def check_hash(self, schedule):
         return check_password_hash(self.schedule_hash, schedule)
+
+    def get_tt_link(self, is_api: bool = False):
+        main = "https://timetable.spbu.ru"
+        if is_api:
+            path = "/api/v1/educators/{0}/events"
+        else:
+            path = "/EducatorEvents/{0}"
+        return main + path.format(self.id)
 
     def get_events(self, from_date=None, to_date=None, lessons_type=None):
         # TODO change spbu method in future

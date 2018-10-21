@@ -2,7 +2,7 @@ import json
 import logging
 import re
 from datetime import datetime, timedelta, date
-
+import hashlib
 import requests
 from telebot.apihelper import ApiException
 from telebot.types import Message
@@ -766,3 +766,29 @@ def write_log(update, work_time, was_error=False):
     if was_error:
         log += "\t\t\tERROR"
     logging.info(log)
+
+
+def generate_hash(content: bytes):
+    """
+    Create md5 hash from bytes
+
+    :param content: some data in bytes
+    :type content: bytes
+    :return: hash string
+    :rtype: str
+    """
+    return hashlib.sha3_512(content).hexdigest()
+
+
+def check_hash(cur_hash: str, content: bytes):
+    """
+    Checks current hash and content
+
+    :param cur_hash: current hash
+    :type cur_hash: str
+    :param content: some data in bytes
+    :type content: bytes
+    :return: is same
+    :rtype: bool
+    """
+    return cur_hash == generate_hash(content)

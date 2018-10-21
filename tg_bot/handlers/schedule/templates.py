@@ -127,9 +127,11 @@ def change_template_handler(call_back):
     if "группу" in call_back.message.text:
         user.current_group_id = call_back.data
         user.current_educator_id = 0
+        user.is_educator = False
     else:
         user.current_group_id = 0
         user.current_educator_id = call_back.data
+        user.is_educator = True
 
     answer = "Изменено. Текущее расписания для <b>{0}</b>".format(
         user.get_current_status_title()

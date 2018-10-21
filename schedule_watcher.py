@@ -1,6 +1,7 @@
 from tg_bot import bot
 from app import create_app
 from app.models import Group, Educator
+from app.constants import schedule_changed_answer
 import requests
 
 
@@ -13,7 +14,7 @@ def watcher():
                 for user in obj.current_members:
                     bot.send_message(
                         chat_id=user.tg_id,
-                        text="В расписании появились изменения! Заходи и проверь текущую неделю."
+                        text=schedule_changed_answer
                     )
 
 

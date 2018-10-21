@@ -10,7 +10,7 @@ def watcher():
             if obj.update_hash(
                     requests.get("https://timetable.spbu.ru/api/v1/educators/{0}/events".format(obj.id)).content
             ):
-                for user in obj.members.all():
+                for user in obj.current_member:
                     bot.send_message(
                         chat_id=user.tg_id,
                         text="В расписании появились изменения! Заходи и проверь текущую неделю."

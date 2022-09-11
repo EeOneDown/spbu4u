@@ -1,0 +1,31 @@
+# IDEs
+.idea/
+.vscode
+*.code-workspace
+
+# local envs
+venv
+.venv
+local_settings*.py
+*.env
+.env_*
+.python-version
+.aws
+/feature_flags.json
+
+# caches
+__pycache__
+.DS_Store
+.coverage
+.pytest_cache
+htmlcov
+
+# local dev scripts
+sandbox
+celerybeat-schedule
+
+# test artifacts
+.coverage.*
+coverage.xml
+coverage_unit.xml
+/allure-results/

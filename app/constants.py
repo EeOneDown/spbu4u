@@ -13,10 +13,10 @@ sha_string = hmac.new(
 
 ids = {
     "my": 200466757,
-    "ks": 71591548
+    "ig": 827150524,
 }
 
-webhook_host = ""
+webhook_host = Config.BASE_DOMAIN
 webhook_port = 443
 webhook_url_base = "https://{0}:{1}/tg".format(webhook_host, webhook_port)
 webhook_url_path = "/{0}/".format(sha_string)

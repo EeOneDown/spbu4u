@@ -1,3 +1,4 @@
+import logging
 import re
 
 import spbu
@@ -35,13 +36,15 @@ def try_auto_reg(o_id, is_edu, tg_id, bot_msg_id):
             is_edu=is_edu,
             tg_id=tg_id
         )
-    except spbu.ApiException:
+    except spbu.ApiException as e:
+        logging.error(str(e), exc_info=True)
         bot.edit_message_text(
             text="Ошибка в ID!",
             chat_id=tg_id,
             message_id=bot_msg_id
         )
-    except Exception:
+    except Exception as e:
+        logging.error(str(e), exc_info=True)
         bot.edit_message_text(
             text="Неизвестная ошибка!",
             chat_id=tg_id,

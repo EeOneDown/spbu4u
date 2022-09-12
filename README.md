@@ -26,6 +26,8 @@ Username: @Spbu4UBot ([link](https://t.me/Spbu4UBot))
   * `webhook_host = "<host>"`
 * run `flask db upgrade`
 * run `python first_deploy.py`
+* fix DB
+  * `ALTER TABLE users MODIFY tg_id BIGINT NOT NULL;`
 * setup WSGI
   * `from spbu4u_flask.py import app as application`
 * go to `<host>/tg/reset_webhook`
@@ -33,7 +35,7 @@ Username: @Spbu4UBot ([link](https://t.me/Spbu4UBot))
 
 
 ## local docker deploy (polling)
-* `docker-compose build up -d`
+* `docker-compose up --build -d`
 * `docker-compose down`
 
 ## local deploy

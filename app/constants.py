@@ -14,6 +14,7 @@ sha_string = hmac.new(
 ids = {
     "my": 200466757,
     "ig": 827150524,
+    "my2": 5012798631,
 }
 
 webhook_host = Config.BASE_DOMAIN

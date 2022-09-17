@@ -19,21 +19,23 @@ def run_bot(update):
     tic = time()
     was_error = False
     answer = "No error"
+    left = False
     try:
         bot.process_new_updates([update])
     except ApiException as ApiExcept:
         was_error = True
         json_err = loads(ApiExcept.result.text)
-        if json_err["description"] == "Forbidden: tg_bot was blocked by " \
-                                      "the user":
+        if ApiExcept.result.status_code == 403:
+            left = True
             if update.message:
                 chat_id = update.message.chat.id
             else:
                 chat_id = update.callback_query.message.chat.id
             user = User.query.filter_by(tg_id=chat_id).first()
-            user.clear_all()
-            db.session.delete(user)
-            db.session.commit()
+            if user:
+                user.clear_all()
+                db.session.delete(user)
+                db.session.commit()
 
             logging.info("USER LEFT {0}".format(
                 update.message.chat.id))
@@ -48,7 +50,7 @@ def run_bot(update):
             text=str(err)
         )
     finally:
-        if was_error:
+        if was_error and not left:
             if update.message:
                 chat_id = update.message.chat.id
             else:

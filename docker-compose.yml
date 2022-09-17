@@ -1,0 +1,34 @@
+version: "3.6"
+
+services:
+  spbu4u_app:
+    container_name: "spbu4u-app"
+    build:
+      context: .
+    restart: always
+    volumes:
+      - ./:/app/
+    command: bash -c "flask db upgrade && python first_deploy.py && python spbu4u_tg.py"
+    depends_on:
+      - spbu4u_app_db
+    env_file:
+      - .env
+  spbu4u_app_db:
+    container_name: "spbu4u-app-db"
+    image: mysql:8
+    volumes:
+      - spbu4u-app-db:/var/lib/mysql
+    restart: always
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: root-password
+      MYSQL_DATABASE: spbu4u
+      MYSQL_USER: spbu4u
+      MYSQL_PASSWORD: password
+    command: "--character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci"
+networks:
+  default:
+    name: main-backend
+volumes:
+  spbu4u-app-db: null

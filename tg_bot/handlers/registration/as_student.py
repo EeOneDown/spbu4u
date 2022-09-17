@@ -29,12 +29,12 @@ def select_division_handler(call_back):
 )
 def select_level_handler(call_back):
     bot_msg = bot.edit_message_text(
-        text="Ищу подходящие ступени\U00002026",
+        text="Ищу подходящие стeпени\U00002026",
         chat_id=call_back.message.chat.id,
         message_id=call_back.message.message_id
     )
     bot.edit_message_text(
-        text="{0}/\n\nВыбери ступень:".format(call_back.data),
+        text="{0}/\n\nВыбери стeпень:".format(call_back.data),
         chat_id=call_back.message.chat.id,
         message_id=bot_msg.message_id,
         reply_markup=levels_keyboard(call_back.data)
@@ -43,7 +43,7 @@ def select_level_handler(call_back):
 
 # Level callback
 @bot.callback_query_handler(
-    func=lambda call_back: "Выбери ступень:" in call_back.message.text
+    func=lambda call_back: "Выбери стeпень:" in call_back.message.text
 )
 def select_program_handler(call_back):
     bot_msg = bot.edit_message_text(

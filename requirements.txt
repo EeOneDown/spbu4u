@@ -3,7 +3,9 @@ flask-sqlalchemy
 flask-migrate
 flask-bootstrap
 pymysql
-pyTelegramBotAPI
+pyTelegramBotAPI==3.6.6
 python-dotenv
 requests
-spbuTimetableAPI>=1.0.1
+spbuTimetableAPI==1.0.2
+six
+cryptography

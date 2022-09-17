@@ -1,5 +1,6 @@
 from datetime import timedelta, date, datetime
 
+import requests
 import spbu
 
 from app import db, new_functions as nf
@@ -183,7 +184,7 @@ class User(db.Model):
         q = self._current_educator if self.is_educator else self._current_group
         return q.get_events(
             from_date=from_date, to_date=to_date, lessons_type=lessons_type
-        )["Days"]
+        )
 
     def _parse_event(self, event):
         if not self.is_educator:
@@ -673,7 +674,7 @@ class Group(db.Model):
         :return: raw data
         :rtype: dict
         """
-        return spbu.get_group_events(self.id, from_date, to_date, lessons_type)
+        return spbu.get_group_events(self.id, from_date, to_date, lessons_type)["Days"]
 
     def get_tt_link(self, is_api: bool = False):
         if is_api:
@@ -711,8 +712,12 @@ class Educator(db.Model):
         return urls["tt"] + path.format(self.id)
 
     def get_events(self, from_date=None, to_date=None, lessons_type=None):
-        # TODO change spbu method in future
-        return spbu.get_group_events(self.id, from_date, to_date, lessons_type)
+        try:
+            res = requests.get(f"https://timetable.spbu.ru/api/v1/educators/{self.id}/events/{from_date}/{to_date}")
+            res.raise_for_status()
+        except Exception:
+            raise spbu.ApiException("", "", ...)
+        return res.json()["EducatorEventsDays"]
 
     def get_term_events(self, is_next_term=False):
         """

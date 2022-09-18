@@ -141,4 +141,4 @@ def educator_required_inline(func):
     return wrapper
 
 
-from telebot_login import help_decorators
+from telebot_login import help_decorators  # noqa

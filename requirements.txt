@@ -1,11 +1,11 @@
-flask
-flask-sqlalchemy
-flask-migrate
-flask-bootstrap
-pymysql
-pyTelegramBotAPI==3.6.6
-python-dotenv
-requests
+Flask==2.2.2
+Flask-SQLAlchemy==2.5.1
+Flask-Migrate==3.1.0
+Flask-Bootstrap==3.3.7.1
+PyMySQL==1.0.2  # for MySQL
+pyTelegramBotAPI==4.7.0
+python-dotenv==0.21.0
+requests==2.28.1
 spbuTimetableAPI==1.0.2
-six
-cryptography
+six==1.16.0  # for spbuTimetableAPI
+cryptography==38.0.1  # for MySQL

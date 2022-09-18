@@ -6,7 +6,6 @@ from datetime import datetime, timedelta, date
 
 import requests
 from telebot.apihelper import ApiException
-from telebot.types import Message
 
 from app.constants import (
     emoji, subject_short_types, week_day_number, months,

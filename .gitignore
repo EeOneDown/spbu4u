@@ -4,7 +4,7 @@
 *.code-workspace
 
 # local envs
-venv
+venv*
 .venv
 local_settings*.py
 *.env

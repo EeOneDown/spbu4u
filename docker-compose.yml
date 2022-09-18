@@ -1,4 +1,4 @@
-version: "3.6"
+version: "3.9"
 
 services:
   spbu4u_app:
@@ -27,8 +27,5 @@ services:
       MYSQL_USER: spbu4u
       MYSQL_PASSWORD: password
     command: "--character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci"
-networks:
-  default:
-    name: main-backend
 volumes:
   spbu4u-app-db: null

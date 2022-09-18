@@ -1,6 +1,4 @@
-import logging
-
-from telebot import TeleBot, logger
+from telebot import TeleBot
 from config import Config
 
 
@@ -9,7 +7,5 @@ bot = TeleBot(
     threaded=Config.IS_THREADED_BOT
 )
 
-logger.setLevel(logging.INFO)
 
-
-from tg_bot import handlers
+from tg_bot import handlers  # noqa

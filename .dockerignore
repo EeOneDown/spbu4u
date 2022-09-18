@@ -1,0 +1,6 @@
+**/__pycache__
+.coverage
+.coverage-*
+allure-results
+coverage.xml
+venv*

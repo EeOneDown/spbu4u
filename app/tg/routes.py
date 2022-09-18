@@ -77,7 +77,7 @@ def webhook():
         # Запускать бота фоновым процессом в RQ?
         run_bot(
             update=Update.de_json(
-                json_type=request.get_data().decode("utf-8")
+                request.get_data().decode("utf-8")
             )
         )
         return "OK", 200

@@ -12,8 +12,8 @@ jobs:
   build:
     runs-on: ubuntu-latest
     env:
-      SECRET_KEY="test-1"
-      OTHER_SECRET_KEY="test-2"
+      SECRET_KEY: "test-1"
+      OTHER_SECRET_KEY: "test-2"
     steps:
     - uses: actions/checkout@v3
     - name: Set up Python 3.9

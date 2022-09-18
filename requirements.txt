@@ -10,4 +10,4 @@ spbuTimetableAPI==1.0.2
 six
 cryptography
 pytest==7.0.1
-pytest-socket==0.5.1
+pytest-socket==0.4.1

@@ -78,7 +78,7 @@ class TestNewFunctions(unittest.TestCase):
     def test_text_to_date_dmy(self):
         text_t = "{0}{3}{1:0>2}{3}{2}"
         for s in [" ", "."]:
-            for y in range(2018, 2100):
+            for y in range(2018, 2022):
                 self.test_text_to_date_dm(text_t, y, s)
 
     def test_text_to_interval(self):
@@ -106,10 +106,11 @@ class TestNewFunctions(unittest.TestCase):
         )
 
     def test_get_term_dates(self):
+        today = datetime.today()
         terms = (
-            (date(2018, 8, 1), date(2019, 2, 1)),
-            (date(2019, 2, 1), date(2019, 8, 1)),
-            (date(2019, 8, 1), date(2020, 2, 1))
+            (date(today.year - 1, 8, 1), date(today.year, 2, 1)),
+            (date(today.year, 2, 1), date(today.year, 8, 1)),
+            (date(today.year, 8, 1), date(today.year + 1, 2, 1))
         )
         self.assertTrue(nf.get_term_dates() in terms)
 
@@ -217,7 +218,3 @@ class TestNewFunctions(unittest.TestCase):
             nf.get_hours_minutes_by_seconds(0),
             (0, 0)
         )
-
-
-if __name__ == '__main__':
-    unittest.main()

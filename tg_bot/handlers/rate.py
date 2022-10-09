@@ -42,14 +42,20 @@ def statistics_handler(call_back):
     user = g.current_tbot_user
 
     rates = user.get_rates()
+    total_n = sum(rates.values())
 
-    if not sum(rates.values()):
+    if not total_n:
         answer = "Пока что нет оценок."
     else:
-        avg_rate = sum([r * rates[r] for r in rates]) / sum(rates.values())
+        avg_rate = sum([r * rates[r] for r in rates]) / total_n
         stars = emoji["star"] * int(round(avg_rate))
-        answer = "Средняя оценка: {0}\n{1} ({2})".format(
-            round(avg_rate, 1), stars, sum(rates.values())
+        length = 20
+        lines = [
+            f"{i}: {'*' * round(rates.get(i, 0) / total_n * length):<{length}} ({rates.get(i, 0)})"
+            for i in range(5, 0, -1)
+        ]
+        answer = "Средняя оценка: {0}\n{1} ({2})\n\n<pre>{3}</pre>".format(
+            round(avg_rate, 2), stars, total_n, "\n".join(lines)
         )
     if user.tg_id in ids.values():
         admin_statistics = user.get_admin_statistics()
@@ -74,7 +80,7 @@ def statistics_handler(call_back):
 
 # Feedback callback
 @bot.callback_query_handler(
-    func=lambda call_back: call_back.data == "Связь"
+    func=lambda call_back: call_back.data == "Отзыв"
 )
 @telebot_login.login_required_callback
 def feedback_handler(call_back):

@@ -109,6 +109,6 @@ def rate_keyboard(rate):
     )
     inline_keyboard.add(
         *[InlineKeyboardButton(text=name, callback_data=name)
-          for name in ["Связь", "Статистика"]]
+          for name in ["Отзыв", "Статистика"]]
     )
     return inline_keyboard
